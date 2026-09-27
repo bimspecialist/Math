@@ -1,0 +1,13 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { KEY_CONTRACT } from "../src/calculator/key-contract.js";
+import { renderCalculatorMarkup, mapKeyboardToKeyId } from "../src/calculator/render-calculator.js";
+import { CalculatorController } from "../src/calculator/calculator-controller.js";
+
+test("rendered calculator uses contract ids and renders every required face key",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");for(const key of KEY_CONTRACT)assert.match(html,new RegExp('data-key-id="'+key.id+'"'),"not rendered: "+key.id)});
+test("no visible key renders an unimplemented alternate legend",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");assert.doesNotMatch(html,/undefined|null|NOOP/i)});
+test("math display is LTR while Arabic calculator shell is RTL",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");assert.match(html,/class="calculator-shell"[^>]*dir="rtl"/);assert.match(html,/class="math-input"[^>]*dir="ltr"/)});
+test("REPLAY directions are real focusable buttons",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"en");for(const id of ["REPLAY_UP","REPLAY_DOWN","REPLAY_LEFT","REPLAY_RIGHT"])assert.match(html,new RegExp('<button[^>]*data-key-id="'+id+'"[^>]*type="button"'))});
+test("keyboard slash maps to structured division/fraction command",()=>{assert.equal(mapKeyboardToKeyId("/"),"FRAC");const c=new CalculatorController();c.dispatch(mapKeyboardToKeyId("/"));assert.match(c.view().mathHtml,/math-fraction/)});
+test("keyboard arrows map to REPLAY navigation without changing canonical token order",()=>{assert.equal(mapKeyboardToKeyId("ArrowDown"),"REPLAY_DOWN");const c=new CalculatorController();c.dispatch("FRAC");c.dispatch("DIGIT_1");c.dispatch(mapKeyboardToKeyId("ArrowDown"));c.dispatch("DIGIT_2");assert.equal(c.view().canonicalExpression,"(1)/(2)")});
+test("controller exposes menu selections for UI without label-based dispatch",()=>{const c=new CalculatorController();c.dispatch("MODE");assert.equal(c.view().state.menu?.id,"MODE");assert.equal(c.selectMode("COMP"),true);c.dispatch("SHIFT");c.dispatch("MODE");assert.equal(c.selectSetup("ANGLE","RAD"),true);assert.equal(c.view().state.angleMode,"RAD")});

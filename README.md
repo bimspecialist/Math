@@ -1,19 +1,34 @@
 # Math
 
-Scientific calculator web project.
+Scientific calculator web project with a familiar classic scientific interaction profile and independent branding.
 
-## Live site
-After GitHub Pages is enabled with **Settings → Pages → Source: GitHub Actions**, every push to `main` deploys automatically.
+## Current calculator work
 
-Expected URL:
+Development branch: `feature/calculator-behavior-profile`
 
-`https://bimspecialist.github.io/Math/`
+Implemented and regression-tested:
+- contract-driven key inventory
+- MODE/SETUP state behavior
+- SHIFT and ALPHA one-shot modifiers
+- vertical Natural Display fractions
+- fraction slot navigation with REPLAY
+- powers, square roots, nth roots
+- CALC/SOLVE state flows
+- exact/fraction ↔ decimal result toggle
+- mixed/improper fraction presentation
+- memory, Ans, DEL, AC, history/replay
+- Arabic RTL shell with LTR mathematics
 
-## Current status
-- Scientific calculator: available
-- Arabic/English UI switch: available
-- DEG/RAD: available
-- Math equation editor: available
-- Image/camera input: UI available
-- Math OCR/handwriting recognition: provider not connected yet
-- Advanced symbolic solver: provider not connected yet
+Advanced modes such as MATRIX, VECTOR, STAT, TABLE, BASE-N, EQN and CMPLX remain hidden until their complete workflows are implemented and tested.
+
+## Verification
+
+```bash
+node scripts/verify-calculator.mjs
+```
+
+GitHub Pages deployment is gated by this verification command.
+
+## Advanced Solver / Math Scan
+
+The website keeps the UI entry point for image/camera input and advanced solving, but no production OCR/handwriting-recognition or symbolic-solver provider is configured yet. No provider secret is shipped in the static site.
