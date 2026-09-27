@@ -1,7 +1,7 @@
 # Calculator Key Contract & Natural Math Display Redesign
 
 Date: 2026-09-27
-Status: DESIGN_READY FOR USER REVIEW
+Status: REVISED_DESIGN_READY FOR USER REVIEW
 Scope: Web calculator redesign only
 Review mode: "100 expert perspectives" — structured multidisciplinary review, not 100 real people.
 
@@ -443,3 +443,56 @@ If any mandatory gate fails, status is BLOCKED.
 - OCR/handwriting provider integration.
 
 Those remain separate workstreams.
+
+
+## Approved interaction baseline
+
+The user approved a familiar ES Plus-style interaction model as the baseline for the first release, implemented independently with this product's own branding and visual identity.
+
+Behavior requirements:
+- MODE opens a selectable calculation-mode menu rather than directly toggling the angle unit.
+- The target mode inventory is COMP, CMPLX, STAT, BASE-N, EQN, MATRIX, TABLE, and VECTOR; a mode is shown in release UI only when its workflow is implemented and tested.
+- SHIFT + MODE opens SETUP.
+- SETUP owns angle unit, input/output format, number format, fraction-result format, and other implemented calculation/display settings.
+- SHIFT and ALPHA are one-shot modifier states with visible status indicators.
+- REPLAY direction keys are context-sensitive for structured-expression navigation and calculation history.
+- CALC evaluates an expression after prompting for required variable values.
+- SHIFT + CALC enters SOLVE where supported.
+- S↔D toggles compatible exact/fraction and decimal results.
+- SHIFT + S↔D toggles compatible improper/mixed fraction presentation.
+- ON is not implemented as an AC alias.
+- Menus define numbered choices, arrow navigation, direct numeric selection where supported, confirm, cancel/back, resulting state, keyboard equivalent, and accessibility announcement.
+
+## Behavior profile architecture
+
+Add a BehaviorProfile boundary beside KeyContract. It defines menu semantics, key state transitions, supported modes, setup options, and result-toggle behavior. The first profile is an ES Plus-style scientific profile. Future profiles may reuse the math engine without changing its internals.
+
+## Additional regression gates
+
+The release test suite must verify:
+- MODE opens a menu and does not merely toggle DEG/RAD.
+- MODE selection enters the selected implemented mode.
+- SHIFT + MODE opens SETUP.
+- SETUP angle-unit selection updates both indicator and engine behavior.
+- CALC prompts for required variables.
+- SHIFT + CALC enters SOLVE only where supported.
+- REPLAY is tested in expression-edit and history contexts.
+- S↔D and SHIFT + S↔D have separate verified result-format behavior.
+- A visible mode with an unimplemented workflow fails the release gate.
+
+## Evidence boundary
+
+Official manuals, product pages, and FAQs document observable behavior and supported features; they do not disclose proprietary firmware source code. This project independently implements documented external behavior.
+
+Every key behavior is classified before implementation:
+- VERIFIED: backed by an official reference.
+- PRODUCT_DECISION: deliberate behavior required by browser/app constraints.
+- BLOCKED: insufficient evidence; do not show a misleading legend or claim.
+
+Primary verification sources are the official fx-570ES PLUS / fx-991ES PLUS User's Guide, official product specifications, official CASIO MODE/S↔D FAQs, and the official Arabic manual for terminology/workflow cross-checks.
+
+## Council-of-100 release rule
+
+The multidisciplinary review adopts a behavior-first definition of completeness. A calculator face is complete only when every visible key and alternate legend has a verified state transition, mathematical effect or menu workflow, error behavior, focus/keyboard behavior, and regression test.
+
+Priority order: complete primary keys; MODE/SETUP; Natural Display templates; SHIFT/ALPHA; CALC/SOLVE; REPLAY/history; memory/Ans; exact-decimal-fraction formatting; then advanced modes according to tested implementation status.
