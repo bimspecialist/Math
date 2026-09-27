@@ -21,3 +21,8 @@ test("rational-only arithmetic preserves exact result", () => {
   const r = evalv("1/2+1/3"); assert.equal(r.exact, "5/6");
   assert.equal(formatExactDecimal(r,"EXACT"), "5/6"); assert.equal(formatExactDecimal(r,"DECIMAL"), String(5/6));
 });
+
+test("SHIFT log and ln engine functions are evaluable", () => {
+  assert.equal(evalv("pow10(2)").numeric, 100);
+  assert.ok(Math.abs(evalv("exp(1)").numeric - Math.E) < 1e-12);
+});
