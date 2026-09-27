@@ -1,60 +1,352 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eef1f4">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#eef1f4">
 <title>Math — Scientific Calculator</title>
 <style>
-:root{color-scheme:light dark;--page:#edf2f6;--text:#18212a;--muted:#66727e;--body:#f7f8f9;--edge:#c8d0d6;--lcd:#dce7d2;--ink:#172318;--fn:#30343a;--num:#f7f7f5;--op:#d7dce1;--panel:#fff;--border:#cbd2d9;--accent:#315f9a}
-@media(prefers-color-scheme:dark){:root{--page:#11161c;--text:#f3f5f7;--muted:#aeb8c2;--panel:#1b222a;--border:#36414c;--accent:#648fc0}}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(#f8fafc,var(--page));color:var(--text);font-family:Segoe UI,Tahoma,Arial,sans-serif}button,textarea,input{font:inherit}button{cursor:pointer}button:focus-visible,textarea:focus-visible{outline:3px solid #2f72d6;outline-offset:2px}
-main{width:min(1150px,calc(100% - 18px));margin:auto;padding:16px 0 40px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.top h1{margin:0;font-size:clamp(1.2rem,2.5vw,1.8rem)}.top small{color:var(--muted)}.actions,.tabs{display:flex;gap:8px;flex-wrap:wrap}.chip,.tabs button{min-height:42px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;padding:7px 12px}.tabs{margin:12px 0 15px}.tabs .active{background:#dce8f6;color:#183b61;font-weight:700}
-.section{display:none}.section.active{display:block}.workspace{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;align-items:start}.stage{display:flex;justify-content:center}.calculatorBody{width:min(100%,420px);background:linear-gradient(145deg,#fff,var(--body) 60%,#dfe4e8);border:1px solid var(--edge);border-radius:28px 28px 42px 42px;padding:14px 14px 18px;box-shadow:0 18px 40px rgba(28,39,52,.18);color:#171b20}
-.brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.brand strong{display:block;font-size:.86rem}.brand span{font-size:.62rem;color:#66707a}.solarStrip{width:118px;height:27px;border:1px solid #776956;border-radius:4px;background:linear-gradient(90deg,transparent 24%,#8b7969 25%,transparent 26%,transparent 49%,#8b7969 50%,transparent 51%,transparent 74%,#8b7969 75%,transparent 76%),linear-gradient(#493322,#2e2118)}
-.lcdFrame{background:#d4dbe0;border:1px solid #a7b0b7;border-radius:12px;padding:7px;margin-bottom:10px}.lcdScreen{min-height:104px;background:var(--lcd);color:var(--ink);border:2px solid #98a692;border-radius:5px;padding:7px 9px;font-family:Consolas,"Courier New",monospace;box-shadow:inset 0 2px 5px rgba(30,50,30,.14)}.lcdStatus{display:flex;gap:8px;direction:ltr;font-size:.64rem;opacity:.72;min-height:15px}.lcdStatus .on{font-weight:800;opacity:1}.lcdExpression,.lcdResult{direction:ltr;text-align:right;overflow-wrap:anywhere}.lcdExpression{min-height:31px;font-size:.92rem;padding-top:5px}.lcdResult{font-size:1.65rem;font-weight:800;min-height:34px}
-.modeRow{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:3px 0 8px}.modeKey{min-height:35px;border:1px solid #899198;border-radius:16px;background:linear-gradient(#eff1f3,#cdd3d8);color:#1b232a;font-size:.68rem;font-weight:800;box-shadow:0 2px 0 #969da3}.modeKey:nth-child(1){color:#675100}.modeKey:nth-child(2){color:#7e214a}.activeShift{box-shadow:0 0 0 2px #e5c43f,0 2px 0 #969da3}.activeAlpha{box-shadow:0 0 0 2px #ca5b87,0 2px 0 #969da3}
-.nav{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:7px;align-items:center;margin-bottom:9px}.navSmall{min-height:34px;border:1px solid #717981;background:#394047;color:#fff;border-radius:16px;font-size:.65rem}.navPad{width:82px;height:58px;margin:auto;border-radius:50%;border:1px solid #68727a;background:radial-gradient(circle,#7890a6 0 43%,#3b444d 44% 100%)}
-.scientificKeys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:8px}.numericKeys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.key{position:relative;border-radius:6px;min-height:44px;padding:11px 3px 4px;font-weight:800;line-height:1;box-shadow:0 2px 0 rgba(0,0,0,.35);border:1px solid #202428}.key small{position:absolute;top:2px;left:2px;right:2px;font-size:.48rem;color:#ddc64f;white-space:nowrap;overflow:hidden}.fnKey{background:linear-gradient(#41464c,#262a2f);color:#fff;font-size:.75rem}.numKey{background:linear-gradient(#fff,#dedfdd);color:#1a2025;border-color:#929aa1;font-size:1rem}.opKey{background:linear-gradient(#eef0f2,#c6cbd0);color:#172028;border-color:#899198;font-size:1rem}.dangerKey{background:linear-gradient(#efa06f,#d76f3a);color:#23130d;border-color:#9c542e}.eqKey{background:linear-gradient(#7ea8d4,#4f79a8);color:#fff;border-color:#3d638b}
-.footer{display:flex;justify-content:space-between;margin-top:9px;color:#68727b;font-size:.6rem}.side{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px}.side h3{margin:0 0 8px}.side p{color:var(--muted)}.historyItem{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:9px 2px;text-align:left;direction:ltr}.historyItem strong{float:right}.ad{border:1px dashed var(--border);border-radius:12px;padding:12px;margin-top:14px;color:var(--muted);font-size:.8rem}
-.solverGrid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px}.solverPanel{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:16px}.label{display:block;font-weight:700;margin:7px 0 5px}.mathInput{width:100%;min-height:96px;background:#eef2f6;color:#17212a;border:1px solid var(--border);border-radius:12px;padding:11px;direction:ltr;text-align:left}.rendered{direction:ltr;text-align:left;background:#eef2f6;color:#17212a;border-radius:10px;min-height:50px;padding:10px;margin:8px 0;font-size:1.25rem}.palette,.scanActions{display:flex;gap:7px;flex-wrap:wrap}.palette button,.scanActions label,.primary{min-height:42px;border:1px solid var(--border);border-radius:9px;background:#eef2f6;color:#17212a;padding:7px 10px}.scanActions label{display:inline-flex;align-items:center;cursor:pointer}.scanActions input{display:none}.primary{background:var(--accent);color:#fff;border:0;font-weight:700}.scan{border:1px solid var(--border);border-radius:12px;padding:11px;margin:13px 0}.preview{max-width:100%;max-height:300px;border:1px solid var(--border);border-radius:10px;margin-top:10px}.notice{margin-top:10px;padding:10px;background:#dce8f6;color:#183b61;border-radius:10px}
-@media(max-width:850px){.workspace,.solverGrid{grid-template-columns:1fr}.side{max-width:520px;width:100%;margin:auto}}@media(max-width:480px){main{width:calc(100% - 8px);padding-top:8px}.top{align-items:flex-start;flex-direction:column}.calculatorBody{padding:10px 9px 14px;border-radius:20px 20px 30px 30px}.scientificKeys{gap:4px}.numericKeys{gap:5px}.key{min-height:41px;font-size:.72rem}.numKey,.opKey{font-size:.94rem}.solarStrip{width:102px;height:24px}}
+:root{
+  color-scheme:light dark;
+  --page:#eef2f5;--text:#18212a;--muted:#687580;--panel:#ffffff;--border:#ccd3da;
+  --calc-shell:#eceff2;--calc-edge:#aeb6be;--calc-dark:#2b3036;--calc-dark-2:#1d2126;
+  --lcd:#dbe6d4;--lcd-edge:#8f9e90;--lcd-ink:#162317;
+  --num:#f4f4f1;--num-edge:#989fa6;--op:#d7dce1;--orange:#e98445;--blue:#547da9;
+  --shift:#d0ad2d;--alpha:#c24e7b;--accent:#315f9a;
+}
+@media(prefers-color-scheme:dark){
+  :root{--page:#10151b;--text:#f3f5f7;--muted:#adb7c0;--panel:#192129;--border:#35414c}
+}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--page);color:var(--text);font-family:Segoe UI,Tahoma,Arial,sans-serif}
+button,textarea,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #2f72d6;outline-offset:2px}
+main{width:min(1180px,calc(100% - 18px));margin:auto;padding:16px 0 40px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top h1{margin:0;font-size:clamp(1.2rem,2.5vw,1.8rem)}
+.top small{color:var(--muted)}
+.actions,.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.chip,.tabs button{min-height:42px;border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:10px;padding:7px 12px}
+.tabs{margin:12px 0 16px}
+.tabs .active{background:#dce8f6;color:#173b61;font-weight:700}
+.section{display:none}.section.active{display:block}
+.workspace{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:18px;align-items:start}
+.stage{display:flex;justify-content:center;align-items:flex-start}
+
+.calculatorBody{
+  width:min(100%,386px);
+  background:linear-gradient(155deg,#fafbfc 0%,#e8ecef 55%,#d9dee2 100%);
+  border:1px solid var(--calc-edge);
+  border-radius:24px 24px 34px 34px;
+  padding:11px 12px 17px;
+  box-shadow:0 16px 34px rgba(25,34,44,.18);
+  color:#171b20;
+}
+.brand{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 3px 7px;
+}
+.brandTitle{display:flex;flex-direction:column;gap:1px}
+.brandTitle strong{font-size:.82rem;letter-spacing:.02em}
+.brandTitle span{font-size:.56rem;color:#66717b}
+.modelText{font-size:.58rem;color:#5f6972;font-weight:700;letter-spacing:.04em}
+
+.lcdFrame{
+  background:#cfd5d9;
+  border:1px solid #9ea7ad;
+  border-radius:8px;
+  padding:6px;
+  margin-bottom:9px;
+}
+.lcdScreen{
+  min-height:96px;background:var(--lcd);color:var(--lcd-ink);
+  border:2px solid var(--lcd-edge);border-radius:4px;padding:6px 8px;
+  font-family:Consolas,"Courier New",monospace;
+  box-shadow:inset 0 2px 5px rgba(30,50,30,.12)
+}
+.lcdStatus{display:flex;gap:7px;direction:ltr;font-size:.6rem;opacity:.7;min-height:14px}
+.lcdStatus .on{font-weight:800;opacity:1}
+.lcdExpression,.lcdResult{direction:ltr;text-align:right;overflow-wrap:anywhere}
+.lcdExpression{min-height:30px;padding-top:4px;font-size:.88rem}
+.lcdResult{font-size:1.55rem;font-weight:800;min-height:32px}
+
+.controlDeck{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:7px;align-items:center;margin:0 0 8px}
+.controlSide{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.controlSide.right{grid-template-columns:repeat(3,1fr)}
+.smallKey{
+  min-height:31px;border:1px solid #727a82;border-radius:14px;
+  background:linear-gradient(#e7eaed,#c3c9ce);color:#1d252c;
+  font-size:.58rem;font-weight:800;box-shadow:0 2px 0 #929aa0;padding:3px
+}
+#shiftBtn{color:#6d5500}.shiftOn{box-shadow:0 0 0 2px #d8b63b,0 2px 0 #929aa0}
+#alphaBtn{color:#8e2753}.alphaOn{box-shadow:0 0 0 2px #ce628d,0 2px 0 #929aa0}
+.dpad{
+  position:relative;width:76px;height:60px;margin:auto;border-radius:50%;
+  border:1px solid #4f5e6e;background:#31547c;box-shadow:inset 0 0 0 7px #6688b0,0 2px 0 #3e4852;
+  color:#102741;
+}
+.dpad::before{content:"▲";position:absolute;top:4px;left:31px;font-size:.56rem}
+.dpad::after{content:"▼";position:absolute;bottom:4px;left:31px;font-size:.56rem}
+.dpad span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.56rem;font-weight:800;color:#173657}
+.dpad .left,.dpad .right{position:absolute;top:24px;font-size:.56rem}.dpad .left{left:7px}.dpad .right{right:7px}
+
+.scientificKeys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-bottom:8px}
+.numericKeys{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.key{
+  position:relative;border-radius:6px;min-height:39px;padding:10px 2px 4px;
+  font-weight:800;line-height:1;border:1px solid #1f2429;box-shadow:0 2px 0 rgba(0,0,0,.34)
+}
+.key small{
+  position:absolute;top:2px;inset-inline:2px;font-size:.43rem;color:#d6ba33;
+  white-space:nowrap;overflow:hidden;text-overflow:clip
+}
+.fnKey{background:linear-gradient(#3c4147,#25292e);color:#fff;font-size:.7rem}
+.numKey{background:linear-gradient(#fff,#e3e3df);color:#171d22;border-color:var(--num-edge);font-size:.96rem}
+.opKey{background:linear-gradient(#eef1f3,#c9ced3);color:#172028;border-color:#8e969d;font-size:.92rem}
+.dangerKey{background:linear-gradient(#f2a171,#dc743c);color:#23140d;border-color:#a25a34;font-size:.74rem}
+.eqKey{background:linear-gradient(#79a3d0,#537ca7);color:#fff;border-color:#42678d;font-size:1rem}
+.functionNote{display:flex;justify-content:space-between;gap:8px;color:#68727a;font-size:.54rem;padding-top:8px}
+
+.side{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:14px}
+.side h3{margin:0 0 8px}.side p{color:var(--muted)}
+.historyItem{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:9px 2px;text-align:left;direction:ltr}
+.historyItem strong{float:right}
+.ad{border:1px dashed var(--border);border-radius:12px;padding:12px;margin-top:14px;color:var(--muted);font-size:.8rem}
+
+.solverGrid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px}
+.solverPanel{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:16px}
+.label{display:block;font-weight:700;margin:7px 0 5px}
+.mathInput{width:100%;min-height:96px;background:#eef2f6;color:#17212a;border:1px solid var(--border);border-radius:12px;padding:11px;direction:ltr;text-align:left}
+.rendered{direction:ltr;text-align:left;background:#eef2f6;color:#17212a;border-radius:10px;min-height:50px;padding:10px;margin:8px 0;font-size:1.25rem}
+.palette,.scanActions{display:flex;gap:7px;flex-wrap:wrap}
+.palette button,.scanActions label,.primary{min-height:42px;border:1px solid var(--border);border-radius:9px;background:#eef2f6;color:#17212a;padding:7px 10px}
+.scanActions label{display:inline-flex;align-items:center;cursor:pointer}.scanActions input{display:none}
+.primary{background:var(--accent);color:#fff;border:0;font-weight:700}
+.scan{border:1px solid var(--border);border-radius:12px;padding:11px;margin:13px 0}
+.preview{max-width:100%;max-height:300px;border:1px solid var(--border);border-radius:10px;margin-top:10px}
+.notice{margin-top:10px;padding:10px;background:#dce8f6;color:#183b61;border-radius:10px}
+
+@media(max-width:850px){
+  .workspace,.solverGrid{grid-template-columns:1fr}
+  .side{max-width:520px;width:100%;margin:auto}
+}
+@media(max-width:480px){
+  main{width:calc(100% - 8px);padding-top:8px}.top{align-items:flex-start;flex-direction:column}
+  .calculatorBody{padding:9px 8px 13px;border-radius:19px 19px 29px 29px}
+  .scientificKeys{gap:3px}.numericKeys{gap:4px}.key{min-height:38px}
+  .fnKey{font-size:.64rem}.numKey,.opKey{font-size:.9rem}
+  .dpad{width:70px;height:56px}.dpad::before,.dpad::after{left:28px}
+}
 </style>
 </head>
 <body>
 <main>
-<header class="top"><div><small>Math Workspace</small><h1 id="title">الحاسبة العلمية</h1></div><div class="actions"><button class="chip" id="langBtn">EN</button><button class="chip" id="angleBtn">DEG</button></div></header>
-<nav class="tabs"><button class="active" data-tab="calculator">الحاسبة</button><button data-tab="solver">Advanced Solver</button></nav>
-<section class="section active" id="calculator"><div class="workspace">
-<div class="stage"><article class="calculatorBody">
-<div class="brand"><div><strong>Math Scientific</strong><span>Natural Display</span></div><div class="solarStrip" aria-hidden="true"></div></div>
-<div class="lcdFrame"><div class="lcdScreen"><div class="lcdStatus"><span id="shiftStatus">S</span><span id="alphaStatus">A</span><span id="statusAngle">DEG</span><span>MATH</span></div><div class="lcdExpression" id="expr">0</div><div class="lcdResult" id="result">0</div></div></div>
-<div class="modeRow"><button class="modeKey" id="shiftBtn">SHIFT</button><button class="modeKey" id="alphaBtn">ALPHA</button><button class="modeKey" data-insert="(">(</button><button class="modeKey" data-insert=")">)</button><button class="modeKey" id="angleKey">DEG/RAD</button></div>
-<div class="nav"><button class="navSmall" id="historyBtn">HISTORY</button><div class="navPad"></div><button class="navSmall" id="advancedBtn">SOLVER</button></div>
-<div class="scientificKeys" id="scientificKeys"></div><div class="numericKeys" id="numericKeys"></div>
-<div class="footer"><span>2nd functions via SHIFT</span><span>AR / EN</span></div>
-</article></div>
-<aside class="side"><h3>History</h3><div id="historyList"></div><div class="ad"><strong>Website ad area</strong><br>بعيد عن شاشة الحاسبة والأزرار.</div></aside>
-</div></section>
-<section class="section" id="solver"><div class="solverGrid"><div class="solverPanel">
-<label><span class="label">اكتب المعادلة</span><textarea id="mathInput" class="mathInput">x^3+y^2+5=0</textarea></label><div id="rendered" class="rendered">x³+y²+5=0</div><div class="palette" id="palette"></div>
-<div class="scan"><strong>Math Scan</strong><p>رفع صورة أو التصوير بالكاميرا. التعرف الحقيقي سيُربط لاحقًا بمزود Math Recognition على الخادم.</p><div class="scanActions"><label>رفع صورة<input type="file" accept="image/*" id="upload"></label><label>الكاميرا<input type="file" accept="image/*" capture="environment" id="camera"></label></div><img id="preview" class="preview" hidden><div id="review" hidden><label><span class="label">صحح المعادلة قبل الحل</span><textarea id="scanText" class="mathInput"></textarea></label><button class="primary" id="confirmScan">تأكيد المعادلة</button></div></div>
-<button class="primary" id="solveBtn">حل</button><div id="solverNotice" class="notice" hidden></div>
-</div><aside class="side"><h3>Result / النتيجة</h3><p>سيظهر الحل المتقدم والخطوات والرسم هنا بعد ربط Solver Provider.</p></aside></div></section>
+<header class="top">
+  <div><small>Math Workspace</small><h1 id="title">الحاسبة العلمية</h1></div>
+  <div class="actions"><button class="chip" id="langBtn">EN</button><button class="chip" id="angleBtn">DEG</button></div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-tab="calculator">الحاسبة</button>
+  <button data-tab="solver">Advanced Solver</button>
+</nav>
+
+<section class="section active" id="calculator">
+  <div class="workspace">
+    <div class="stage">
+      <article class="calculatorBody" aria-label="Scientific calculator">
+        <div class="brand">
+          <div class="brandTitle"><strong>Math Scientific</strong><span>Natural Display</span></div>
+          <div class="modelText">SCIENTIFIC</div>
+        </div>
+
+        <div class="lcdFrame">
+          <div class="lcdScreen">
+            <div class="lcdStatus">
+              <span id="shiftStatus">S</span><span id="alphaStatus">A</span><span id="statusAngle">DEG</span><span>MATH</span>
+            </div>
+            <div class="lcdExpression" id="expr">0</div>
+            <div class="lcdResult" id="result" aria-live="polite">0</div>
+          </div>
+        </div>
+
+        <div class="controlDeck">
+          <div class="controlSide">
+            <button class="smallKey" id="shiftBtn">SHIFT</button>
+            <button class="smallKey" id="alphaBtn">ALPHA</button>
+          </div>
+          <div class="dpad" aria-label="Replay navigation"><span>REPLAY</span><i class="left">◀</i><i class="right">▶</i></div>
+          <div class="controlSide right">
+            <button class="smallKey" id="modeBtn">MODE</button>
+            <button class="smallKey" id="setupBtn">SETUP</button>
+            <button class="smallKey" id="onBtn">ON</button>
+          </div>
+        </div>
+
+        <div class="scientificKeys" id="scientificKeys"></div>
+        <div class="numericKeys" id="numericKeys"></div>
+        <div class="functionNote"><span>SHIFT = secondary functions</span><span>ALPHA = variables</span></div>
+      </article>
+    </div>
+
+    <aside class="side">
+      <h3>History</h3><div id="historyList"></div>
+      <div class="ad"><strong>Website ad area</strong><br>بعيد عن شاشة الحاسبة والأزرار.</div>
+    </aside>
+  </div>
+</section>
+
+<section class="section" id="solver">
+  <div class="solverGrid">
+    <div class="solverPanel">
+      <label><span class="label">اكتب المعادلة</span><textarea id="mathInput" class="mathInput">x^3+y^2+5=0</textarea></label>
+      <div id="rendered" class="rendered">x³+y²+5=0</div><div class="palette" id="palette"></div>
+      <div class="scan">
+        <strong>Math Scan</strong>
+        <p>رفع صورة أو التصوير بالكاميرا. التعرف الحقيقي سيُربط لاحقًا بمزود Math Recognition على الخادم.</p>
+        <div class="scanActions"><label>رفع صورة<input type="file" accept="image/*" id="upload"></label><label>الكاميرا<input type="file" accept="image/*" capture="environment" id="camera"></label></div>
+        <img id="preview" class="preview" alt="معاينة صورة المعادلة" hidden>
+        <div id="review" hidden><label><span class="label">صحح المعادلة قبل الحل</span><textarea id="scanText" class="mathInput"></textarea></label><button class="primary" id="confirmScan">تأكيد المعادلة</button></div>
+      </div>
+      <button class="primary" id="solveBtn">حل</button><div id="solverNotice" class="notice" hidden></div>
+    </div>
+    <aside class="side"><h3>Result / النتيجة</h3><p>سيظهر الحل المتقدم والخطوات والرسم هنا بعد ربط Solver Provider.</p></aside>
+  </div>
+</section>
 </main>
+
 <script>
-(()=>{const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let expression="",result="0",ans="0",memory="0",angle="DEG",shift=false,alpha=false,history=[];
-const sci=[["x⁻¹","x!","inverse"],["√","x²","sqrt"],["xʸ","ⁿ√x","power"],["log","10ˣ","fn","log"],["ln","eˣ","fn","ln"],["(-)","","append","-"],["sin","sin⁻¹","fn","sin"],["cos","cos⁻¹","fn","cos"],["tan","tan⁻¹","fn","tan"],["π","e","constant","pi"],["nCr","nPr","combin"],["Abs","","fn","abs"],["S⇔D","","noop"],["ENG","","noop"],["EXP","","constant","e"],["STO","M+","store"],["RCL","","recall"],["Ans","","ans"]];
-const nums=[["7","","append","7","num"],["8","","append","8","num"],["9","","append","9","num"],["DEL","","delete","","danger"],["AC","","clear","","danger"],["4","","append","4","num"],["5","","append","5","num"],["6","","append","6","num"],["×","","append","*","op"],["÷","","append","/","op"],["1","","append","1","num"],["2","","append","2","num"],["3","","append","3","num"],["+","","append","+","op"],["−","","append","-","op"],["0","","append","0","num"],[".","","append",".","num"],["×10ˣ","","append","*10^","op"],["=","","equals","","eq"],["⌫","","delete","","op"]];
-const sup={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"},pretty=s=>s.replace(/\^([0-9])/g,(_,d)=>sup[d]||("^"+d)).replace(/\*/g,"×").replace(/\bpi\b/gi,"π");
-function tok(src){let o=[],i=0;src=src.replaceAll("×","*").replaceAll("÷","/").replaceAll("−","-");while(i<src.length){let c=src[i];if(/\s/.test(c)){i++;continue}if(/[0-9.]/.test(c)){let st=i++;while(i<src.length&&/[0-9.]/.test(src[i]))i++;o.push(["n",Number(src.slice(st,i))]);continue}if(/[A-Za-zπ]/.test(c)){let st=i++;while(i<src.length&&/[A-Za-z0-9_π]/.test(src[i]))i++;o.push(["i",src.slice(st,i).toLowerCase()]);continue}if("+-*/^!".includes(c)){o.push(["o",c]);i++;continue}if(c==="("||c===")"||c===","){o.push([c,c]);i++;continue}throw Error("INVALID_EXPRESSION")}o.push(["e",""]);return o}
-function evalMath(src){let t=tok(src),p=0,peek=()=>t[p],take=()=>t[p++];const fact=n=>{if(!Number.isInteger(n)||n<0||n>170)throw Error("DOMAIN_ERROR");let r=1;for(let i=2;i<=n;i++)r*=i;return r};function call(n,a){let x=a[0],tr=v=>angle==="DEG"?v*Math.PI/180:v,fr=v=>angle==="DEG"?v*180/Math.PI:v;if(n==="pi")return Math.PI;if(n==="e")return Math.E;if(n==="sin")return Math.sin(tr(x));if(n==="cos")return Math.cos(tr(x));if(n==="tan")return Math.tan(tr(x));if(n==="asin")return fr(Math.asin(x));if(n==="acos")return fr(Math.acos(x));if(n==="atan")return fr(Math.atan(x));if(n==="log"){if(x<=0)throw Error("DOMAIN_ERROR");return Math.log10(x)}if(n==="ln"){if(x<=0)throw Error("DOMAIN_ERROR");return Math.log(x)}if(n==="sqrt"){if(x<0)throw Error("DOMAIN_ERROR");return Math.sqrt(x)}if(n==="abs")return Math.abs(x);if(n==="exp")return Math.exp(x);if(n==="pow10")return 10**x;if(n==="ncr"||n==="npr"){let N=a[0],R=a[1];if(!Number.isInteger(N)||!Number.isInteger(R)||R<0||R>N)throw Error("DOMAIN_ERROR");if(n==="npr"){let z=1;for(let i=0;i<R;i++)z*=N-i;return z}R=Math.min(R,N-R);let z=1;for(let i=1;i<=R;i++)z=z*(N-R+i)/i;return z}if(n==="root"){let N=a[0],X=a[1];if(!N)throw Error("DOMAIN_ERROR");return X<0&&Math.abs(N%2)===1?-Math.pow(-X,1/N):Math.pow(X,1/N)}throw Error("UNSUPPORTED_OPERATION")}
-function pri(){let x=take();if(x[0]==="n")return x[1];if(x[0]==="("){let v=add();if(take()[0]!==")")throw Error("INVALID_EXPRESSION");return v}if(x[0]==="i"){if((x[1]==="pi"||x[1]==="e")&&peek()[0]!=="(")return call(x[1],[]);if(take()[0]!=="(")throw Error("INVALID_EXPRESSION");let a=[add()];while(peek()[0]===","){take();a.push(add())}if(take()[0]!==")")throw Error("INVALID_EXPRESSION");return call(x[1],a)}throw Error("INVALID_EXPRESSION")}function post(){let v=pri();while(peek()[0]==="o"&&peek()[1]==="!"){take();v=fact(v)}return v}function un(){if(peek()[0]==="o"&&["+","-"].includes(peek()[1])){let o=take()[1],v=un();return o==="-"?-v:v}return post()}function pow(){let l=un();if(peek()[0]==="o"&&peek()[1]==="^"){take();l=Math.pow(l,pow())}return l}function mul(){let l=pow();while(peek()[0]==="o"&&["*","/"].includes(peek()[1])){let o=take()[1],r=pow();if(o==="/"&&r===0)throw Error("DIVISION_BY_ZERO");l=o==="*"?l*r:l/r}return l}function add(){let l=mul();while(peek()[0]==="o"&&["+","-"].includes(peek()[1])){let o=take()[1],r=mul();l=o==="+"?l+r:l-r}return l}let v=add();if(peek()[0]!=="e")throw Error("INVALID_EXPRESSION");if(!Number.isFinite(v))throw Error("DOMAIN_ERROR");return String(Number(v.toPrecision(14)))}
-function render(){$("#expr").textContent=expression||"0";$("#result").textContent=result;$("#statusAngle").textContent=angle;$("#angleBtn").textContent=angle;$("#shiftStatus").classList.toggle("on",shift);$("#alphaStatus").classList.toggle("on",alpha);$("#shiftBtn").classList.toggle("activeShift",shift);$("#alphaBtn").classList.toggle("activeAlpha",alpha)}
-function hist(){let h=$("#historyList");h.innerHTML=history.length?"":"<p>لا توجد عمليات بعد.</p>";history.forEach(i=>{let b=document.createElement("button");b.className="historyItem";b.innerHTML="<span>"+i.e.replace(/[<>&]/g,"")+"</span><strong>= "+i.r+"</strong>";b.onclick=()=>{expression=i.r;result=i.r;render()};h.appendChild(b)})}
+(()=>{
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let expression="",result="0",ans="0",memory="0",angle="DEG",shift=false,alpha=false,history=[];
+
+const sci=[
+["x⁻¹","x!","inverse"],["√","x²","sqrt"],["xʸ","ⁿ√x","power"],["log","10ˣ","fn","log"],["ln","eˣ","fn","ln"],["(-)","","append","-"],
+["sin","sin⁻¹","fn","sin"],["cos","cos⁻¹","fn","cos"],["tan","tan⁻¹","fn","tan"],["π","e","constant","pi"],["nCr","nPr","combin"],["Abs","","fn","abs"],
+["S⇔D","","fraction"],["ENG","","eng"],["EXP","","constant","e"],["STO","M+","store"],["RCL","","recall"],["Ans","","ans"]
+];
+const nums=[
+["7","","append","7","num"],["8","","append","8","num"],["9","","append","9","num"],["DEL","","delete","","danger"],["AC","","clear","","danger"],
+["4","","append","4","num"],["5","","append","5","num"],["6","","append","6","num"],["×","","append","*","op"],["÷","","append","/","op"],
+["1","","append","1","num"],["2","","append","2","num"],["3","","append","3","num"],["+","","append","+","op"],["−","","append","-","op"],
+["0","","append","0","num"],[".","","append",".","num"],["×10ˣ","","append","*10^","op"],["Ans","","ans","","op"],["=","","equals","","eq"]
+];
+
+const sup={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+const pretty=s=>s.replace(/\^([0-9])/g,(_,d)=>sup[d]||("^"+d)).replace(/\*/g,"×").replace(/\bpi\b/gi,"π");
+
+function tok(src){
+  let o=[],i=0;src=src.replaceAll("×","*").replaceAll("÷","/").replaceAll("−","-");
+  while(i<src.length){
+    let c=src[i];
+    if(/\s/.test(c)){i++;continue}
+    if(/[0-9.]/.test(c)){let st=i++;while(i<src.length&&/[0-9.]/.test(src[i]))i++;o.push(["n",Number(src.slice(st,i))]);continue}
+    if(/[A-Za-zπ]/.test(c)){let st=i++;while(i<src.length&&/[A-Za-z0-9_π]/.test(src[i]))i++;o.push(["i",src.slice(st,i).toLowerCase()]);continue}
+    if("+-*/^!".includes(c)){o.push(["o",c]);i++;continue}
+    if(c==="("||c===")"||c===","){o.push([c,c]);i++;continue}
+    throw Error("INVALID_EXPRESSION")
+  }
+  o.push(["e",""]);return o
+}
+
+function evalMath(src){
+  let t=tok(src),p=0,peek=()=>t[p],take=()=>t[p++];
+  const fact=n=>{if(!Number.isInteger(n)||n<0||n>170)throw Error("DOMAIN_ERROR");let r=1;for(let i=2;i<=n;i++)r*=i;return r};
+  function call(n,a){
+    let x=a[0],tr=v=>angle==="DEG"?v*Math.PI/180:v,fr=v=>angle==="DEG"?v*180/Math.PI:v;
+    if(n==="pi")return Math.PI;if(n==="e")return Math.E;
+    if(n==="sin")return Math.sin(tr(x));if(n==="cos")return Math.cos(tr(x));if(n==="tan")return Math.tan(tr(x));
+    if(n==="asin")return fr(Math.asin(x));if(n==="acos")return fr(Math.acos(x));if(n==="atan")return fr(Math.atan(x));
+    if(n==="log"){if(x<=0)throw Error("DOMAIN_ERROR");return Math.log10(x)}
+    if(n==="ln"){if(x<=0)throw Error("DOMAIN_ERROR");return Math.log(x)}
+    if(n==="sqrt"){if(x<0)throw Error("DOMAIN_ERROR");return Math.sqrt(x)}
+    if(n==="abs")return Math.abs(x);if(n==="exp")return Math.exp(x);if(n==="pow10")return 10**x;
+    if(n==="ncr"||n==="npr"){let N=a[0],R=a[1];if(!Number.isInteger(N)||!Number.isInteger(R)||R<0||R>N)throw Error("DOMAIN_ERROR");if(n==="npr"){let z=1;for(let i=0;i<R;i++)z*=N-i;return z}R=Math.min(R,N-R);let z=1;for(let i=1;i<=R;i++)z=z*(N-R+i)/i;return z}
+    if(n==="root"){let N=a[0],X=a[1];if(!N)throw Error("DOMAIN_ERROR");return X<0&&Math.abs(N%2)===1?-Math.pow(-X,1/N):Math.pow(X,1/N)}
+    throw Error("UNSUPPORTED_OPERATION")
+  }
+  function pri(){let x=take();if(x[0]==="n")return x[1];if(x[0]==="("){let v=add();if(take()[0]!==")")throw Error("INVALID_EXPRESSION");return v}if(x[0]==="i"){if((x[1]==="pi"||x[1]==="e")&&peek()[0]!=="(")return call(x[1],[]);if(take()[0]!=="(")throw Error("INVALID_EXPRESSION");let a=[add()];while(peek()[0]===","){take();a.push(add())}if(take()[0]!==")")throw Error("INVALID_EXPRESSION");return call(x[1],a)}throw Error("INVALID_EXPRESSION")}
+  function post(){let v=pri();while(peek()[0]==="o"&&peek()[1]==="!"){take();v=fact(v)}return v}
+  function un(){if(peek()[0]==="o"&&["+","-"].includes(peek()[1])){let o=take()[1],v=un();return o==="-"?-v:v}return post()}
+  function pow(){let l=un();if(peek()[0]==="o"&&peek()[1]==="^"){take();l=Math.pow(l,pow())}return l}
+  function mul(){let l=pow();while(peek()[0]==="o"&&["*","/"].includes(peek()[1])){let o=take()[1],r=pow();if(o==="/"&&r===0)throw Error("DIVISION_BY_ZERO");l=o==="*"?l*r:l/r}return l}
+  function add(){let l=mul();while(peek()[0]==="o"&&["+","-"].includes(peek()[1])){let o=take()[1],r=mul();l=o==="+"?l+r:l-r}return l}
+  let v=add();if(peek()[0]!=="e")throw Error("INVALID_EXPRESSION");if(!Number.isFinite(v))throw Error("DOMAIN_ERROR");
+  return String(Number(v.toPrecision(14)))
+}
+
+function decimalToFraction(value){
+  const n=Number(value);if(!Number.isFinite(n))return value;
+  if(Number.isInteger(n))return String(n);
+  let bestN=0,bestD=1,bestErr=Infinity;
+  for(let d=1;d<=1000;d++){const num=Math.round(n*d),err=Math.abs(n-num/d);if(err<bestErr){bestErr=err;bestN=num;bestD=d}if(err<1e-10)break}
+  return bestErr<1e-7?bestN+"/"+bestD:value
+}
+
+function render(){
+  $("#expr").textContent=expression||"0";$("#result").textContent=result;$("#statusAngle").textContent=angle;$("#angleBtn").textContent=angle;
+  $("#shiftStatus").classList.toggle("on",shift);$("#alphaStatus").classList.toggle("on",alpha);
+  $("#shiftBtn").classList.toggle("shiftOn",shift);$("#alphaBtn").classList.toggle("alphaOn",alpha)
+}
+function hist(){
+  let h=$("#historyList");h.innerHTML=history.length?"":"<p>لا توجد عمليات بعد.</p>";
+  history.forEach(i=>{let b=document.createElement("button");b.className="historyItem";b.innerHTML="<span>"+i.e.replace(/[<>&]/g,"")+"</span><strong>= "+i.r+"</strong>";b.onclick=()=>{expression=i.r;result=i.r;render()};h.appendChild(b)})
+}
 function fn(n){let m={sin:"asin",cos:"acos",tan:"atan",log:"pow10",ln:"exp",sqrt:"sqrt",abs:"abs"};expression+=(shift?(m[n]||n):n)+"(";shift=false}
-function act(label,cmd,val){if(cmd==="append")expression+=val;else if(cmd==="clear"){expression="";result="0"}else if(cmd==="delete")expression=expression.slice(0,-1);else if(cmd==="fn")fn(val);else if(cmd==="inverse"){if(shift){expression+="!";shift=false}else expression+="^(-1)"}else if(cmd==="sqrt"){if(shift){expression+="^2";shift=false}else fn("sqrt")}else if(cmd==="power"){if(shift){expression+="root(";shift=false}else expression+="^"}else if(cmd==="constant"){expression+=(shift&&label==="π")?"e":val;shift=false}else if(cmd==="combin"){expression+=shift?"nPr(":"nCr(";shift=false}else if(cmd==="ans")expression+=ans;else if(cmd==="store")memory=result;else if(cmd==="recall")expression+=memory;else if(cmd==="equals"){try{result=evalMath(expression);ans=result;history.unshift({e:expression,r:result});history=history.slice(0,12);hist()}catch(e){result=e.message||"Math Error"}}render()}
-function key(k,s){let [l,sm,c,v,kind]=k,b=document.createElement("button");b.className="key "+(s?"fnKey":kind==="num"?"numKey":kind==="danger"?"dangerKey":kind==="eq"?"eqKey":"opKey");b.innerHTML="<small>"+(sm||"&nbsp;")+"</small><span>"+l+"</span>";b.onclick=()=>act(l,c,v);return b}sci.forEach(k=>$("#scientificKeys").appendChild(key(k,1)));nums.forEach(k=>$("#numericKeys").appendChild(key(k,0)));
-$("#shiftBtn").onclick=()=>{shift=!shift;render()};$("#alphaBtn").onclick=()=>{alpha=!alpha;render()};$("#angleKey").onclick=$("#angleBtn").onclick=()=>{angle=angle==="DEG"?"RAD":"DEG";render()};$$("[data-insert]").forEach(b=>b.onclick=()=>{expression+=b.dataset.insert;render()});$("#advancedBtn").onclick=()=>$$("[data-tab]")[1].click();$("#historyBtn").onclick=()=>$(".side").scrollIntoView({behavior:"smooth"});
-let lang="ar";$("#langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";$("#langBtn").textContent=lang==="ar"?"EN":"AR";$("#title").textContent=lang==="ar"?"الحاسبة العلمية":"Scientific Calculator"};$$("[data-tab]").forEach(b=>b.onclick=()=>{$$("[data-tab]").forEach(x=>x.classList.remove("active"));b.classList.add("active");$$(".section").forEach(s=>s.classList.remove("active"));$("#"+b.dataset.tab).classList.add("active")});
-const mi=$("#mathInput"),mr=$("#rendered"),rmath=()=>mr.textContent=pretty(mi.value);mi.oninput=rmath;[["x²","^2"],["xⁿ","^"],["√","sqrt("],["π","pi"],["sin","sin("],["cos","cos("],["tan","tan("],["log","log("],["ln","ln("],["∫","int("],["Σ","sum("],["(", "("],[")",")"],["=","="]].forEach(([l,t])=>{let b=document.createElement("button");b.textContent=l;b.onclick=()=>{mi.value+=t;rmath()};$("#palette").appendChild(b)});
-function img(f){if(!f)return;$("#preview").src=URL.createObjectURL(f);$("#preview").hidden=false;$("#review").hidden=false;$("#scanText").value="";$("#solverNotice").hidden=false;$("#solverNotice").textContent="تم التقاط الصورة. Math Recognition الحقيقي غير مهيأ بعد؛ صحح المعادلة يدويًا ثم أكدها."}$("#upload").onchange=e=>img(e.target.files[0]);$("#camera").onchange=e=>img(e.target.files[0]);$("#confirmScan").onclick=()=>{let v=$("#scanText").value.trim();if(v){mi.value=v;rmath();$("#solverNotice").hidden=false;$("#solverNotice").textContent="تم تأكيد المعادلة وأصبحت جاهزة للإرسال إلى Solver Provider."}};$("#solveBtn").onclick=()=>{$("#solverNotice").hidden=false;$("#solverNotice").textContent="الحاسبة المحلية تعمل. Advanced Solver سيعمل بعد ربط مزود حل رمزي على الخادم."};render();hist();rmath()})();
-</script></body></html>
+function alphaValue(label){const map={sin:"x",cos:"y",tan:"z",log:"A",ln:"B",π:"C"};return map[label]||null}
+
+function act(label,cmd,val){
+  if(alpha){const av=alphaValue(label);if(av){expression+=av;alpha=false;render();return}}
+  if(cmd==="append")expression+=val;
+  else if(cmd==="clear"){expression="";result="0";ans="0"}
+  else if(cmd==="delete")expression=expression.slice(0,-1);
+  else if(cmd==="fn")fn(val);
+  else if(cmd==="inverse"){if(shift){expression+="!";shift=false}else expression+="^(-1)"}
+  else if(cmd==="sqrt"){if(shift){expression+="^2";shift=false}else fn("sqrt")}
+  else if(cmd==="power"){if(shift){expression+="root(";shift=false}else expression+="^"}
+  else if(cmd==="constant"){expression+=(shift&&label==="π")?"e":val;shift=false}
+  else if(cmd==="combin"){expression+=shift?"nPr(":"nCr(";shift=false}
+  else if(cmd==="fraction"){result=decimalToFraction(result)}
+  else if(cmd==="eng")expression+="*10^"
+  else if(cmd==="ans")expression+=ans;
+  else if(cmd==="store")memory=result;
+  else if(cmd==="recall")expression+=memory;
+  else if(cmd==="equals"){try{result=evalMath(expression);ans=result;history.unshift({e:expression,r:result});history=history.slice(0,12);hist()}catch(e){result=e.message||"Math Error"}}
+  render()
+}
+
+function key(k,scientific){
+  let [l,sm,c,v,kind]=k,b=document.createElement("button");
+  b.type="button";b.className="key "+(scientific?"fnKey":kind==="num"?"numKey":kind==="danger"?"dangerKey":kind==="eq"?"eqKey":"opKey");
+  b.innerHTML="<small>"+(sm||"&nbsp;")+"</small><span>"+l+"</span>";
+  b.onclick=()=>act(l,c,v);return b
+}
+sci.forEach(k=>$("#scientificKeys").appendChild(key(k,true)));nums.forEach(k=>$("#numericKeys").appendChild(key(k,false)));
+
+$("#shiftBtn").onclick=()=>{shift=!shift;render()};
+$("#alphaBtn").onclick=()=>{alpha=!alpha;render()};
+$("#modeBtn").onclick=()=>{angle=angle==="DEG"?"RAD":"DEG";render()};
+$("#setupBtn").onclick=()=>$("#langBtn").click();
+$("#onBtn").onclick=()=>{expression="";result="0";shift=false;alpha=false;render()};
+$("#angleBtn").onclick=()=>{angle=angle==="DEG"?"RAD":"DEG";render()};
+
+let lang="ar";
+$("#langBtn").onclick=()=>{lang=lang==="ar"?"en":"ar";document.documentElement.lang=lang;document.documentElement.dir=lang==="ar"?"rtl":"ltr";$("#langBtn").textContent=lang==="ar"?"EN":"AR";$("#title").textContent=lang==="ar"?"الحاسبة العلمية":"Scientific Calculator"};
+
+$$("[data-tab]").forEach(b=>b.onclick=()=>{$$("[data-tab]").forEach(x=>x.classList.remove("active"));b.classList.add("active");$$(".section").forEach(s=>s.classList.remove("active"));$("#"+b.dataset.tab).classList.add("active")});
+
+const mi=$("#mathInput"),mr=$("#rendered"),rmath=()=>mr.textContent=pretty(mi.value);
+mi.oninput=rmath;
+[["x²","^2"],["xⁿ","^"],["√","sqrt("],["π","pi"],["sin","sin("],["cos","cos("],["tan","tan("],["log","log("],["ln","ln("],["∫","int("],["Σ","sum("],["(", "("],[")",")"],["=","="]].forEach(([l,t])=>{let b=document.createElement("button");b.type="button";b.textContent=l;b.onclick=()=>{mi.value+=t;rmath()};$("#palette").appendChild(b)});
+
+function img(f){if(!f)return;$("#preview").src=URL.createObjectURL(f);$("#preview").hidden=false;$("#review").hidden=false;$("#scanText").value="";$("#solverNotice").hidden=false;$("#solverNotice").textContent="تم التقاط الصورة. Math Recognition الحقيقي غير مهيأ بعد؛ صحح المعادلة يدويًا ثم أكدها."}
+$("#upload").onchange=e=>img(e.target.files[0]);$("#camera").onchange=e=>img(e.target.files[0]);
+$("#confirmScan").onclick=()=>{let v=$("#scanText").value.trim();if(v){mi.value=v;rmath();$("#solverNotice").hidden=false;$("#solverNotice").textContent="تم تأكيد المعادلة وأصبحت جاهزة للإرسال إلى Solver Provider."}};
+$("#solveBtn").onclick=()=>{$("#solverNotice").hidden=false;$("#solverNotice").textContent="الحاسبة المحلية تعمل. Advanced Solver سيعمل بعد ربط مزود حل رمزي على الخادم."};
+
+render();hist();rmath();
+})();
+</script>
+</body>
+</html>
