@@ -38,7 +38,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+keyMarkup(controlMap.get("ON"))+'</div></div>'+
-    '<div class="scientific-grid">'+scientific.map(keyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+'</section>';
+    '<div class="scientific-grid">'+scientific.map(keyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</section>';
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
