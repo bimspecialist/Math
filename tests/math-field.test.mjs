@@ -30,3 +30,10 @@ test("keyboard slash and FRAC command create equivalent structures", () => {
   const a = new MathFieldAdapter(); a.insertFraction(); const b = new MathFieldAdapter(); b.insertKeyboard("/");
   assert.equal(a.renderHtml(), b.renderHtml()); assert.equal(a.getCanonicalExpression(), b.getCanonicalExpression());
 });
+
+test("power key wraps the existing base and focuses the exponent", () => {
+  const f = new MathFieldAdapter(); f.insertText("2"); f.insertPower(); f.insertText("3");
+  assert.equal(f.focusSlot(), "exponent");
+  assert.equal(f.getCanonicalExpression(), "(2)^(3)");
+  assert.match(f.renderHtml(), /math-power/);
+});
