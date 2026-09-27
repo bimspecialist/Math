@@ -31,3 +31,20 @@ test("unknown command ids fail validation", () => {
   const broken = KEY_CONTRACT.map((k, i) => i === 0 ? {...k, primaryAction:"UNKNOWN_CMD"} : k);
   assert.match(validateKeyContract(broken, ES_PLUS_PROFILE).join("\n"), /unknown/i);
 });
+
+test("physical divide remains division while FRAC owns the vertical template", () => {
+  const divide = KEY_CONTRACT.find(k => k.id === "DIVIDE");
+  const frac = KEY_CONTRACT.find(k => k.id === "FRAC");
+  assert.equal(divide.primaryAction, "INSERT_TOKEN");
+  assert.equal(divide.expressionTemplate, "/");
+  assert.equal(frac.primaryAction, "INSERT_FRACTION");
+});
+
+test("verified ALPHA variable legends are mapped on the classic profile keys", () => {
+  const expected = {NEGATE:"A",DMS:"B",HYP:"C",SIN:"D",COS:"E",TAN:"F",RPAREN:"X",S_D:"Y",M_PLUS:"M",CALC:"="};
+  for (const [id,label] of Object.entries(expected)) {
+    const key = KEY_CONTRACT.find(k => k.id === id);
+    assert.equal(key.alphaLabel, label, `${id} alpha legend`);
+    assert.ok(key.alphaAction, `${id} alpha action`);
+  }
+});
