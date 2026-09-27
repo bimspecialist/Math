@@ -174,29 +174,29 @@ This inventory is based on the user's reference image and the official fx-991ES 
 
 | ID | Primary | SHIFT / secondary requirement |
 |---|---|---|
-| FRAC | vertical fraction template | mixed-fraction template or approved alternate |
+| FRAC | vertical fraction template | mixed-fraction template |
 | SQRT | √ | square |
-| SQUARE | x² | inverse relation documented in contract |
+| SQUARE | x² | no secondary legend until verified |
 | POWER | x^y | nth-root |
 | LOG | log | 10^x |
 | LN | ln | e^x |
 | INVERSE | x⁻¹ | factorial |
-| NEGATE | (-) | secondary per final inventory |
-| DMS | °′″ | approved secondary |
+| NEGATE | (-) | no secondary legend until verified |
+| DMS | °′″ | no secondary legend until verified |
 | HYP | hyp | hyperbolic function state |
 | SIN | sin | sin⁻¹ |
 | COS | cos | cos⁻¹ |
 | TAN | tan | tan⁻¹ |
 | NCR | nCr | nPr |
-| ABS | Abs | approved secondary |
-| RCL | RCL | STO where appropriate |
-| ENG | ENG | reverse engineering notation where applicable |
-| LPAREN | ( | secondary/alpha mapping as approved |
-| RPAREN | ) | secondary/alpha mapping as approved |
+| ABS | Abs | no secondary legend until verified |
+| RCL | RCL | STO is a separate state/action; do not infer an alternate legend |
+| ENG | ENG | no secondary legend until verified |
+| LPAREN | ( | no secondary/alpha legend until verified |
+| RPAREN | ) | no secondary/alpha legend until verified |
 | S_D | S↔D | mixed ↔ improper conversion via SHIFT |
-| M_PLUS | M+ | M− / memory alternate as approved |
-| EXP | ×10^x / EXP | π/e mapping as approved |
-| ANS | Ans | percent / approved alternate |
+| M_PLUS | M+ | no secondary legend until verified |
+| EXP | ×10^x / EXP | no secondary/alpha legend until verified |
+| ANS | Ans | no secondary legend until verified |
 
 ### Numeric/operation area
 
@@ -245,7 +245,7 @@ ALPHA:
 - AC clears ALPHA;
 - pressing ALPHA again cancels it.
 
-The exact variable map is documented in the key contract and must not be inferred ad hoc inside click handlers.
+The exact variable map must be verified from the approved reference before its legends are rendered. Unverified ALPHA legends are omitted rather than guessed. The mapping must never be inferred ad hoc inside click handlers.
 
 ## 8. Display behavior
 
@@ -420,7 +420,7 @@ If any mandatory gate fails, status is BLOCKED.
 
 ## 13. Implementation order
 
-1. Freeze approved key inventory.
+1. Freeze approved primary key inventory and verify every displayed SHIFT/ALPHA legend against the reference/manual before rendering it.
 2. Add KeyContract and completeness tests.
 3. Add MathFieldAdapter behind a test double.
 4. Implement vertical fraction template.
