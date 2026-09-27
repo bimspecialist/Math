@@ -16,6 +16,7 @@ function keyMarkup(key){
   const alpha=key.alphaLabel?'<span class="alpha-legend">'+esc(key.alphaLabel)+'</span>':"";
   return '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+'" aria-label="'+esc(key.accessibilityName)+'">'+shift+alpha+'<span class="primary-label">'+primaryMarkup(key)+'</span></button>';
 }
+function promptMarkup(view){const prompt=view.state.prompt;if(!prompt)return "";const variable=prompt.variables?.[prompt.index]??"X";return '<div class="calculator-prompt" role="dialog" aria-label="'+esc(prompt.kind)+'"><strong>'+esc(prompt.kind)+'</strong><div data-prompt-variable="'+esc(variable)+'">'+esc(variable)+' = ?</div></div>'}
 function menuMarkup(view){
   const menu=view.state.menu;if(!menu)return "";
   if(menu.id==="MODE")return '<div class="calculator-menu" role="dialog" aria-label="Mode"><div class="menu-title">MODE</div><div class="menu-list">'+menu.choices.map(c=>'<button type="button" data-mode-id="'+c.id+'" class="menu-item">'+c.number+': '+esc(c.label)+'</button>').join("")+'</div><button type="button" data-menu-cancel class="menu-cancel">AC / Back</button></div>';
