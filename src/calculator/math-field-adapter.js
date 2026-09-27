@@ -6,7 +6,7 @@ export class MathFieldAdapter{
  insertKeyboard(key){if(key==="/")this.insertFraction();else this.insertText(key)}
  insertFraction(){const node=fractionNode();this.current.push(node);this.stack.push({node,parent:this.current,type:"fraction"});this.current=node.numerator;this.slotName="numerator"}
  insertMixedFraction(){const node=mixedFractionNode();this.current.push(node);this.stack.push({node,parent:this.current,type:"mixedFraction"});this.current=node.integer;this.slotName="integer"}
- insertPower(){const node=powerNode();this.current.push(node);this.stack.push({node,parent:this.current,type:"power"});this.current=node.base;this.slotName="base"}
+ insertPower(){const parent=this.current,base=parent.splice(0,parent.length),node=powerNode();node.base.push(...base);parent.push(node);this.stack.push({node,parent,type:"power"});this.current=node.exponent;this.slotName="exponent"}
  insertSquareRoot(){const node=sqrtNode();this.current.push(node);this.stack.push({node,parent:this.current,type:"sqrt"});this.current=node.radicand;this.slotName="radicand"}
  insertNthRoot(){const node=nthRootNode();this.current.push(node);this.stack.push({node,parent:this.current,type:"nthRoot"});this.current=node.index;this.slotName="index"}
  top(){return this.stack[this.stack.length-1]}
