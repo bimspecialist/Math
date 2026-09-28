@@ -39,7 +39,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
   const scientific=KEY_CONTRACT.filter(k=>!controlIds.has(k.id)&&!navIds.includes(k.id)&&!numericIds.has(k.id));
   const numeric=KEY_CONTRACT.filter(k=>numericIds.has(k.id));
   const nav=navIds.map(id=>keyById.get(id)).filter(Boolean);
-  return '<section class="calculator-shell" dir="'+dir+'">'+
+  return '<section class="calculator-shell" dir="'+dir+'"><div class="calculator-face" dir="ltr">'+
     '<div class="calculator-brand"><div><strong>Math Scientific</strong><small>Natural Display</small></div><span>CLASSIC</span></div>'+
     '<div class="calculator-display"><div class="display-status" dir="ltr">'+
       '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.state.mode)+'</span></div>'+
@@ -48,7 +48,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+'</div></div>'+
-    '<div class="scientific-grid">'+scientific.map(scientificKeyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</section>';
+    '<div class="scientific-grid">'+scientific.map(scientificKeyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
