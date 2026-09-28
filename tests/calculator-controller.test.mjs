@@ -22,3 +22,13 @@ test("DMS converts a decimal result to sexagesimal display and toggles back",()=
 test("CALC accepts prompted variable values and evaluates the stored expression",()=>{const c=new CalculatorController();c.dispatch("ALPHA");c.dispatch("RPAREN");c.dispatch("ADD");c.dispatch("DIGIT_1");c.dispatch("CALC");assert.equal(c.view().state.prompt?.kind,"CALC");c.dispatch("DIGIT_5");c.dispatch("EQUALS");assert.equal(c.view().state.prompt,null);assert.equal(c.view().result,"6")});
 test("SOLVE accepts an initial X value and numerically solves a one-variable equality",()=>{const c=new CalculatorController();c.dispatch("ALPHA");c.dispatch("RPAREN");c.dispatch("MULTIPLY");c.dispatch("ALPHA");c.dispatch("RPAREN");c.dispatch("ALPHA");c.dispatch("CALC");c.dispatch("DIGIT_4");c.dispatch("SHIFT");c.dispatch("CALC");assert.equal(c.view().state.prompt?.kind,"SOLVE");c.dispatch("DIGIT_1");c.dispatch("EQUALS");assert.equal(c.view().state.prompt,null);assert.ok(Math.abs(Number(c.view().result)-2)<1e-8)});
 test("ENG formats a displayed result in engineering notation and repeated presses shift by three powers",()=>{const c=new CalculatorController();["DIGIT_1","DIGIT_2","DIGIT_3","DIGIT_4","EQUALS"].forEach(k=>c.dispatch(k));c.dispatch("ENG");assert.equal(c.view().result,"1.234×10^3");c.dispatch("ENG");assert.equal(c.view().result,"1234×10^0")});
+
+
+test("history recall preserves structured Natural Display instead of flattening to text",()=> {
+  const x=new CalculatorController();
+  x.dispatch("FRAC");x.dispatch("DIGIT_1");x.dispatch("REPLAY_DOWN");x.dispatch("DIGIT_2");x.dispatch("EQUALS");
+  x.dispatch("AC");
+  x.dispatch("REPLAY_UP");
+  assert.equal(x.view().canonicalExpression,"(1)/(2)");
+  assert.match(x.view().mathHtml,/math-fraction/);
+});
