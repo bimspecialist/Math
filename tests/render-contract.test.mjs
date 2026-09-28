@@ -13,3 +13,6 @@ test("keyboard arrows map to REPLAY navigation without changing canonical token 
 test("controller exposes menu selections for UI without label-based dispatch",()=>{const c=new CalculatorController();c.dispatch("MODE");assert.equal(c.view().state.menu?.id,"MODE");assert.equal(c.selectMode("COMP"),true);c.dispatch("SHIFT");c.dispatch("MODE");assert.equal(c.selectSetup("ANGLE","RAD"),true);assert.equal(c.view().state.angleMode,"RAD")});
 
 test("CALC prompt is rendered visibly when controller enters prompt state",()=>{const x=new CalculatorController();x.dispatch("ALPHA");x.dispatch("RPAREN");x.dispatch("ADD");x.dispatch("DIGIT_1");x.dispatch("CALC");const html=renderCalculatorMarkup(x.view(),"en");assert.match(html,/calculator-prompt/);assert.match(html,/data-prompt-variable="X"/)});
+
+test("web face omits the unnecessary hardware ON key",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");assert.doesNotMatch(html,/data-key-id="ON"/)});
+test("REPLAY left and right controls keep physical LTR placement in Arabic UI",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");assert.match(html,/class="replay-left"><button[^>]*data-key-id="REPLAY_LEFT"/);assert.match(html,/class="replay-right"><button[^>]*data-key-id="REPLAY_RIGHT"/)});
