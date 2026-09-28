@@ -16,6 +16,16 @@ function keyMarkup(key){
   const alpha=key.alphaLabel?'<span class="alpha-legend">'+esc(key.alphaLabel)+'</span>':"";
   return '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+'" aria-label="'+esc(key.accessibilityName)+'">'+shift+alpha+'<span class="primary-label">'+primaryMarkup(key)+'</span></button>';
 }
+function scientificKeyMarkup(key){
+  const shift=key.shiftLabel?'<span class="key-legend key-legend-shift">'+esc(key.shiftLabel)+'</span>':'<span class="key-legend key-legend-shift empty" aria-hidden="true"></span>';
+  const alpha=key.alphaLabel?'<span class="key-legend key-legend-alpha">'+esc(key.alphaLabel)+'</span>':'<span class="key-legend key-legend-alpha empty" aria-hidden="true"></span>';
+  return '<div class="scientific-key-cell">'+
+    '<div class="key-legend-row" aria-hidden="true">'+shift+alpha+'</div>'+
+    '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+' scientific-key-button" aria-label="'+esc(key.accessibilityName)+'">'+
+      '<span class="primary-label">'+primaryMarkup(key)+'</span>'+
+    '</button>'+
+  '</div>';
+}
 function promptMarkup(view){const prompt=view.state.prompt;if(!prompt)return "";const variable=prompt.variables?.[prompt.index]??"X";return '<div class="calculator-prompt" role="dialog" aria-label="'+esc(prompt.kind)+'"><strong>'+esc(prompt.kind)+'</strong><div data-prompt-variable="'+esc(variable)+'">'+esc(variable)+' = ?</div></div>'}
 function menuMarkup(view){
   const menu=view.state.menu;if(!menu)return "";
@@ -38,7 +48,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+keyMarkup(controlMap.get("ON"))+'</div></div>'+
-    '<div class="scientific-grid">'+scientific.map(keyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</section>';
+    '<div class="scientific-grid">'+scientific.map(scientificKeyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</section>';
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
