@@ -245,3 +245,15 @@
   .numeric-grid .role-number .primary-label{font-size:1.08em}
   .numeric-grid .role-operator .primary-label{font-size:1.04em}
 }
+
+/* Exact results use textbook-style vertical fractions, matching traditional scientific calculators. */
+.math-result{display:flex;align-items:center;justify-content:flex-end;gap:.2em}
+.result-fraction{display:inline-grid;grid-template-rows:auto auto;min-width:1.5em;vertical-align:middle;text-align:center;line-height:1.02}
+.result-numerator,.result-denominator{display:block;padding:.03em .18em}
+.result-denominator{border-top:2px solid currentColor}
+.result-mixed{display:inline-flex;align-items:center;gap:.22em}
+.result-whole{display:inline-block}
+@media(min-width:1200px){
+  .result-fraction{font-size:1.05em}
+  .result-denominator{border-top-width:2px}
+}
