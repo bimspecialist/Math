@@ -223,3 +223,25 @@
 @media(max-width:600px){
   .scientific-grid{column-gap:3px;row-gap:6px;margin-bottom:12px}
 }
+
+/* Comfort pass: reduce visual noise while preserving the physical calculator map. */
+.calculator-face{font-family:"Segoe UI",Arial,sans-serif}
+.scientific-grid{padding-top:2px;border-top:1px solid rgba(65,76,88,.14)}
+.numeric-grid{padding-top:14px;border-top:1px solid rgba(65,76,88,.2)}
+.role-function{background:#30353b;box-shadow:0 2px 0 rgba(0,0,0,.28)}
+.role-number{background:#f6f6f3;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.role-operator{background:#dce1e5;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.role-danger{background:#e88b54;box-shadow:0 2px 0 rgba(0,0,0,.22)}
+.role-equals{background:#5f86b3;box-shadow:0 2px 0 rgba(0,0,0,.22)}
+.calc-key:hover{filter:brightness(1.035)}
+.calc-key:active{transform:translateY(1px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.scientific-key-button .primary-label{font-family:Arial,"Segoe UI",sans-serif}
+.numeric-grid .primary-label{font-variant-numeric:tabular-nums;font-weight:800}
+.key-legend{font-family:Arial,"Segoe UI",sans-serif;line-height:1.12}
+.key-legend-shift{color:#6f5700}
+.key-legend-alpha{color:#962250}
+.control-side .primary-label{font-weight:800;letter-spacing:.015em}
+@media(min-width:1200px){
+  .numeric-grid .role-number .primary-label{font-size:1.08em}
+  .numeric-grid .role-operator .primary-label{font-size:1.04em}
+}
