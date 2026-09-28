@@ -16,6 +16,30 @@ export class MathFieldAdapter{
  moveLeft(){return this.moveUp()}
  _nameFor(frame,array){for(const k of["numerator","denominator","integer","base","exponent","radicand","index"])if(frame.node[k]===array)return k;return"root"}
  deleteBackward(){if(this.current.length){this.current.pop();return true}const f=this.top();if(!f)return false;const allEmpty=Object.values(f.node).filter(Array.isArray).every(a=>a.length===0);if(!allEmpty)return false;const ix=f.parent.indexOf(f.node);if(ix>=0)f.parent.splice(ix,1);this.stack.pop();this.current=f.parent;this.slotName=this.top()?this._nameFor(this.top(),this.current):"root";return true}
+ _focusPath(array,target,path=[]){
+  if(array===target)return path;
+  for(let i=0;i<array.length;i++){
+    const node=array[i];
+    for(const slot of ["numerator","denominator","integer","base","exponent","radicand","index"]){
+      if(!Array.isArray(node?.[slot]))continue;
+      const found=this._focusPath(node[slot],target,[...path,{index:i,slot}]);
+      if(found)return found;
+    }
+  }
+  return null
+ }
+ createSnapshot(){return{nodes:JSON.parse(JSON.stringify(this.root)),focusPath:this._focusPath(this.root,this.current)??[]}}
+ restoreSnapshot(snapshot){
+  this.root=JSON.parse(JSON.stringify(snapshot?.nodes??[]));this.current=this.root;this.stack=[];this.slotName="root";
+  let array=this.root;
+  for(const step of snapshot?.focusPath??[]){
+    const node=array?.[step.index];
+    if(!node||!Array.isArray(node[step.slot]))break;
+    this.stack.push({node,parent:array,type:node.type});
+    array=node[step.slot];this.slotName=step.slot;
+  }
+  this.current=array;return true
+ }
  getCanonicalExpression(){return serializeNodes(this.root)}
  setCanonicalExpression(source){this.root=[textNode(source??"")];this.current=this.root;this.stack=[];this.slotName="root"}
  renderHtml(){return renderNodes(this.root,this.current)}
