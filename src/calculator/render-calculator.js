@@ -33,6 +33,14 @@ function scientificKeyMarkup(key){
     '</button>'+
   '</div>';
 }
+function resultMarkup(value){
+  const s=String(value??"");
+  const mixed=s.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
+  if(mixed)return '<span class="result-mixed"><span class="result-whole">'+esc(mixed[1])+'</span><span class="result-fraction"><span class="result-numerator">'+esc(mixed[2])+'</span><span class="result-denominator">'+esc(mixed[3])+'</span></span></span>';
+  const frac=s.match(/^(-?\d+)\/(\d+)$/);
+  if(frac)return '<span class="result-fraction"><span class="result-numerator">'+esc(frac[1])+'</span><span class="result-denominator">'+esc(frac[2])+'</span></span>';
+  return esc(s);
+}
 function promptMarkup(view){const prompt=view.state.prompt;if(!prompt)return "";const variable=prompt.variables?.[prompt.index]??"X";return '<div class="calculator-prompt" role="dialog" aria-label="'+esc(prompt.kind)+'"><strong>'+esc(prompt.kind)+'</strong><div data-prompt-variable="'+esc(variable)+'">'+esc(variable)+' = ?</div></div>'}
 function menuMarkup(view){
   const menu=view.state.menu;if(!menu)return "";
@@ -41,7 +49,7 @@ function menuMarkup(view){
   return "";
 }
 export function renderCalculatorMarkup(view,locale="ar"){
-  const dir=locale==="ar"?"rtl":"ltr";
+  const dir="ltr";
   const controlMap=new Map(KEY_CONTRACT.filter(k=>controlIds.has(k.id)).map(k=>[k.id,k]));
   const scientific=scientificOrder.map(id=>keyById.get(id)).filter(Boolean);
   const numeric=KEY_CONTRACT.filter(k=>numericIds.has(k.id));
@@ -51,7 +59,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
     '<div class="calculator-display"><div class="display-status" dir="ltr">'+
       '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.state.mode)+'</span></div>'+
       '<div class="math-input" dir="ltr" aria-label="Expression">'+(view.mathHtml||'<span class="math-placeholder">0</span>')+'</div>'+
-      '<output class="math-result" dir="ltr" aria-live="polite">'+esc(view.result)+'</output></div>'+
+      '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(view.result)+'">'+resultMarkup(view.result)+'</output></div>'+
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+'</div></div>'+
