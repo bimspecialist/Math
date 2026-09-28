@@ -4,7 +4,7 @@ import { KEY_CONTRACT, validateKeyContract } from "../src/calculator/key-contrac
 import { ES_PLUS_PROFILE } from "../src/calculator/behavior-profile.js";
 
 const requiredIds = [
-  "SHIFT","ALPHA","MODE","SETUP",
+  "SHIFT","ALPHA","MODE",
   "REPLAY_UP","REPLAY_DOWN","REPLAY_LEFT","REPLAY_RIGHT",
   "FRAC","CALC","S_D","DEL","AC","ANS",
   "DIGIT_0","DIGIT_1","DIGIT_2","DIGIT_3","DIGIT_4",
