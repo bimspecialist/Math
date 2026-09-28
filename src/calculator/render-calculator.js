@@ -1,7 +1,7 @@
 import { KEY_CONTRACT } from "./key-contract.js";
 
 const keyById = new Map(KEY_CONTRACT.map(k=>[k.id,k]));
-const controlIds = new Set(["SHIFT","ALPHA","MODE","SETUP","ON"]);
+const controlIds = new Set(["SHIFT","ALPHA","MODE","SETUP"]);
 const navIds = ["REPLAY_UP","REPLAY_LEFT","REPLAY_RIGHT","REPLAY_DOWN"];
 const numericIds = new Set([
   "DIGIT_0","DIGIT_1","DIGIT_2","DIGIT_3","DIGIT_4","DIGIT_5","DIGIT_6","DIGIT_7","DIGIT_8","DIGIT_9",
@@ -47,7 +47,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
       '<output class="math-result" dir="ltr" aria-live="polite">'+esc(view.result)+'</output></div>'+
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
-      '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+keyMarkup(controlMap.get("ON"))+'</div></div>'+
+      '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+keyMarkup(controlMap.get("SETUP"))+'</div></div>'+
     '<div class="scientific-grid">'+scientific.map(scientificKeyMarkup).join("")+'</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</section>';
 }
 export function mapKeyboardToKeyId(key){
