@@ -100,3 +100,43 @@
 @media(prefers-contrast:more){.calculator-shell,.calculator-display,.calc-key,.menu-item{border-width:2px}.active-slot{outline-width:2px}}
 
 .calculator-prompt{position:absolute;inset:96px 18px auto;z-index:6;background:var(--lcd);color:var(--lcd-ink);border:2px solid var(--lcd-edge);border-radius:7px;padding:10px;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+
+
+/* Scientific key typography hierarchy: legends live above the key face. */
+.scientific-key-cell{display:grid;grid-template-rows:14px auto;gap:2px;min-width:0;direction:ltr}
+.key-legend-row{display:flex;align-items:end;justify-content:space-between;gap:3px;min-width:0;padding-inline:2px;line-height:1}
+.key-legend{display:block;min-width:0;white-space:nowrap;font-size:.58rem;font-weight:800;letter-spacing:-.01em}
+.key-legend-shift{color:var(--yellow);text-align:left}
+.key-legend-alpha{color:var(--alpha);text-align:right}
+.key-legend.empty{visibility:hidden}
+.scientific-key-button{padding:5px 3px!important}
+.scientific-key-button .primary-label{min-height:27px;font-size:1.06em;font-weight:850;letter-spacing:.005em}
+.scientific-key-button .shift-legend,.scientific-key-button .alpha-legend{display:none!important}
+.scientific-grid{row-gap:7px}
+
+@media(min-width:1500px){
+  .scientific-key-cell{grid-template-rows:17px auto;gap:3px}
+  .key-legend{font-size:.72rem}
+  .scientific-key-button{padding:6px 4px!important}
+  .scientific-key-button .primary-label{font-size:1.12em;min-height:30px}
+  .scientific-grid{row-gap:10px}
+}
+@media(min-width:1200px) and (max-width:1499px){
+  .scientific-key-cell{grid-template-rows:16px auto;gap:3px}
+  .key-legend{font-size:.68rem}
+  .scientific-key-button .primary-label{font-size:1.1em;min-height:29px}
+  .scientific-grid{row-gap:9px}
+}
+@media(min-width:601px) and (max-width:1199px){
+  .scientific-key-cell{grid-template-rows:15px auto}
+  .key-legend{font-size:.62rem}
+  .scientific-key-button .primary-label{font-size:1.08em}
+}
+@media(max-width:600px){
+  .scientific-key-cell{grid-template-rows:12px auto;gap:1px}
+  .key-legend-row{padding-inline:1px}
+  .key-legend{font-size:.48rem}
+  .scientific-key-button{padding:4px 1px!important}
+  .scientific-key-button .primary-label{font-size:1.08em;min-height:20px}
+  .scientific-grid{row-gap:5px}
+}
