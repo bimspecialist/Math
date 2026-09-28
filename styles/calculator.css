@@ -206,3 +206,20 @@
 /* Secondary legends remain printed like a physical calculator, but primary labels dominate. */
 .key-legend{opacity:.92}
 .scientific-key-button .primary-label{font-weight:850}
+
+/* Traditional scientific grouping: fixed physical rows, clear gap before the numeric keypad. */
+.scientific-grid{
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  grid-auto-flow:row;
+  column-gap:7px;
+  row-gap:10px;
+  margin-bottom:18px;
+}
+.scientific-spacer{visibility:hidden;pointer-events:none}
+.numeric-grid{margin-top:2px}
+@media(min-width:1500px){
+  .scientific-grid{column-gap:8px;row-gap:11px;margin-bottom:20px}
+}
+@media(max-width:600px){
+  .scientific-grid{column-gap:3px;row-gap:6px;margin-bottom:12px}
+}
