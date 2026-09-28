@@ -257,3 +257,21 @@
   .result-fraction{font-size:1.05em}
   .result-denominator{border-top-width:2px}
 }
+
+/* Hard LTR isolation for the calculator, independent of site language. */
+#calculator-section,
+.calculator-stage,
+#calculator-root,
+.calculator-shell,
+.calculator-face,
+.calculator-display,
+.control-deck,
+.replay-pad,
+.scientific-grid,
+.numeric-grid{
+  direction:ltr !important;
+  unicode-bidi:isolate;
+}
+.calculator-shell *{
+  direction:ltr;
+}
