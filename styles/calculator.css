@@ -16,24 +16,24 @@
   .desktop-layout{grid-template-columns:clamp(170px,11vw,220px) clamp(185px,12vw,240px) minmax(760px,1fr) clamp(185px,12vw,240px) clamp(170px,11vw,220px);gap:clamp(14px,1.3vw,24px)}
   .center-column{width:100%}
   .site-header,.site-tabs{max-width:940px}
-  .calculator-stage{min-height:850px;padding-top:8px}
-  .calculator-shell{width:clamp(720px,43vw,800px);padding:22px 22px 28px;border-radius:34px 34px 46px 46px}
-  .calculator-brand strong{font-size:1.14rem}.calculator-brand small,.calculator-brand>span{font-size:.78rem}
-  .calculator-display{padding:10px;margin-bottom:16px}
-  .display-status{min-height:24px;font-size:.82rem;padding:8px 12px 2px}
-  .math-input{min-height:78px;font-size:1.35rem;padding:12px 14px}
-  .math-result{min-height:56px;font-size:2.15rem;padding:7px 14px 10px}
-  .control-deck{gap:12px;margin-bottom:15px}
-  .control-side{gap:8px}.control-side .calc-key{min-height:46px;font-size:.82rem}
-  .replay-pad{min-height:108px}
-  .replay-center{width:84px;height:62px;font-size:.68rem}
-  .replay-pad .calc-key{min-width:48px;min-height:36px;font-size:.8rem}
-  .scientific-grid{gap:9px;margin-bottom:13px}.numeric-grid{gap:11px}
-  .calc-key{min-height:68px;padding:18px 5px 8px;border-radius:9px}
-  .role-function{font-size:1.02rem}.role-number{font-size:1.42rem}.role-operator{font-size:1.3rem}
-  .role-danger,.role-equals{font-size:1.14rem}
-  .shift-legend,.alpha-legend{font-size:.66rem;top:4px}
-  .primary-label{min-height:34px}.key-fraction-icon{width:28px;font-size:.98rem}
+  .calculator-stage{min-height:780px;padding-top:6px}
+  .calculator-shell{width:clamp(610px,40vw,700px);padding:18px 18px 24px;border-radius:30px 30px 42px 42px}
+  .calculator-brand strong{font-size:1rem}.calculator-brand small,.calculator-brand>span{font-size:.7rem}
+  .calculator-display{padding:8px;margin-bottom:14px}
+  .display-status{min-height:22px;font-size:.76rem;padding:7px 10px 1px}
+  .math-input{min-height:70px;font-size:1.22rem;padding:10px 12px}
+  .math-result{min-height:50px;font-size:1.95rem;padding:6px 12px 9px}
+  .control-deck{gap:10px;margin-bottom:13px}
+  .control-side{gap:7px}.control-side .calc-key{min-height:40px;font-size:.9rem}
+  .replay-pad{min-height:98px}
+  .replay-center{width:76px;height:56px;font-size:.72rem}
+  .replay-pad .calc-key{min-width:44px;min-height:32px;font-size:.9rem}
+  .scientific-grid{gap:7px;margin-bottom:11px}.numeric-grid{gap:9px}
+  .calc-key{min-height:58px;padding:16px 4px 6px;border-radius:8px}
+  .role-function{font-size:1.08rem}.role-number{font-size:1.4rem}.role-operator{font-size:1.28rem}
+  .role-danger,.role-equals{font-size:1.12rem}
+  .shift-legend,.alpha-legend{font-size:.68rem;top:3px}
+  .primary-label{min-height:28px}.key-fraction-icon{width:24px;font-size:.92rem}
   .ad-left,.ad-right,.ad-outer-left,.ad-outer-right{height:min(76vh,860px);min-height:660px}
   .ad-bottom-left,.ad-bottom-right{height:260px}
   .ad-bottom{height:145px;margin-top:30px}.ad-bottom-secondary{height:120px;margin-top:16px}
@@ -44,13 +44,14 @@
   .site-shell{width:min(1480px,calc(100% - 24px))}
   .desktop-layout{grid-template-columns:220px minmax(700px,1fr) 220px;grid-template-areas:"left center right" "bottom-left center bottom-right";gap:20px}
   .ad-outer-left,.ad-outer-right{display:none}
-  .calculator-stage{min-height:790px}
-  .calculator-shell{width:min(100%,720px);padding:19px 19px 25px}
-  .calc-key{min-height:62px;padding:17px 4px 7px}
-  .role-function{font-size:.96rem}.role-number{font-size:1.32rem}.role-operator{font-size:1.2rem}
-  .shift-legend,.alpha-legend{font-size:.61rem}
-  .control-side .calc-key{min-height:42px;font-size:.76rem}
-  .replay-pad{min-height:100px}.replay-center{width:78px;height:58px}
+  .calculator-stage{min-height:740px}
+  .calculator-shell{width:min(100%,680px);padding:18px 18px 24px}
+  .calc-key{min-height:58px;padding:16px 4px 6px}
+  .role-function{font-size:1.04rem}.role-number{font-size:1.36rem}.role-operator{font-size:1.24rem}
+  .role-danger,.role-equals{font-size:1.08rem}
+  .shift-legend,.alpha-legend{font-size:.66rem}
+  .control-side .calc-key{min-height:40px;font-size:.88rem}
+  .replay-pad{min-height:96px}.replay-center{width:74px;height:54px}
   .ad-left,.ad-right{height:760px}.ad-bottom-left,.ad-bottom-right{height:220px}
 }
 /* Tablet / compact desktop: one central column and no side ad rails. */
