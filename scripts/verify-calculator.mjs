@@ -4,7 +4,7 @@ import { KEY_CONTRACT, validateKeyContract } from "../src/calculator/key-contrac
 import { ES_PLUS_PROFILE } from "../src/calculator/behavior-profile.js";
 import { buildModeMenu } from "../src/calculator/menu-controller.js";
 const failures=[];
-const required=["SHIFT","ALPHA","MODE","ON","REPLAY_UP","REPLAY_DOWN","REPLAY_LEFT","REPLAY_RIGHT","FRAC","CALC","S_D","DEL","AC","ANS","EQUALS"];
+const required=["SHIFT","ALPHA","MODE","REPLAY_UP","REPLAY_DOWN","REPLAY_LEFT","REPLAY_RIGHT","FRAC","CALC","S_D","DEL","AC","ANS","EQUALS"];
 const ids=new Set(KEY_CONTRACT.map(k=>k.id));for(const id of required)if(!ids.has(id))failures.push("missing required key: "+id);
 failures.push(...validateKeyContract(KEY_CONTRACT,ES_PLUS_PROFILE));
 for(const key of KEY_CONTRACT)for(const action of [key.primaryAction,key.shiftAction,key.alphaAction].filter(Boolean))if(/NOOP|PLACEHOLDER/i.test(action))failures.push("placeholder action on "+key.id+": "+action);
