@@ -176,3 +176,33 @@
 /* Web-specific controls: keep replay arrows physically correct in RTL UI and balance two control buttons. */
 .control-right{align-content:center}
 .control-right .calc-key{min-height:38px}
+
+/* Physical-calculator parity: the calculator face always keeps hardware-like LTR geometry. */
+.calculator-face{direction:ltr}
+.calculator-brand{direction:ltr}
+.control-deck,.scientific-grid,.numeric-grid{direction:ltr}
+.control-left,.control-right{direction:ltr}
+.calc-key{direction:ltr}
+.key-legend-row{direction:ltr}
+
+/* Familiar 5-column numeric keypad: 7-8-9 / 4-5-6 / 1-2-3 / 0-. with operators on the right. */
+.numeric-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-areas:
+    "n7 n8 n9 del ac"
+    "n4 n5 n6 mul div"
+    "n1 n2 n3 add sub"
+    "n0 dec exp ans eq";
+}
+.numeric-grid [data-key-id="DIGIT_7"]{grid-area:n7}.numeric-grid [data-key-id="DIGIT_8"]{grid-area:n8}.numeric-grid [data-key-id="DIGIT_9"]{grid-area:n9}
+.numeric-grid [data-key-id="DIGIT_4"]{grid-area:n4}.numeric-grid [data-key-id="DIGIT_5"]{grid-area:n5}.numeric-grid [data-key-id="DIGIT_6"]{grid-area:n6}
+.numeric-grid [data-key-id="DIGIT_1"]{grid-area:n1}.numeric-grid [data-key-id="DIGIT_2"]{grid-area:n2}.numeric-grid [data-key-id="DIGIT_3"]{grid-area:n3}
+.numeric-grid [data-key-id="DIGIT_0"]{grid-area:n0}.numeric-grid [data-key-id="DECIMAL"]{grid-area:dec}
+.numeric-grid [data-key-id="MULTIPLY"]{grid-area:mul}.numeric-grid [data-key-id="DIVIDE"]{grid-area:div}
+.numeric-grid [data-key-id="ADD"]{grid-area:add}.numeric-grid [data-key-id="SUBTRACT"]{grid-area:sub}
+.numeric-grid [data-key-id="DEL"]{grid-area:del}.numeric-grid [data-key-id="AC"]{grid-area:ac}.numeric-grid [data-key-id="EQUALS"]{grid-area:eq}
+.numeric-grid [data-key-id="EXP"]{grid-area:exp}.numeric-grid [data-key-id="ANS"]{grid-area:ans}
+
+/* Secondary legends remain printed like a physical calculator, but primary labels dominate. */
+.key-legend{opacity:.92}
+.scientific-key-button .primary-label{font-weight:850}
