@@ -1,20 +1,7 @@
 import { KEY_CONTRACT } from "./key-contract.js";
+import { PHYSICAL_LAYOUT_PROFILE } from "./physical-layout-profile.js";
 
 const keyById = new Map(KEY_CONTRACT.map(k=>[k.id,k]));
-const controlIds = new Set(["SHIFT","ALPHA","MODE"]);
-const navIds = ["REPLAY_UP","REPLAY_LEFT","REPLAY_RIGHT","REPLAY_DOWN"];
-const numericIds = new Set([
-  "DIGIT_0","DIGIT_1","DIGIT_2","DIGIT_3","DIGIT_4","DIGIT_5","DIGIT_6","DIGIT_7","DIGIT_8","DIGIT_9",
-  "DECIMAL","ADD","SUBTRACT","MULTIPLY","DIVIDE","DEL","AC","EQUALS","EXP","ANS"
-]);
-
-const scientificOrder = [
-  "INVERSE","FRAC","SQRT","POWER","LOG","LN",
-  "NEGATE","DMS","HYP","SIN","COS","TAN",
-  "NCR","ABS","CALC","RCL","LPAREN","RPAREN",
-  "S_D","M_PLUS","ENG"
-];
-
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function fractionIcon(){return '<span class="key-fraction-icon" aria-hidden="true"><span>□</span><span class="bar"></span><span>□</span></span>'}
 function primaryMarkup(key){return key.id==="FRAC"?fractionIcon():esc(key.primaryLabel)}
@@ -23,10 +10,10 @@ function keyMarkup(key){
   const alpha=key.alphaLabel?'<span class="alpha-legend">'+esc(key.alphaLabel)+'</span>':"";
   return '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+'" aria-label="'+esc(key.accessibilityName)+'">'+shift+alpha+'<span class="primary-label">'+primaryMarkup(key)+'</span></button>';
 }
-function scientificKeyMarkup(key){
+function scientificKeyMarkup(key,cell){
   const shift=key.shiftLabel?'<span class="key-legend key-legend-shift">'+esc(key.shiftLabel)+'</span>':'<span class="key-legend key-legend-shift empty" aria-hidden="true"></span>';
   const alpha=key.alphaLabel?'<span class="key-legend key-legend-alpha">'+esc(key.alphaLabel)+'</span>':'<span class="key-legend key-legend-alpha empty" aria-hidden="true"></span>';
-  return '<div class="scientific-key-cell">'+
+  return '<div class="scientific-key-cell" style="grid-row:'+cell.row+';grid-column:'+cell.col+'">'+
     '<div class="key-legend-row" aria-hidden="true">'+shift+alpha+'</div>'+
     '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+' scientific-key-button" aria-label="'+esc(key.accessibilityName)+'">'+
       '<span class="primary-label">'+primaryMarkup(key)+'</span>'+
@@ -50,10 +37,10 @@ function menuMarkup(view){
 }
 export function renderCalculatorMarkup(view,locale="ar"){
   const dir="ltr";
-  const controlMap=new Map(KEY_CONTRACT.filter(k=>controlIds.has(k.id)).map(k=>[k.id,k]));
-  const scientific=scientificOrder.map(id=>keyById.get(id)).filter(Boolean);
-  const numeric=KEY_CONTRACT.filter(k=>numericIds.has(k.id));
-  const nav=navIds.map(id=>keyById.get(id)).filter(Boolean);
+  const controlMap=new Map(PHYSICAL_LAYOUT_PROFILE.controls.map(id=>[id,keyById.get(id)]).filter(([,k])=>k));
+  const scientific=PHYSICAL_LAYOUT_PROFILE.scientific.map(cell=>({cell,key:keyById.get(cell.id)})).filter(x=>x.key);
+  const numeric=PHYSICAL_LAYOUT_PROFILE.numeric.map(cell=>({cell,key:keyById.get(cell.id)})).filter(x=>x.key);
+  const nav=PHYSICAL_LAYOUT_PROFILE.replay.map(cell=>keyById.get(cell.id)).filter(Boolean);
   return '<section class="calculator-shell" dir="'+dir+'"><div class="calculator-face" dir="ltr">'+
     '<div class="calculator-brand"><div><strong>Math Scientific</strong><small>Natural Display</small></div><span>CLASSIC</span></div>'+
     '<div class="calculator-display"><div class="display-status" dir="ltr">'+
@@ -63,9 +50,8 @@ export function renderCalculatorMarkup(view,locale="ar"){
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+'</div></div>'+
-    '<div class="scientific-grid">'+scientific.map(scientificKeyMarkup).join("")+
-      '<div class="scientific-key-cell scientific-spacer" aria-hidden="true"></div><div class="scientific-key-cell scientific-spacer" aria-hidden="true"></div><div class="scientific-key-cell scientific-spacer" aria-hidden="true"></div>'+
-    '</div><div class="numeric-grid">'+numeric.map(keyMarkup).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
+    '<div class="scientific-grid">'+scientific.map(({key,cell})=>scientificKeyMarkup(key,cell)).join("")+
+    '</div><div class="numeric-grid">'+numeric.map(({key,cell})=>'<div class="numeric-key-cell" style="grid-row:'+cell.row+';grid-column:'+cell.col+'">'+keyMarkup(key)+'</div>').join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
