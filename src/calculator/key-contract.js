@@ -17,7 +17,6 @@ export const KEY_CONTRACT = Object.freeze([
   key("ALPHA","ALPHA","ALPHA",{styleRole:"modifier"}),
   key("MODE","MODE","OPEN_MODE_MENU",{shiftLabel:"SETUP",shiftAction:"OPEN_SETUP_MENU",styleRole:"control"}),
   key("SETUP","SETUP","OPEN_SETUP_MENU",{styleRole:"control"}),
-  key("ON","ON","POWER_ON",{styleRole:"control"}),
   key("REPLAY_UP","↑","REPLAY_UP",{styleRole:"nav"}),
   key("REPLAY_DOWN","↓","REPLAY_DOWN",{styleRole:"nav"}),
   key("REPLAY_LEFT","←","REPLAY_LEFT",{styleRole:"nav"}),
