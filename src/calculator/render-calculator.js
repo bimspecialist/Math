@@ -5,10 +5,11 @@ const keyById = new Map(KEY_CONTRACT.map(k=>[k.id,k]));
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function fractionIcon(){return '<span class="key-fraction-icon" aria-hidden="true"><span>□</span><span class="bar"></span><span>□</span></span>'}
 function primaryMarkup(key){return key.id==="FRAC"?fractionIcon():esc(key.primaryLabel)}
-function keyMarkup(key){
+function keyMarkup(key,cell=null){
   const shift=key.shiftLabel?'<span class="shift-legend">'+esc(key.shiftLabel)+'</span>':'<span class="shift-legend empty" aria-hidden="true"></span>';
   const alpha=key.alphaLabel?'<span class="alpha-legend">'+esc(key.alphaLabel)+'</span>':"";
-  return '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+'" aria-label="'+esc(key.accessibilityName)+'">'+shift+alpha+'<span class="primary-label">'+primaryMarkup(key)+'</span></button>';
+  const pos=cell?' style="grid-row:'+cell.row+';grid-column:'+cell.col+'"':"";
+  return '<button data-key-id="'+key.id+'" type="button" class="calc-key role-'+key.styleRole+'" aria-label="'+esc(key.accessibilityName)+'"'+pos+'>'+shift+alpha+'<span class="primary-label">'+primaryMarkup(key)+'</span></button>';
 }
 function scientificKeyMarkup(key,cell){
   const shift=key.shiftLabel?'<span class="key-legend key-legend-shift">'+esc(key.shiftLabel)+'</span>':'<span class="key-legend key-legend-shift empty" aria-hidden="true"></span>';
@@ -51,7 +52,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
       '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+'</div></div>'+
     '<div class="scientific-grid">'+scientific.map(({key,cell})=>scientificKeyMarkup(key,cell)).join("")+
-    '</div><div class="numeric-grid">'+numeric.map(({key,cell})=>'<div class="numeric-key-cell" style="grid-row:'+cell.row+';grid-column:'+cell.col+'">'+keyMarkup(key)+'</div>').join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
+    '</div><div class="numeric-grid">'+numeric.map(({key,cell})=>keyMarkup(key,cell)).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
