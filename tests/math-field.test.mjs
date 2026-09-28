@@ -37,3 +37,16 @@ test("power key wraps the existing base and focuses the exponent", () => {
   assert.equal(f.getCanonicalExpression(), "(2)^(3)");
   assert.match(f.renderHtml(), /math-power/);
 });
+
+
+test("structured snapshot restores nested fraction and focused slot", () => {
+  const a=new MathFieldAdapter();
+  a.insertFraction(); a.insertText("1"); a.moveDown(); a.insertFraction(); a.insertText("2"); a.moveDown(); a.insertText("3");
+  const snap=a.createSnapshot();
+  const b=new MathFieldAdapter();
+  b.restoreSnapshot(snap);
+  assert.equal(b.getCanonicalExpression(),"(1)/((2)/(3))");
+  assert.equal(b.focusSlot(),"denominator");
+  assert.match(b.renderHtml(),/math-fraction/);
+  assert.equal((b.renderHtml().match(/math-fraction/g)||[]).length,2);
+});
