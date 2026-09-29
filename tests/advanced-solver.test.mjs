@@ -8,16 +8,19 @@ test("advanced solver evaluates a typed numeric expression",()=>{
   assert.equal(r.numeric,12);
 });
 
-test("advanced solver solves a one-variable equation",()=>{
+test("advanced solver returns all roots of a one-variable quadratic",()=>{
   const r=solveAdvancedInput("x^2-4=0");
-  assert.equal(r.kind,"solution");
+  assert.equal(r.kind,"solution-set");
   assert.equal(r.variable,"x");
-  assert.ok(Math.abs(Math.abs(r.value)-2)<1e-8);
+  assert.deepEqual(r.solutions,[-2,2]);
 });
 
-test("advanced solver rejects underdetermined multi-variable equations clearly",()=>{
-  const r=solveAdvancedInput("x^3+y^2+5=0");
-  assert.deepEqual(r,{kind:"error",code:"MULTIPLE_VARIABLES",variables:["x","y"]});
+test("advanced solver returns a parametric answer for one linear equation with several unknowns",()=>{
+  const r=solveAdvancedInput("x+y=5");
+  assert.equal(r.kind,"parametric-system");
+  assert.deepEqual(r.variables,["x","y"]);
+  assert.equal(r.freeVariables.length,1);
+  assert.match(r.expressions.x,/5/);
 });
 
 test("advanced solver accepts calculator multiplication and division glyphs",()=>{
@@ -35,4 +38,31 @@ test("Advanced Solver UI exposes solve action and result region",async()=>{
   assert.match(index,/id="advanced-result"/);
   assert.match(app,/solveAdvancedInput/);
   assert.match(app,/advanced-solve/);
+});
+
+
+test("advanced solver recognizes arbitrary single-letter variables such as A",()=>{
+  const r=solveAdvancedInput("A*5=5*2^2");
+  assert.equal(r.kind,"solution-set");
+  assert.equal(r.variable,"A");
+  assert.deepEqual(r.solutions,[4]);
+});
+
+test("advanced solver analyzes a polynomial expression even without an equals sign",()=>{
+  const r=solveAdvancedInput("X^2+4");
+  assert.equal(r.kind,"expression-analysis");
+  assert.equal(r.variable,"X");
+  assert.equal(r.degree,2);
+  assert.deepEqual(r.roots,["-2i","2i"]);
+});
+
+test("advanced solver solves a square linear system with multiple unknowns",()=>{
+  const r=solveAdvancedInput("x+y=5\nx-y=1");
+  assert.equal(r.kind,"system-solution");
+  assert.deepEqual(r.values,{x:3,y:2});
+});
+
+test("advanced solver reports an inconsistent linear system",()=>{
+  const r=solveAdvancedInput("x+y=1\nx+y=2");
+  assert.deepEqual(r,{kind:"error",code:"NO_SOLUTION",variables:["x","y"]});
 });
