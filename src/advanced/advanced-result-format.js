@@ -19,6 +19,8 @@ const TEXT={
     UNSUPPORTED_OPERATION:"This operation is not supported yet.",
     SYMBOLIC_CALCULUS_UNSUPPORTED:"This symbolic calculus expression is not supported yet.",
     SYMBOLIC_TRANSFORM_UNSUPPORTED:"This symbolic transformation is not supported yet.",
+    INVALID_LIMIT:"The limit expression is invalid.",
+    LIMIT_DOES_NOT_EXIST:"The two-sided limit does not exist as a finite value.",
     unknown:"Unknown result"
   },
   ar:{
@@ -39,6 +41,8 @@ const TEXT={
     UNSUPPORTED_OPERATION:"هذه العملية غير مدعومة بعد.",
     SYMBOLIC_CALCULUS_UNSUPPORTED:"هذا التعبير الرمزي في التفاضل أو التكامل غير مدعوم بعد.",
     SYMBOLIC_TRANSFORM_UNSUPPORTED:"هذا التحويل الرمزي غير مدعوم بعد.",
+    INVALID_LIMIT:"صيغة النهاية غير صحيحة.",
+    LIMIT_DOES_NOT_EXIST:"النهاية الثنائية لا توجد كقيمة منتهية.",
     unknown:"نتيجة غير معروفة"
   }
 };
@@ -63,6 +67,7 @@ export function formatAdvancedResult(r,locale="en"){
   if(r.kind==="equation-check")return r.equal?t.equationTrue:t.equationFalse;
   if(r.kind==="symbolic-calculus"){const label=r.operation==="integral"?(locale==="ar"?"التكامل":"Integral"):(locale==="ar"?"المشتقة":"Derivative");return `${label}: ${r.expression}`;}
   if(r.kind==="symbolic-transform"){const label=r.operation==="expand"?(locale==="ar"?"التوسيع":"Expanded"):(locale==="ar"?"التبسيط":"Simplified");return `${label}: ${r.expression}`;}
+  if(r.kind==="limit")return locale==="ar"?`النهاية عندما ${r.variable} ← ${r.point}: ${r.value}`:`Limit as ${r.variable} → ${r.point}: ${r.value}`;
   const suffix=r.variables?.length?` (${r.variables.join(", ")})`:"";
   return (t[r.code]??r.code??t.unknown)+suffix;
 }
