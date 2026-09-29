@@ -156,6 +156,30 @@ function zeros(rows,cols){
   return Array.from({length:rows},()=>Array(cols).fill(0));
 }
 
+function ones(rows,cols){
+  rows=Number(rows);cols=Number(cols);
+  if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:rows},()=>Array(cols).fill(1));
+}
+
+function linspace(start,end,count){
+  start=Number(start);end=Number(end);count=Number(count);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||!Number.isInteger(count)||count<2||count>10000)throw new Error("INVALID_SAMPLE_COUNT");
+  const step=(end-start)/(count-1);
+  return Array.from({length:count},(_,i)=>i===count-1?end:Number((start+i*step).toPrecision(14)));
+}
+
+function diagonal(m){
+  const [rows,cols]=matrixShape(m),n=Math.min(rows,cols);
+  return Array.from({length:n},(_,i)=>m[i][i]);
+}
+
+function euclideanNorm(value){
+  const values=flatten(value).map(Number);
+  if(values.some(v=>!Number.isFinite(v)))throw new Error("INVALID_VALUE");
+  return Math.sqrt(values.reduce((sum,v)=>sum+v*v,0));
+}
+
 function evalValue(source,workspace){
   const text=source.trim();
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
@@ -179,6 +203,10 @@ function evalCommand(expr,workspace){
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
     if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
     if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
+    if(fn==="ones"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1])}
+    if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
+    if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
+    if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
     if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).reduce((a,b)=>a+b,0)}
     if(fn==="mean"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const a=flatten(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
     if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
