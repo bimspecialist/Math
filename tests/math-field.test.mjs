@@ -52,12 +52,13 @@ test("structured snapshot restores nested fraction and focused slot", () => {
 });
 
 
-test("left arrow never behaves like up inside a fraction", () => {
+test("left arrow moves horizontally and never jumps up inside a fraction", () => {
   const x=new MathFieldAdapter();
   x.insertFraction();x.insertText("1");x.moveDown();x.insertText("2");
   assert.equal(x.focusSlot(),"denominator");
-  assert.equal(x.moveLeft(),false);
+  assert.equal(x.moveLeft(),true);
   assert.equal(x.focusSlot(),"denominator");
+  assert.equal(x.cursorPosition(),0);
   assert.equal(x.moveUp(),true);
   assert.equal(x.focusSlot(),"numerator");
 });
