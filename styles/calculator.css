@@ -432,3 +432,21 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 }
 .formula-detail-result-primary{font-weight:800}
 @media(max-width:700px){.formula-detail-form{grid-template-columns:1fr}}
+
+
+/* Formula explanations */
+.formula-explanation{
+  margin:14px 0 16px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--panel) 97%,var(--page));
+}
+.formula-explanation h3{margin:0 0 8px;font-size:1rem}
+.formula-explanation p{margin:0;color:var(--muted);line-height:1.7}
+.formula-variable-guide{margin-top:14px}
+.formula-variable-guide h4{margin:0 0 8px;font-size:.92rem}
+.formula-variable-guide dl{display:grid;gap:6px;margin:0}
+.formula-variable-guide dl>div{display:grid;grid-template-columns:minmax(52px,auto) 1fr;gap:10px;align-items:start}
+.formula-variable-guide dt{font-weight:800;color:var(--text)}
+.formula-variable-guide dd{margin:0;color:var(--muted)}
