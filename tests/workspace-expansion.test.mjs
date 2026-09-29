@@ -419,3 +419,63 @@ test("professional knowledge libraries support localized search and empty result
   assert.match(app,/knowledgeNoResults/);
   assert.match(app,/knowledge-search[^\n]*addEventListener\("input",renderProfessionalLibrary\)/);
 });
+
+
+test("Math Lab provides descriptive statistics using sample variance semantics",()=>{
+  const r=runMathLabScript("v = [2,4,4,4,5,5,7,9]\nmean(v)\nmedian(v)\nvar(v)\nstd(v)\nmin(v)\nmax(v)");
+  assert.equal(r.ok,true);
+  assert.equal(r.outputs[1].value,5);
+  assert.equal(r.outputs[2].value,4.5);
+  assert.ok(Math.abs(r.outputs[3].value-(32/7))<1e-12);
+  assert.ok(Math.abs(r.outputs[4].value-Math.sqrt(32/7))<1e-12);
+  assert.equal(r.outputs[5].value,2);
+  assert.equal(r.outputs[6].value,9);
+});
+
+test("Math Lab supports dot and 3D cross products",()=>{
+  const r=runMathLabScript("u = [1,2,3]\nv = [4,5,6]\ndot(u,v)\ncross(u,v)");
+  assert.equal(r.ok,true);
+  assert.equal(r.outputs[2].value,32);
+  assert.deepEqual(r.outputs[3].value,[-3,6,-3]);
+});
+
+test("Math Lab reshapes arrays and reports dimensions",()=>{
+  const r=runMathLabScript("A = reshape([1,2,3,4,5,6],2,3)\nsize(A)\nrows(A)\ncols(A)\nnumel(A)");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.A,[[1,2,3],[4,5,6]]);
+  assert.deepEqual(r.outputs[1].value,[2,3]);
+  assert.equal(r.outputs[2].value,2);
+  assert.equal(r.outputs[3].value,3);
+  assert.equal(r.outputs[4].value,6);
+});
+
+test("Math Lab error diagnostics include failing line and source",()=>{
+  const r=runMathLabScript("a = 5\nB = inv([1,2;2,4])\na");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"SINGULAR_MATRIX");
+  assert.equal(r.error.line,2);
+  assert.equal(r.error.source,"B = inv([1,2;2,4])");
+  assert.equal(r.workspace.a,5);
+});
+
+test("Math Lab can reuse a previous workspace across separate runs",()=>{
+  const first=runMathLabScript("a = 5\nA = [1,2;3,4]");
+  const second=runMathLabScript("b = a^2\ndet(A)",first.workspace);
+  assert.equal(second.ok,true);
+  assert.equal(second.workspace.a,5);
+  assert.equal(second.workspace.b,25);
+  assert.equal(second.outputs[1].value,-2);
+});
+
+test("Math Lab UI exposes persistent workspace controls statistics and vectors",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/id="mathlab-clear-workspace"/);
+  assert.match(index,/id="mathlab-clear-output"/);
+  assert.match(index,/data-i18n="statistics"/);
+  assert.match(index,/data-i18n="vectors"/);
+  assert.match(index,/data-i18n="linearSystems"/);
+  assert.match(app,/let mathLabWorkspaceState=\{\}/);
+  assert.match(app,/runMathLabScript\(mathLabInput\.value,mathLabWorkspaceState\)/);
+  assert.match(app,/event\.key==="Enter"/);
+});
