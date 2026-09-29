@@ -1,5 +1,6 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
+import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="en"?"en":"ar";
@@ -10,3 +11,31 @@ document.querySelectorAll("[data-tab-target]").forEach(button=>button.addEventLi
 function handleImage(file){if(!file)return;const preview=document.querySelector("#scan-preview");preview.src=URL.createObjectURL(file);preview.hidden=false;document.querySelector("#scan-note").textContent="تم اختيار الصورة. Math Recognition الفعلي سيُربط بمزوّد server-side لاحقًا؛ راجع المعادلة يدويًا قبل الحل."}
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 document.querySelector("#camera-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
+
+const advancedInput=document.querySelector("#advanced-input");
+const advancedResult=document.querySelector("#advanced-result");
+function formatAdvancedResult(r){
+  if(r.kind==="value")return `= ${r.exact??r.numeric}`;
+  if(r.kind==="solution")return `${r.variable} = ${r.value}`;
+  if(r.kind==="equation-check")return r.equal?"المعادلة صحيحة":"طرفا المعادلة غير متساويين";
+  const messages={
+    EMPTY_INPUT:"اكتب تعبيرًا أو معادلة أولًا.",
+    MULTIPLE_VARIABLES:"المحلل المحلي يحل حاليًا معادلة بمجهول واحد فقط.",
+    VARIABLE_REQUIRES_EQUATION:"أضف علامة = لحل التعبير الذي يحتوي متغيرًا.",
+    INVALID_EQUATION:"صيغة المعادلة غير صحيحة.",
+    INVALID_EXPRESSION:"تعذر قراءة التعبير.",
+    NO_NUMERIC_SOLUTION:"لم يتم العثور على حل عددي من نقاط البدء المتاحة.",
+    DIVISION_BY_ZERO:"قسمة على صفر.",
+    DOMAIN_ERROR:"القيمة خارج مجال الدالة.",
+    UNSUPPORTED_OPERATION:"العملية غير مدعومة حاليًا."
+  };
+  const suffix=r.variables?.length?` (${r.variables.join(", ")})`:"";
+  return (messages[r.code]??r.code)+suffix;
+}
+document.querySelector("#advanced-solve")?.addEventListener("click",()=>{
+  const result=solveAdvancedInput(advancedInput?.value??"");
+  if(advancedResult){advancedResult.textContent=formatAdvancedResult(result);advancedResult.dataset.kind=result.kind}
+});
+advancedInput?.addEventListener("keydown",event=>{
+  if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();document.querySelector("#advanced-solve")?.click()}
+});
