@@ -101,3 +101,10 @@ test("active tool updates the visible and document headings",()=>{
   assert.match(app,/heading\.textContent=title/);
   assert.match(app,/document\.title=target==="calculator"/);
 });
+
+
+test("image preview lifecycle revokes replaced object URLs",()=>{
+  assert.match(app,/let scanPreviewUrl=null/);
+  assert.match(app,/URL\.revokeObjectURL\(scanPreviewUrl\)/);
+  assert.match(app,/String\(file\.type\|\|""\)\.startsWith\("image\/"\)/);
+});
