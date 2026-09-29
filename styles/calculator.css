@@ -268,3 +268,6 @@
 .math-cursor{display:inline-block;width:2px;height:1.15em;min-height:14px;background:currentColor;vertical-align:-.18em;margin:0 1px;animation:math-cursor-blink 1s steps(1,end) infinite}
 @keyframes math-cursor-blink{0%,48%{opacity:1}49%,100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.math-cursor{animation:none}}
+
+.advanced-solve{min-height:42px;border:1px solid var(--line);background:var(--text);color:var(--panel);border-radius:10px;padding:7px 16px;font-weight:800}
+.advanced-result{display:block;min-height:48px;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--page);direction:ltr;text-align:left;font-family:Consolas,"Courier New",monospace;font-size:1rem}
