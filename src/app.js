@@ -5,7 +5,7 @@ import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
-import { sampleGraphExpression, graphBounds } from "./graphing/graph-engine.js";
+import { sampleGraphExpressions, graphBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 import { daysBetween, addDays } from "./date/date-calculator.js";
 import { translate } from "./i18n/ui-strings.js";
@@ -169,10 +169,11 @@ const graphCanvas=document.querySelector("#graph-canvas");
 const graphStatus=document.querySelector("#graph-status");
 function drawGraph(){
   if(!graphCanvas)return;
-  const result=sampleGraphExpression(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:501});
+  const result=sampleGraphExpressions(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:501});
   graphCanvas.innerHTML="";
+  const legend=document.querySelector("#graph-legend");if(legend)legend.innerHTML="";
   if(!result.ok){if(graphStatus)graphStatus.textContent=result.error;return}
-  const width=760,height=420,{minY,maxY}=graphBounds(result.samples);
+  const width=760,height=420,allSamples=result.series.flatMap(s=>s.samples),{minY,maxY}=graphBounds(allSamples);
   const sx=x=>(x-result.minX)/(result.maxX-result.minX)*width;
   const sy=y=>height-(y-minY)/(maxY-minY)*height;
   const makeLine=(x1,y1,x2,y2,klass)=>{
@@ -181,19 +182,26 @@ function drawGraph(){
   };
   if(result.minX<=0&&result.maxX>=0)makeLine(sx(0),0,sx(0),height,"graph-axis");
   if(minY<=0&&maxY>=0)makeLine(0,sy(0),width,sy(0),"graph-axis");
-  let d="",open=false;
-  for(const p of result.samples){
-    if(p.y===null||!Number.isFinite(p.y)){open=false;continue}
-    const x=sx(p.x),y=sy(p.y);
-    if(y<-height*4||y>height*5){open=false;continue}
-    d+=(open?"L":"M")+x.toFixed(2)+" "+y.toFixed(2)+" ";open=true;
-  }
-  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
-  path.setAttribute("d",d.trim());path.setAttribute("class","graph-path");graphCanvas.appendChild(path);
+  result.series.forEach((series,index)=>{
+    if(!series.result.ok)return;
+    let d="",open=false;
+    for(const p of series.samples){
+      if(p.y===null||!Number.isFinite(p.y)){open=false;continue}
+      const x=sx(p.x),y=sy(p.y);
+      if(y<-height*4||y>height*5){open=false;continue}
+      d+=(open?"L":"M")+x.toFixed(2)+" "+y.toFixed(2)+" ";open=true;
+    }
+    const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d",d.trim());path.setAttribute("class",`graph-path graph-series-${index}`);graphCanvas.appendChild(path);
+    if(legend){
+      const item=document.createElement("span");item.className=`graph-legend-item graph-series-${index}`;
+      item.textContent=series.expression;legend.appendChild(item);
+    }
+  });
   if(graphStatus)graphStatus.textContent=`x: [${result.minX}, ${result.maxX}] · y: [${Number(minY.toPrecision(5))}, ${Number(maxY.toPrecision(5))}]`;
 }
 document.querySelector("#graph-draw")?.addEventListener("click",drawGraph);
-graphExpression?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();drawGraph()}});
+graphExpression?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();drawGraph()}});
 drawGraph();
 
 const programmerInput=document.querySelector("#programmer-input");
