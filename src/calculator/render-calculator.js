@@ -36,7 +36,7 @@ function menuMarkup(view){
   if(menu.id==="SETUP")return '<div class="calculator-menu" role="dialog" aria-label="Setup"><div class="menu-title">SETUP</div>'+menu.groups.map(g=>'<section class="setup-group"><strong>'+esc(g.label)+'</strong><div>'+g.choices.map(v=>'<button type="button" data-setup-group="'+g.id+'" data-setup-value="'+v+'" class="menu-item">'+esc(v)+'</button>').join("")+'</div></section>').join("")+'<button type="button" data-menu-cancel class="menu-cancel">AC / Back</button></div>';
   return "";
 }
-export function renderCalculatorMarkup(view,locale="ar"){
+export function renderCalculatorMarkup(view,locale="en"){
   const dir="ltr";
   const controlMap=new Map(PHYSICAL_LAYOUT_PROFILE.controls.map(id=>[id,keyById.get(id)]).filter(([,k])=>k));
   const scientific=PHYSICAL_LAYOUT_PROFILE.scientific.map(cell=>({cell,key:keyById.get(cell.id)})).filter(x=>x.key);
@@ -58,7 +58,7 @@ export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
   return ({".":"DECIMAL","+":"ADD","-":"SUBTRACT","*":"MULTIPLY","/":"FRAC","Enter":"EQUALS","=":"EQUALS","Backspace":"DEL","Escape":"AC","ArrowUp":"REPLAY_UP","ArrowDown":"REPLAY_DOWN","ArrowLeft":"REPLAY_LEFT","ArrowRight":"REPLAY_RIGHT","(":"LPAREN",")":"RPAREN","^":"POWER"})[key]??null;
 }
-export function mountCalculator(root,controller,locale="ar"){
+export function mountCalculator(root,controller,locale="en"){
   const render=()=>{
     root.innerHTML=renderCalculatorMarkup(controller.view(),locale);
     root.querySelectorAll("[data-key-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.dispatch(btn.dataset.keyId);render()}));
