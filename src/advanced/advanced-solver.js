@@ -308,7 +308,12 @@ function numericRootFunction(equation,variable){
     const r=evalNumeric(parts[0],[variable],values,"RAD");
     return r.kind==="value"?r.numeric:NaN;
   };
-  if(parts.length===2&&parts[0].trim()&&parts[1].trim())return differenceFunction(parts[0].trim(),parts[1].trim(),[variable]);
+  if(parts.length===2&&parts[0].trim()&&parts[1].trim())return values=>{
+    const a=evalNumeric(parts[0].trim(),[variable],values,"RAD");
+    const b=evalNumeric(parts[1].trim(),[variable],values,"RAD");
+    if(a.kind!=="value"||b.kind!=="value")return NaN;
+    return a.numeric-b.numeric;
+  };
   return null;
 }
 
