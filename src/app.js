@@ -5,6 +5,8 @@ import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
+import { sampleGraphExpression, graphBounds } from "./graphing/graph-engine.js";
+import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="en"?"en":"ar";
@@ -123,3 +125,59 @@ function selectConverterCategory(category){
 converterInput?.addEventListener("input",updateConverter);converterFrom?.addEventListener("change",updateConverter);converterTo?.addEventListener("change",updateConverter);
 document.querySelector("#converter-swap")?.addEventListener("click",()=>{if(!converterFrom||!converterTo)return;const a=converterFrom.value;converterFrom.value=converterTo.value;converterTo.value=a;updateConverter()});
 renderConverterUnits();updateConverter();
+
+const graphExpression=document.querySelector("#graph-expression");
+const graphMinX=document.querySelector("#graph-min-x");
+const graphMaxX=document.querySelector("#graph-max-x");
+const graphCanvas=document.querySelector("#graph-canvas");
+const graphStatus=document.querySelector("#graph-status");
+function drawGraph(){
+  if(!graphCanvas)return;
+  const result=sampleGraphExpression(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:501});
+  graphCanvas.innerHTML="";
+  if(!result.ok){if(graphStatus)graphStatus.textContent=result.error;return}
+  const width=760,height=420,{minY,maxY}=graphBounds(result.samples);
+  const sx=x=>(x-result.minX)/(result.maxX-result.minX)*width;
+  const sy=y=>height-(y-minY)/(maxY-minY)*height;
+  const makeLine=(x1,y1,x2,y2,klass)=>{
+    const el=document.createElementNS("http://www.w3.org/2000/svg","line");
+    el.setAttribute("x1",x1);el.setAttribute("y1",y1);el.setAttribute("x2",x2);el.setAttribute("y2",y2);el.setAttribute("class",klass);graphCanvas.appendChild(el);
+  };
+  if(result.minX<=0&&result.maxX>=0)makeLine(sx(0),0,sx(0),height,"graph-axis");
+  if(minY<=0&&maxY>=0)makeLine(0,sy(0),width,sy(0),"graph-axis");
+  let d="",open=false;
+  for(const p of result.samples){
+    if(p.y===null||!Number.isFinite(p.y)){open=false;continue}
+    const x=sx(p.x),y=sy(p.y);
+    if(y<-height*4||y>height*5){open=false;continue}
+    d+=(open?"L":"M")+x.toFixed(2)+" "+y.toFixed(2)+" ";open=true;
+  }
+  const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d",d.trim());path.setAttribute("class","graph-path");graphCanvas.appendChild(path);
+  if(graphStatus)graphStatus.textContent=`x: [${result.minX}, ${result.maxX}] · y: [${Number(minY.toPrecision(5))}, ${Number(maxY.toPrecision(5))}]`;
+}
+document.querySelector("#graph-draw")?.addEventListener("click",drawGraph);
+graphExpression?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();drawGraph()}});
+drawGraph();
+
+const programmerInput=document.querySelector("#programmer-input");
+const programmerBase=document.querySelector("#programmer-base");
+const programmerB=document.querySelector("#programmer-b");
+const programmerOp=document.querySelector("#programmer-op");
+const programmerResult=document.querySelector("#programmer-result");
+function renderProgrammer(){
+  if(!programmerInput||!programmerBase||!programmerOp||!programmerResult)return;
+  try{
+    const base=Number(programmerBase.value),a=parseInteger(programmerInput.value,base);
+    let value=a;
+    if(programmerOp.value!=="convert"){
+      const b=parseInteger(programmerB?.value??"0",base);
+      value=bitwise(programmerOp.value,a,b);
+    }
+    const d=describeInteger(value);
+    programmerResult.innerHTML=`<div><span>BIN</span><code>${escHtml(d.bin)}</code></div><div><span>OCT</span><code>${escHtml(d.oct)}</code></div><div><span>DEC</span><code>${escHtml(d.dec)}</code></div><div><span>HEX</span><code>${escHtml(d.hex)}</code></div>`;
+  }catch(error){programmerResult.textContent=error.message}
+}
+document.querySelector("#programmer-run")?.addEventListener("click",renderProgrammer);
+programmerInput?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);
+renderProgrammer();
