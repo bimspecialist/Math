@@ -236,6 +236,8 @@ export const UI_STRINGS = Object.freeze({
     exampleExpand:"توسيع",
     exampleSimplify:"تبسيط",
     exampleLimit:"نهاية",
+    exampleNumericRootGuess:"جذر عددي",
+    exampleNumericRootBracket:"جذر ضمن مجال",
     formulaKicker:"مرجع",
     formulaTitle:"مكتبة القوانين الرياضية",
     formulaDescription:"مكتبة قابلة للبحث والتوسعة، مصنفة حسب المجال الرياضي.",
