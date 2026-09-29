@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1026">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1040">
 </head>
 <body>
 <main class="site-shell">
@@ -55,11 +55,15 @@
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="pressure"><span class="tool-icon">⌁</span><span>Pressure</span></button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="angle"><span class="tool-icon">∠</span><span>Angle</span></button>
         </div>
+        <div class="tool-group">
+          <div class="tool-group-title">More tools</div>
+          <button type="button" class="tool-item" data-tool-target="graphing"><span class="tool-icon">⌁</span><span>Graphing</span></button>
+          <button type="button" class="tool-item" data-tool-target="programmer"><span class="tool-icon">&lt;/&gt;</span><span>Programmer</span></button>
+        </div>
         <div class="tool-group tool-group-muted" aria-label="Planned tools">
           <div class="tool-group-title">Next</div>
-          <div class="tool-item-static"><span class="tool-icon">⌁</span><span>Graphing</span><small>soon</small></div>
-          <div class="tool-item-static"><span class="tool-icon">&lt;/&gt;</span><span>Programmer</span><small>soon</small></div>
           <div class="tool-item-static"><span class="tool-icon">¤</span><span>Currency</span><small>online</small></div>
+          <div class="tool-item-static"><span class="tool-icon">◫</span><span>Date calculation</span><small>soon</small></div>
         </div>
       </aside>
 
@@ -128,6 +132,34 @@ b</textarea></label>
           </div>
         </section>
 
+        <section id="graphing-section" class="page-section">
+          <div class="tool-page graphing-page">
+            <div class="tool-page-head"><div><small>Graphing</small><h2>Graphing Calculator</h2><p>ارسم دالة في x محليًا داخل المتصفح. الدوال المثلثية في الرسم تستخدم radians.</p></div></div>
+            <div class="graph-controls">
+              <label><span>y =</span><input id="graph-expression" dir="ltr" value="sin(x)"></label>
+              <label><span>x min</span><input id="graph-min-x" type="number" value="-10" step="any"></label>
+              <label><span>x max</span><input id="graph-max-x" type="number" value="10" step="any"></label>
+              <button id="graph-draw" type="button" class="advanced-solve">Draw</button>
+            </div>
+            <div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" aria-label="Function graph"></svg></div>
+            <div id="graph-status" class="formula-count" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section id="programmer-section" class="page-section">
+          <div class="tool-page programmer-page">
+            <div class="tool-page-head"><div><small>Programmer</small><h2>Programmer Calculator</h2><p>تحويل بين BIN / OCT / DEC / HEX وتنفيذ العمليات البتية الأساسية.</p></div></div>
+            <div class="programmer-grid">
+              <label><span>Value A</span><input id="programmer-input" dir="ltr" value="FF"></label>
+              <label><span>Base</span><select id="programmer-base"><option value="16">HEX</option><option value="10">DEC</option><option value="8">OCT</option><option value="2">BIN</option></select></label>
+              <label><span>Value B / Shift</span><input id="programmer-b" dir="ltr" value="0F"></label>
+              <label><span>Operation</span><select id="programmer-op"><option value="convert">Convert</option><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option><option value="shl">Shift left</option><option value="shr">Shift right</option><option value="not">NOT (64-bit)</option></select></label>
+              <button id="programmer-run" type="button" class="advanced-solve">Run</button>
+            </div>
+            <div id="programmer-result" class="programmer-result" aria-live="polite"></div>
+          </div>
+        </section>
+
         <section id="converter-section" class="page-section">
           <div class="tool-page converter-page">
             <div class="tool-page-head"><div><small>Converter</small><h2 id="converter-title">Unit Converter</h2><p>تحويل وحدات هندسية ورياضية محليًا بدون اتصال.</p></div></div>
@@ -153,5 +185,5 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" aria-label="مساحة إعلان سفلية يمين"><span>Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1026"></script>
+<script type="module" src="./src/app.js?v=20260929-1040"></script>
 </body></html>
