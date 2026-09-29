@@ -319,7 +319,7 @@ test("Math Lab UI exposes a numerical sampling example",()=>{
 
 test("Knowledge includes accounting engineering and PMP professional libraries",async()=>{
   const {PROFESSIONAL_LIBRARIES,getProfessionalLibrary}=await import("../src/knowledge/professional-libraries.js");
-  for(const id of ["accounting","engineering","pmp"]){
+  for(const id of ["accounting","civil","pmp"]){
     const library=getProfessionalLibrary(id);
     assert.ok(library,id);
     assert.ok(library.formulas.length>=8,id+" formula count");
@@ -342,7 +342,7 @@ test("all general formula cards expose the interactive formula workbench",()=>{
   const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
   const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
   assert.match(index,/data-knowledge-library="accounting"/);
-  assert.match(index,/data-knowledge-library="engineering"/);
+  assert.match(index,/data-knowledge-library="civil"/);
   assert.match(index,/data-knowledge-library="pmp"/);
   assert.match(index,/id="formula-detail-section"/);
   assert.match(app,/data-general-formula-id/);
