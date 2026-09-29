@@ -122,3 +122,25 @@ test("advanced result formatter localizes English by default and Arabic on reque
   assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"x^2+1",variable:"x",degree:2,roots:["-i","i"]}),/Roots:/);
   assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"x^2+1",variable:"x",degree:2,roots:["-i","i"]},"ar"),/الجذور:/);
 });
+
+test("Advanced Solver differentiates polynomial expressions symbolically",()=>{
+  const r=solveAdvancedInput("diff(x^3+2*x,x)");
+  assert.deepEqual(r,{kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"3*x^2 + 2"});
+});
+
+test("Advanced Solver integrates polynomial expressions symbolically",()=>{
+  const r=solveAdvancedInput("integrate(3*x^2+2,x)");
+  assert.deepEqual(r,{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"x^3 + 2*x + C"});
+});
+
+test("Advanced Solver returns an explicit limitation for non-polynomial symbolic calculus",()=>{
+  const r=solveAdvancedInput("diff(sin(x),x)");
+  assert.deepEqual(r,{kind:"error",code:"SYMBOLIC_CALCULUS_UNSUPPORTED",variables:["x"]});
+});
+
+test("Advanced Solver formatter localizes symbolic calculus labels",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  const r={kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"3*x^2 + 2"};
+  assert.match(formatAdvancedResult(r),/Derivative:/);
+  assert.match(formatAdvancedResult(r,"ar"),/المشتقة:/);
+});
