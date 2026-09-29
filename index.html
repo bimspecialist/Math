@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#eef2f5"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0"><title>Math — Scientific Calculator</title><link rel="stylesheet" href="./styles/calculator.css?v=20260929-0946"></head>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#eef2f5">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Math — Scientific Calculator</title>
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1015">
+</head>
 <body>
 <main class="site-shell">
 <div class="desktop-layout">
@@ -8,16 +17,103 @@
   <aside class="ad-slot ad-left" aria-label="مساحة إعلان جانبية يسار"><span>Advertisement</span></aside>
 
   <div class="center-column">
-    <header class="site-header"><div><small>Math Workspace</small><h1 id="page-title">الحاسبة العلمية</h1></div><div class="site-actions"><button id="lang-toggle" type="button">EN</button></div></header>
-    <nav class="site-tabs" aria-label="Sections"><button type="button" class="active" data-tab-target="calculator">الحاسبة</button><button type="button" data-tab-target="advanced">Advanced Solver</button></nav>
+    <header class="site-header">
+      <div class="site-brand">
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="tool-sidebar" aria-expanded="false">☰</button>
+        <div><small>Math Workspace</small><h1 id="page-title">الحاسبة العلمية</h1></div>
+      </div>
+      <div class="site-actions"><button id="lang-toggle" type="button">EN</button></div>
+    </header>
 
-    <section id="calculator-section" class="page-section active">
-      <div class="calculator-stage"><div id="calculator-root"></div></div>
-    </section>
+    <div class="workspace-shell">
+      <aside id="tool-sidebar" class="tool-sidebar" aria-label="Math tools">
+        <div class="tool-group">
+          <div class="tool-group-title">Calculator</div>
+          <button type="button" class="tool-item active" data-tool-target="calculator"><span class="tool-icon">▦</span><span>Scientific</span></button>
+          <button type="button" class="tool-item" data-tool-target="advanced"><span class="tool-icon">∑</span><span>Advanced Solver</span></button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-group-title">Knowledge</div>
+          <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span>Formula Library</span></button>
+        </div>
+        <div class="tool-group">
+          <div class="tool-group-title">Tools</div>
+          <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span>Math Lab</span></button>
+        </div>
+        <div class="tool-group tool-group-muted" aria-label="Planned tools">
+          <div class="tool-group-title">Next</div>
+          <div class="tool-item-static"><span class="tool-icon">⌁</span><span>Graphing</span><small>soon</small></div>
+          <div class="tool-item-static"><span class="tool-icon">↔</span><span>Converters</span><small>soon</small></div>
+          <div class="tool-item-static"><span class="tool-icon">&lt;/&gt;</span><span>Programmer</span><small>soon</small></div>
+        </div>
+      </aside>
 
-    <section id="advanced-section" class="page-section">
-      <div class="advanced-panel"><h2>Advanced Solver · الحل المتقدم</h2><p class="advanced-note">اكتب تعبيرًا أو معادلة، وللأنظمة ضع كل معادلة في سطر مستقل. يدعم الآن المعادلات الخطية متعددة المجاهيل، التربيعية بمجهول واحد، وأنظمة غير خطية بمجهولين عدديًا.</p><label><span>Equation / المعادلة</span><textarea id="advanced-input" dir="ltr" spellcheck="false">x^2-4=0</textarea></label><div class="advanced-examples" aria-label="أمثلة"><button type="button" data-advanced-example="A*5=5*2^2">A*5=5*2^2</button><button type="button" data-advanced-example="X^2+4">X^2+4</button><button type="button" data-advanced-example="x+y=5&#10;x-y=1">نظام خطي</button><button type="button" data-advanced-example="x^2+y^2=25&#10;x-y=1">نظام غير خطي</button></div><div class="advanced-actions"><button id="advanced-solve" type="button" class="advanced-solve">حل / Solve</button><label class="file-action">رفع صورة<input id="image-upload" type="file" accept="image/*"></label><label class="file-action">الكاميرا<input id="camera-upload" type="file" accept="image/*" capture="environment"></label></div><output id="advanced-result" class="advanced-result" aria-live="polite">جاهز للحل</output><img id="scan-preview" alt="معاينة صورة المعادلة" hidden style="max-width:100%;max-height:300px;margin-top:12px;border-radius:10px"><p id="scan-note" class="advanced-note">لن يتم إرسال صورة إلى أي مزود خارجي في هذه النسخة.</p></div>
-    </section>
+      <div class="workspace-content">
+        <section id="calculator-section" class="page-section active">
+          <div class="calculator-stage"><div id="calculator-root"></div></div>
+        </section>
+
+        <section id="advanced-section" class="page-section">
+          <div class="advanced-panel">
+            <h2>Advanced Solver · الحل المتقدم</h2>
+            <p class="advanced-note">اكتب تعبيرًا أو معادلة، وللأنظمة ضع كل معادلة في سطر مستقل. يدعم الآن المعادلات الخطية متعددة المجاهيل، التربيعية بمجهول واحد، وأنظمة غير خطية بمجهولين عدديًا.</p>
+            <label><span>Equation / المعادلة</span><textarea id="advanced-input" dir="ltr" spellcheck="false">x^2-4=0</textarea></label>
+            <div class="advanced-examples" aria-label="أمثلة">
+              <button type="button" data-advanced-example="A*5=5*2^2">A*5=5*2^2</button>
+              <button type="button" data-advanced-example="X^2+4">X^2+4</button>
+              <button type="button" data-advanced-example="x+y=5&#10;x-y=1">نظام خطي</button>
+              <button type="button" data-advanced-example="x^2+y^2=25&#10;x-y=1">نظام غير خطي</button>
+            </div>
+            <div class="advanced-actions">
+              <button id="advanced-solve" type="button" class="advanced-solve">حل / Solve</button>
+              <label class="file-action">رفع صورة<input id="image-upload" type="file" accept="image/*"></label>
+              <label class="file-action">الكاميرا<input id="camera-upload" type="file" accept="image/*" capture="environment"></label>
+            </div>
+            <output id="advanced-result" class="advanced-result" aria-live="polite">جاهز للحل</output>
+            <img id="scan-preview" alt="معاينة صورة المعادلة" hidden style="max-width:100%;max-height:300px;margin-top:12px;border-radius:10px">
+            <p id="scan-note" class="advanced-note">لن يتم إرسال صورة إلى أي مزود خارجي في هذه النسخة.</p>
+          </div>
+        </section>
+
+        <section id="formulas-section" class="page-section">
+          <div class="tool-page formula-page">
+            <div class="tool-page-head">
+              <div><small>Reference</small><h2>مكتبة القوانين الرياضية · Formula Library</h2><p>مكتبة قابلة للبحث والتوسعة، مصنفة حسب المجال.</p></div>
+            </div>
+            <div class="formula-controls">
+              <label><span>بحث</span><input id="formula-search" type="search" placeholder="اسم القانون، الرمز، أو الكلمة..." autocomplete="off"></label>
+              <label><span>التصنيف</span><select id="formula-category"></select></label>
+            </div>
+            <div id="formula-count" class="formula-count" aria-live="polite"></div>
+            <div id="formula-grid" class="formula-grid"></div>
+          </div>
+        </section>
+
+        <section id="mathlab-section" class="page-section">
+          <div class="tool-page mathlab-page">
+            <div class="tool-page-head">
+              <div><small>Numerical Workspace</small><h2>Math Lab</h2><p>مساحة عمل رقمية بأسلوب MATLAB: متغيرات، تعبيرات، مصفوفات وأوامر أساسية — محليًا داخل المتصفح.</p></div>
+            </div>
+            <div class="mathlab-layout">
+              <div class="mathlab-editor-panel">
+                <div class="mathlab-toolbar">
+                  <button type="button" data-mathlab-example="a = 5&#10;b = a^2 + 3&#10;b">Variables</button>
+                  <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;det(A)&#10;transpose(A)">Matrix</button>
+                </div>
+                <label><span>Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false">a = 5
+b = a^2 + 3
+b</textarea></label>
+                <button id="mathlab-run" type="button" class="advanced-solve">Run ▶</button>
+              </div>
+              <div class="mathlab-results">
+                <section><h3>Command Window</h3><pre id="mathlab-output" aria-live="polite">&gt;&gt; Ready</pre></section>
+                <section><h3>Workspace</h3><div id="mathlab-workspace" class="mathlab-workspace"><span class="muted">No variables yet</span></div></section>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
 
     <aside class="ad-slot ad-bottom" aria-label="مساحة إعلان أفقية وسطية"><span>Advertisement</span></aside>
     <aside class="ad-slot ad-bottom-secondary" aria-label="مساحة إعلان أفقية وسطية إضافية"><span>Advertisement</span></aside>
@@ -25,8 +121,9 @@
 
   <aside class="ad-slot ad-right" aria-label="مساحة إعلان جانبية يمين"><span>Advertisement</span></aside>
   <aside class="ad-slot ad-outer-right" aria-label="مساحة إعلان جانبية خارجية يمين"><span>Advertisement</span></aside>
-
   <aside class="ad-slot ad-bottom-left" aria-label="مساحة إعلان سفلية يسار"><span>Advertisement</span></aside>
   <aside class="ad-slot ad-bottom-right" aria-label="مساحة إعلان سفلية يمين"><span>Advertisement</span></aside>
 </div>
-</main><script type="module" src="./src/app.js?v=20260929-0946"></script></body></html>
+</main>
+<script type="module" src="./src/app.js?v=20260929-1015"></script>
+</body></html>
