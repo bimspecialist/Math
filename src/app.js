@@ -7,6 +7,7 @@ import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
 import { sampleGraphExpression, graphBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
+import { daysBetween, addDays } from "./date/date-calculator.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="en"?"en":"ar";
@@ -181,3 +182,16 @@ function renderProgrammer(){
 document.querySelector("#programmer-run")?.addEventListener("click",renderProgrammer);
 programmerInput?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);
 renderProgrammer();
+
+const dateStart=document.querySelector("#date-start");
+const dateEnd=document.querySelector("#date-end");
+const dateDifference=document.querySelector("#date-difference");
+const dateBase=document.querySelector("#date-base");
+const dateOffset=document.querySelector("#date-offset");
+const dateOffsetResult=document.querySelector("#date-offset-result");
+function updateDateCalculator(){
+  try{if(dateStart&&dateEnd&&dateDifference){const days=daysBetween(dateStart.value,dateEnd.value);dateDifference.textContent=`${days} day${Math.abs(days)===1?"":"s"}`}}catch(error){if(dateDifference)dateDifference.textContent=error.message}
+  try{if(dateBase&&dateOffset&&dateOffsetResult)dateOffsetResult.textContent=addDays(dateBase.value,Number(dateOffset.value))}catch(error){if(dateOffsetResult)dateOffsetResult.textContent=error.message}
+}
+for(const el of [dateStart,dateEnd,dateBase,dateOffset])el?.addEventListener("input",updateDateCalculator);
+updateDateCalculator();
