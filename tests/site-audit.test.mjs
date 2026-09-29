@@ -76,3 +76,9 @@ test("web asset cache-busting versions are synchronized",()=>{
   assert.equal(versions.length,2);
   assert.equal(new Set(versions).size,1);
 });
+
+
+test("vertical advertising rails stay in normal flow to avoid overlapping lower ad slots",()=>{
+  const css=readFileSync(new URL("../styles/calculator.css",import.meta.url),"utf8");
+  assert.match(css,/\.ad-left,\.ad-right,\.ad-outer-left,\.ad-outer-right\{height:720px;position:static;top:auto;align-self:start\}/);
+});
