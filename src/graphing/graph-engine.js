@@ -23,3 +23,15 @@ export function graphBounds(samples,{fallbackMinY=-10,fallbackMaxY=10}={}){
   const span=maxY-minY;
   return{minY:minY-span*.08,maxY:maxY+span*.08};
 }
+
+export function sampleGraphExpressions(source,options={}){
+  const expressions=String(source??"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,6);
+  if(!expressions.length)return{ok:false,error:"EMPTY_GRAPH_EXPRESSION",series:[]};
+  const series=expressions.map(expression=>{
+    const result=sampleGraphExpression(expression,options);
+    return{expression,result,...(result.ok?{samples:result.samples,minX:result.minX,maxX:result.maxX}:{samples:[],error:result.error})};
+  });
+  const valid=series.filter(x=>x.result.ok);
+  if(!valid.length)return{ok:false,error:series[0]?.error??"INVALID_GRAPH",series};
+  return{ok:true,series,minX:valid[0].minX,maxX:valid[0].maxX};
+}
