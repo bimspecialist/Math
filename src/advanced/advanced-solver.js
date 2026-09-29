@@ -1,5 +1,5 @@
 import { evaluateExpression } from "../calculator/math-engine.js";
-import { runPolynomialCalculus } from "./polynomial-calculus.js";
+import { runPolynomialCalculus, parsePolynomial, formatPolynomial } from "./polynomial-calculus.js";
 
 const EPS=1e-9;
 const normalize=s=>String(s??"")
@@ -265,6 +265,18 @@ function parseEquations(source){
 
 export function solveAdvancedInput(source){
   source=normalize(source);
+  const transform=source.match(/^(expand|simplify)\((.*)\)$/i);
+  if(transform){
+    const variables=[...new Set((transform[2].match(/\b[A-Za-z]\b/g)||[]).filter(v=>v.toLowerCase()!=="e"))];
+    const variable=variables[0]??"x";
+    if(variables.length>1)return{kind:"error",code:"SYMBOLIC_TRANSFORM_UNSUPPORTED",variables};
+    try{
+      const expression=formatPolynomial(parsePolynomial(transform[2],variable),variable);
+      return{kind:"symbolic-transform",operation:transform[1].toLowerCase(),variable,expression};
+    }catch{
+      return{kind:"error",code:"SYMBOLIC_TRANSFORM_UNSUPPORTED",variables:variables.length?variables:[variable]};
+    }
+  }
   const calculus=source.match(/^(diff|differentiate|integrate)\((.*),\s*([A-Za-z])\)$/i);
   if(calculus){
     const operation=/^integrate$/i.test(calculus[1])?"integral":"derivative";
