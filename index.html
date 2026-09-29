@@ -8,13 +8,14 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1146">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1205">
 </head>
 <body>
 <main class="site-shell">
 <div class="desktop-layout">
   <aside class="ad-slot ad-outer-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
-  <aside class="ad-slot ad-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+  <aside class="ad-slot ad-left" data-ad-placement="side-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
 
   <div class="center-column">
     <header class="site-header">
@@ -29,6 +30,7 @@
       <aside id="tool-sidebar" class="tool-sidebar" aria-label="Math tools">
         <div class="tool-group">
           <div class="tool-group-title" data-i18n="navCalculatorGroup">Calculator</div>
+          <button type="button" class="tool-item" data-tool-target="categories"><span class="tool-icon">▦</span><span data-i18n="navCategories">Categories</span></button>
           <button type="button" class="tool-item active" data-tool-target="calculator"><span class="tool-icon">▦</span><span data-i18n="navScientific">Scientific</span></button>
           <button type="button" class="tool-item" data-tool-target="advanced"><span class="tool-icon">∑</span><span data-i18n="navAdvancedSolver">Advanced Solver</span></button>
         </div>
@@ -58,6 +60,7 @@
         <div class="tool-group">
           <div class="tool-group-title" data-i18n="navMoreTools">More tools</div>
           <button type="button" class="tool-item" data-tool-target="graphing"><span class="tool-icon">⌁</span><span data-i18n="navGraphing">Graphing</span></button>
+          <button type="button" class="tool-item" data-tool-target="ramp"><span class="tool-icon">∠</span><span data-i18n="navRamp">Ramp Calculator</span></button>
           <button type="button" class="tool-item" data-tool-target="programmer"><span class="tool-icon">&lt;/&gt;</span><span data-i18n="navProgrammer">Programmer</span></button>
         </div>
         <div class="tool-group tool-group-muted" data-i18n-aria-label="plannedTools" aria-label="Planned tools">
@@ -68,6 +71,10 @@
       </aside>
 
       <div class="workspace-content">
+        <section id="categories-section" class="page-section">
+          <div class="tool-page categories-page"><div class="tool-page-head"><div><small data-i18n="categoriesKicker">Explore</small><h2 data-i18n="categoriesTitle">Calculator Categories</h2><p data-i18n="categoriesDescription">Browse available calculators by topic. More tools will be added progressively.</p></div></div><div id="calculator-categories" class="category-grid"></div></div>
+        </section>
+
         <section id="calculator-section" class="page-section active">
           <div class="calculator-stage"><div id="calculator-root"></div></div>
         </section>
@@ -168,6 +175,10 @@ b</textarea></label>
           </div>
         </section>
 
+        <section id="ramp-section" class="page-section">
+          <div class="tool-page ramp-page"><div class="tool-page-head"><div><small data-i18n="constructionKicker">Construction</small><h2 data-i18n="rampTitle">Ramp Calculator</h2><p data-i18n="rampDescription">Enter any two measurements. All lengths must use the same unit.</p></div></div><div class="ramp-grid"><label><span data-i18n="rampRise">Rise</span><input id="ramp-rise" type="number" value="1" min="0" step="any"></label><label><span data-i18n="rampRun">Run</span><input id="ramp-run" type="number" value="12" min="0" step="any"></label><label><span data-i18n="rampLength">Ramp length</span><input id="ramp-length" type="number" min="0" step="any" placeholder="optional"></label><label><span data-i18n="unit">Unit</span><select id="ramp-unit"><option>m</option><option>cm</option><option>mm</option><option>ft</option><option>in</option></select></label><button id="ramp-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button></div><output id="ramp-result" class="ramp-result" aria-live="polite"></output><p class="advanced-note" data-i18n="rampCodeNote">This calculator gives geometry only. Check the building or accessibility code that applies to your project.</p></div>
+        </section>
+
         <section id="date-section" class="page-section">
           <div class="tool-page date-page">
             <div class="tool-page-head"><div><small data-i18n="dateKicker">Date calculation</small><h2 data-i18n="dateTitle">Date Calculator</h2><p data-i18n="dateDescription">Calculate the difference between two dates, or add/subtract days from a date.</p></div></div>
@@ -203,15 +214,16 @@ b</textarea></label>
       </div>
     </div>
 
-    <aside class="ad-slot ad-bottom" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
-    <aside class="ad-slot ad-bottom-secondary" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+    <aside class="ad-slot ad-bottom" data-ad-placement="bottom-main" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+    <aside class="ad-slot ad-bottom-secondary" data-ad-placement="bottom-secondary" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
   </div>
 
-  <aside class="ad-slot ad-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+  <aside class="ad-slot ad-right" data-ad-placement="side-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
   <aside class="ad-slot ad-outer-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
-  <aside class="ad-slot ad-bottom-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
-  <aside class="ad-slot ad-bottom-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+  <aside class="ad-slot ad-bottom-left" data-ad-placement="bottom-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
+  <aside class="ad-slot ad-bottom-right" data-ad-placement="bottom-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1146"></script>
+<div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Privacy choices</strong><p data-i18n="consentText">Advertising and visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
+<script type="module" src="./src/app.js?v=20260929-1205"></script>
 </body></html>
