@@ -237,3 +237,16 @@ test("Math Lab UI exposes an advanced matrix example",()=>{
   const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
   assert.match(index,/data-mathlab-example="A = \[1,2;3,4\].*inv\(A\).*matmul\(A,B\)/s);
 });
+
+test("Math Lab solves linear systems from matrix coefficients",()=>{
+  const r=runMathLabScript("A = [2,1;1,-1]\nb = [5;1]\nx = solve(A,b)\nx");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.x,[[2],[1]]);
+  assert.deepEqual(r.outputs.at(-1).value,[[2],[1]]);
+});
+
+test("Math Lab reports singular linear systems instead of returning unstable values",()=>{
+  const r=runMathLabScript("A = [1,2;2,4]\nb = [3;6]\nsolve(A,b)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"SINGULAR_MATRIX");
+});
