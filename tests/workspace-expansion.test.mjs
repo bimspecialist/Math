@@ -349,3 +349,34 @@ test("all general formula cards expose the interactive formula workbench",()=>{
   assert.match(app,/openReferenceFormula/);
   assert.match(app,/openProfessionalFormula/);
 });
+
+
+test("every professional formula has a bilingual explanation",async()=>{
+  const {PROFESSIONAL_LIBRARIES}=await import("../src/knowledge/professional-libraries.js");
+  const {professionalFormulaExplanation}=await import("../src/knowledge/formula-explanations.js");
+  for(const library of PROFESSIONAL_LIBRARIES){
+    for(const formula of library.formulas){
+      assert.ok(professionalFormulaExplanation(library.id,formula.id,"en").trim(),library.id+"/"+formula.id+" en");
+      assert.ok(professionalFormulaExplanation(library.id,formula.id,"ar").trim(),library.id+"/"+formula.id+" ar");
+    }
+  }
+});
+
+test("every general reference formula exposes an explanation in both locales",async()=>{
+  const {FORMULAS}=await import("../src/formulas/formula-library.js");
+  const {referenceFormulaExplanation}=await import("../src/knowledge/formula-explanations.js");
+  for(const formula of FORMULAS){
+    assert.ok(referenceFormulaExplanation(formula,"en").trim(),formula.id+" en");
+    assert.ok(referenceFormulaExplanation(formula,"ar").trim(),formula.id+" ar");
+  }
+});
+
+test("formula calculator UI renders explanation and variable guide",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/id="formula-detail-explanation"/);
+  assert.match(index,/id="formula-variable-guide"/);
+  assert.match(index,/data-i18n="formulaExplanationTitle"/);
+  assert.match(app,/professionalFormulaExplanation/);
+  assert.match(app,/referenceFormulaExplanation/);
+});
