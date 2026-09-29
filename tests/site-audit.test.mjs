@@ -108,3 +108,19 @@ test("image preview lifecycle revokes replaced object URLs",()=>{
   assert.match(app,/URL\.revokeObjectURL\(scanPreviewUrl\)/);
   assert.match(app,/String\(file\.type\|\|""\)\.startsWith\("image\/"\)/);
 });
+
+
+test("tool sidebar supports localized search and keyboard shortcut",()=>{
+  assert.match(index,/id="tool-search"/);
+  assert.match(index,/id="tool-search-status"/);
+  assert.match(app,/function filterToolNavigation\(\)/);
+  assert.match(app,/toolSearch\?\.addEventListener\("input",filterToolNavigation\)/);
+  assert.match(app,/event\.key\.toLowerCase\(\)==="k"/);
+  assert.match(app,/toolSearch\?\.focus\(\)/);
+});
+
+test("tool search hides unmatched items and empty groups without removing navigation",()=>{
+  assert.match(app,/item\.hidden=!matches/);
+  assert.match(app,/group\.hidden=groupVisible===0/);
+  assert.match(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
+});
