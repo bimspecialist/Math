@@ -42,3 +42,17 @@ test("calculator rendering defaults to English while keeping its physical LTR la
   assert.match(render,/renderCalculatorMarkup\(view,locale="en"\)/);
   assert.match(render,/mountCalculator\(root,controller,locale="en"\)/);
 });
+
+
+test("site exposes indexable metadata and accessible skip navigation",()=>{
+  assert.match(index,/name="description"/);
+  assert.match(index,/rel="canonical" href="https:\/\/bimspecialist\.github\.io\/Math\/"/);
+  assert.match(index,/class="skip-link" href="#main-content"/);
+  assert.match(index,/id="main-content"/);
+  assert.equal(UI_STRINGS.en.skipToContent,"Skip to main content");
+  assert.equal(UI_STRINGS.ar.skipToContent,"تخطي إلى المحتوى الرئيسي");
+});
+
+test("tool selection state is exposed to assistive technology",()=>{
+  assert.match(app,/setAttribute\("aria-pressed",String\(selected\)\)/);
+});
