@@ -74,15 +74,15 @@ test("left and right arrows move a real cursor inside root expression", () => {
   assert.equal(f.cursorPosition(),3);
 });
 
-test("DEL at an internal cursor removes the token under the cursor", () => {
+test("DEL behaves like calculator backspace and removes the token left of the cursor", () => {
   const f=new MathFieldAdapter();
-  f.insertText("1");f.insertText("2");f.insertText("3");
-  f.moveLeft();f.moveLeft();
-  assert.equal(f.cursorPosition(),1);
+  for(const d of "123456")f.insertText(d);
+  f.moveLeft();f.moveLeft();f.moveLeft();
+  assert.equal(f.cursorPosition(),3);
   assert.equal(f.deleteBackward(),true);
-  assert.equal(f.getCanonicalExpression(),"13");
+  assert.equal(f.getCanonicalExpression(),"12456");
   f.insertText("9");
-  assert.equal(f.getCanonicalExpression(),"193");
+  assert.equal(f.getCanonicalExpression(),"129456");
 });
 
 test("cursor can correct a denominator without leaving the fraction", () => {
@@ -93,7 +93,7 @@ test("cursor can correct a denominator without leaving the fraction", () => {
   assert.equal(f.cursorPosition(),1);
   f.deleteBackward();
   f.insertText("2");
-  assert.equal(f.getCanonicalExpression(),"(1)/(32)");
+  assert.equal(f.getCanonicalExpression(),"(1)/(24)");
 });
 
 test("rendered math exposes a visible cursor at the active insertion point", () => {
