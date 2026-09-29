@@ -56,7 +56,7 @@ export function renderCalculatorMarkup(view,locale="ar"){
 }
 export function mapKeyboardToKeyId(key){
   if(/^[0-9]$/.test(key))return "DIGIT_"+key;
-  return ({".":"DECIMAL","+":"ADD","-":"SUBTRACT","*":"MULTIPLY","/":"FRAC","Enter":"EQUALS","=":"EQUALS","Backspace":"DEL","Escape":"AC","ArrowUp":"REPLAY_UP","ArrowDown":"REPLAY_DOWN","ArrowLeft":"REPLAY_LEFT","ArrowRight":"REPLAY_RIGHT","(":"LPAREN",")":"RPAREN"})[key]??null;
+  return ({".":"DECIMAL","+":"ADD","-":"SUBTRACT","*":"MULTIPLY","/":"FRAC","Enter":"EQUALS","=":"EQUALS","Backspace":"DEL","Escape":"AC","ArrowUp":"REPLAY_UP","ArrowDown":"REPLAY_DOWN","ArrowLeft":"REPLAY_LEFT","ArrowRight":"REPLAY_RIGHT","(":"LPAREN",")":"RPAREN","^":"POWER"})[key]??null;
 }
 export function mountCalculator(root,controller,locale="ar"){
   const render=()=>{
