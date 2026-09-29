@@ -8,12 +8,28 @@ import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-c
 import { sampleGraphExpression, graphBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 import { daysBetween, addDays } from "./date/date-calculator.js";
+import { translate } from "./i18n/ui-strings.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
-let locale=document.documentElement.lang==="en"?"en":"ar";
+let locale=document.documentElement.lang==="ar"?"ar":"en";
 const mounted=mountCalculator(calculatorRoot,controller,locale);
 document.addEventListener("keydown",event=>{if(event.target instanceof HTMLTextAreaElement||event.target instanceof HTMLInputElement)return;mounted.keydown(event)});
-document.querySelector("#lang-toggle")?.addEventListener("click",event=>{locale=locale==="ar"?"en":"ar";document.documentElement.lang=locale;document.documentElement.dir=locale==="ar"?"rtl":"ltr";event.currentTarget.textContent=locale==="ar"?"EN":"AR";document.querySelector("#page-title").textContent=locale==="ar"?"الحاسبة العلمية":"Scientific Calculator";document.querySelector("[data-tool-target='calculator'] span:last-child")?.replaceChildren(document.createTextNode(locale==="ar"?"Scientific":"Scientific"));mounted.setLocale(locale)});
+function applyLocale(nextLocale){
+  locale=nextLocale==="ar"?"ar":"en";
+  document.documentElement.lang=locale;
+  document.documentElement.dir=locale==="ar"?"rtl":"ltr";
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=translate(locale,el.dataset.i18n)});
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{el.setAttribute("placeholder",translate(locale,el.dataset.i18nPlaceholder))});
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(el=>{el.setAttribute("aria-label",translate(locale,el.dataset.i18nAriaLabel))});
+  const langToggle=document.querySelector("#lang-toggle");
+  if(langToggle)langToggle.textContent=locale==="en"?"AR":"EN";
+  mounted.setLocale(locale);
+  renderFormulaCategories();
+  renderFormulaLibrary();
+  updateConverter();
+  updateDateCalculator();
+}
+document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 const toolSidebar=document.querySelector("#tool-sidebar");
 function activateTool(target){
   document.querySelectorAll("[data-tool-target]").forEach(x=>x.classList.toggle("active",x.dataset.toolTarget===target));
@@ -31,7 +47,7 @@ document.querySelector("#sidebar-toggle")?.addEventListener("click",event=>{
   const open=toolSidebar?.classList.toggle("open")??false;
   event.currentTarget.setAttribute("aria-expanded",String(open));
 });
-function handleImage(file){if(!file)return;const preview=document.querySelector("#scan-preview");preview.src=URL.createObjectURL(file);preview.hidden=false;document.querySelector("#scan-note").textContent="تم اختيار الصورة. Math Recognition الفعلي سيُربط بمزوّد server-side لاحقًا؛ راجع المعادلة يدويًا قبل الحل."}
+function handleImage(file){if(!file)return;const preview=document.querySelector("#scan-preview");preview.src=URL.createObjectURL(file);preview.hidden=false;document.querySelector("#scan-note").textContent=translate(locale,"scanSelected")}
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 document.querySelector("#camera-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 
@@ -39,7 +55,7 @@ const advancedInput=document.querySelector("#advanced-input");
 const advancedResult=document.querySelector("#advanced-result");
 document.querySelector("#advanced-solve")?.addEventListener("click",()=>{
   const result=solveAdvancedInput(advancedInput?.value??"");
-  if(advancedResult){advancedResult.textContent=formatAdvancedResult(result);advancedResult.dataset.kind=result.kind}
+  if(advancedResult){advancedResult.textContent=formatAdvancedResult(result,locale);advancedResult.dataset.kind=result.kind}
 });
 advancedInput?.addEventListener("keydown",event=>{
   if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();document.querySelector("#advanced-solve")?.click()}
@@ -53,26 +69,38 @@ document.querySelectorAll("[data-advanced-example]").forEach(button=>button.addE
 }));
 
 function escHtml(value){return String(value??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function renderFormulaCategories(){
+  const select=document.querySelector("#formula-category");
+  if(!select)return;
+  const selected=select.value||"all";
+  select.innerHTML="";
+  for(const category of FORMULA_CATEGORIES){
+    const option=document.createElement("option");
+    option.value=category.id;
+    option.textContent=locale==="ar"?category.labelAr:category.labelEn;
+    select.appendChild(option);
+  }
+  if([...select.options].some(x=>x.value===selected))select.value=selected;
+}
 function renderFormulaLibrary(){
   const select=document.querySelector("#formula-category");
   const search=document.querySelector("#formula-search");
   const grid=document.querySelector("#formula-grid");
   const count=document.querySelector("#formula-count");
   if(!select||!grid)return;
-  if(!select.options.length){
-    for(const category of FORMULA_CATEGORIES){
-      const option=document.createElement("option");
-      option.value=category.id;
-      option.textContent=locale==="ar"?category.labelAr:category.labelEn;
-      select.appendChild(option);
-    }
-  }
+  if(!select.options.length)renderFormulaCategories();
   const rows=filterFormulas({category:select.value||"all",query:search?.value??""});
-  grid.innerHTML=rows.map(x=>`<article class="formula-card"><div class="formula-card-meta">${escHtml(x.titleEn)}</div><h3>${escHtml(x.titleAr)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(x.descriptionAr)}</p></article>`).join("");
-  if(count)count.textContent=(locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`);
+  grid.innerHTML=rows.map(x=>{
+    const title=locale==="ar"?x.titleAr:x.titleEn;
+    const secondary=locale==="ar"?x.titleEn:x.titleAr;
+    const description=locale==="ar"?x.descriptionAr:x.descriptionEn;
+    return `<article class="formula-card"><div class="formula-card-meta">${escHtml(secondary)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p></article>`;
+  }).join("");
+  if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
 }
 document.querySelector("#formula-search")?.addEventListener("input",renderFormulaLibrary);
 document.querySelector("#formula-category")?.addEventListener("change",renderFormulaLibrary);
+renderFormulaCategories();
 renderFormulaLibrary();
 
 const mathLabInput=document.querySelector("#mathlab-input");
@@ -87,7 +115,7 @@ function renderMathLabResult(result){
   }
   if(mathLabWorkspace){
     const entries=Object.entries(result.workspace);
-    mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>`<div class="workspace-row"><strong>${escHtml(name)}</strong><code dir="ltr">${escHtml(formatLabValue(value))}</code></div>`).join(""):'<span class="muted">No variables yet</span>';
+    mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>`<div class="workspace-row"><strong>${escHtml(name)}</strong><code dir="ltr">${escHtml(formatLabValue(value))}</code></div>`).join(""):`<span class="muted">${escHtml(translate(locale,"noVariables"))}</span>`;
   }
 }
 document.querySelector("#mathlab-run")?.addEventListener("click",()=>renderMathLabResult(runMathLabScript(mathLabInput?.value??"")));
@@ -120,7 +148,9 @@ function updateConverter(){
 function selectConverterCategory(category){
   if(!CONVERTER_CATEGORIES[category])return;
   activeConverterCategory=category;
-  const title=document.querySelector("#converter-title");if(title)title.textContent=category[0].toUpperCase()+category.slice(1)+" Converter";
+  const title=document.querySelector("#converter-title");
+  const titleKey={length:"converterLength",volume:"converterVolume",mass:"converterMass",temperature:"converterTemperature",energy:"converterEnergy",area:"converterArea",speed:"converterSpeed",time:"converterTime",power:"converterPower",data:"converterData",pressure:"converterPressure",angle:"converterAngle"}[category];
+  if(title)title.textContent=(titleKey?translate(locale,titleKey)+" · ":"")+translate(locale,"converterTitle");
   renderConverterUnits();updateConverter();
 }
 converterInput?.addEventListener("input",updateConverter);converterFrom?.addEventListener("change",updateConverter);converterTo?.addEventListener("change",updateConverter);
@@ -190,8 +220,10 @@ const dateBase=document.querySelector("#date-base");
 const dateOffset=document.querySelector("#date-offset");
 const dateOffsetResult=document.querySelector("#date-offset-result");
 function updateDateCalculator(){
-  try{if(dateStart&&dateEnd&&dateDifference){const days=daysBetween(dateStart.value,dateEnd.value);dateDifference.textContent=`${days} day${Math.abs(days)===1?"":"s"}`}}catch(error){if(dateDifference)dateDifference.textContent=error.message}
+  try{if(dateStart&&dateEnd&&dateDifference){const days=daysBetween(dateStart.value,dateEnd.value);dateDifference.textContent=locale==="ar"?`${days} يومًا`:`${days} day${Math.abs(days)===1?"":"s"}`}}catch(error){if(dateDifference)dateDifference.textContent=error.message}
   try{if(dateBase&&dateOffset&&dateOffsetResult)dateOffsetResult.textContent=addDays(dateBase.value,Number(dateOffset.value))}catch(error){if(dateOffsetResult)dateOffsetResult.textContent=error.message}
 }
 for(const el of [dateStart,dateEnd,dateBase,dateOffset])el?.addEventListener("input",updateDateCalculator);
 updateDateCalculator();
+
+applyLocale(locale);
