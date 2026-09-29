@@ -168,3 +168,12 @@ test("Advanced Solver reports unsupported symbolic transforms explicitly",()=>{
   const r=solveAdvancedInput("expand(sin(x))");
   assert.deepEqual(r,{kind:"error",code:"SYMBOLIC_TRANSFORM_UNSUPPORTED",variables:["x"]});
 });
+
+test("Advanced Solver UI exposes expand and simplify examples",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-advanced-example="expand\(\(x\+1\)\^2\)"/);
+  assert.match(index,/data-advanced-example="simplify\(x\+x\+2\)"/);
+  assert.match(index,/data-i18n="exampleExpand"/);
+  assert.match(index,/data-i18n="exampleSimplify"/);
+});
