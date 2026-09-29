@@ -18,6 +18,7 @@ function applyLocale(nextLocale){
   locale=nextLocale==="ar"?"ar":"en";
   document.documentElement.lang=locale;
   document.documentElement.dir=locale==="ar"?"rtl":"ltr";
+  document.title=translate(locale,"siteTitle");
   document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=translate(locale,el.dataset.i18n)});
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{el.setAttribute("placeholder",translate(locale,el.dataset.i18nPlaceholder))});
   document.querySelectorAll("[data-i18n-aria-label]").forEach(el=>{el.setAttribute("aria-label",translate(locale,el.dataset.i18nAriaLabel))});
