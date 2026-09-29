@@ -218,3 +218,45 @@ test("Advanced Solver UI exposes a finite-limit example",async()=>{
   assert.match(index,/data-advanced-example="limit\(sin\(x\)\/x,x,0\)"/);
   assert.match(index,/data-i18n="exampleLimit"/);
 });
+
+
+test("Advanced Solver finds a numerical root from an initial guess",()=>{
+  const r=solveAdvancedInput("nsolve(cos(x)=x,x,0.7)");
+  assert.equal(r.kind,"numeric-root");
+  assert.equal(r.variable,"x");
+  assert.equal(r.method,"newton");
+  assert.ok(Math.abs(r.value-0.7390851332)<1e-8);
+  assert.ok(Math.abs(r.residual)<1e-8);
+});
+
+test("Advanced Solver finds a numerical root inside a sign-changing bracket",()=>{
+  const r=solveAdvancedInput("nsolve(x^3-2=0,x,1,2)");
+  assert.equal(r.kind,"numeric-root");
+  assert.equal(r.variable,"x");
+  assert.equal(r.method,"bisection");
+  assert.ok(Math.abs(r.value-Math.cbrt(2))<1e-8);
+  assert.ok(Math.abs(r.residual)<1e-8);
+});
+
+test("Advanced Solver rejects invalid numerical solve syntax or non-bracketing intervals",()=>{
+  assert.deepEqual(solveAdvancedInput("nsolve(x^2+1=0,x,0,1)"),{kind:"error",code:"NO_NUMERIC_ROOT",variables:["x"]});
+  assert.equal(solveAdvancedInput("nsolve(x^2-2=0,x,2,1)").code,"INVALID_NUMERIC_SOLVE");
+});
+
+test("Advanced Solver formatter presents numerical roots in both languages",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  const r={kind:"numeric-root",variable:"x",value:1.25,residual:0,method:"bisection"};
+  assert.match(formatAdvancedResult(r),/Numerical root: x = 1.25/);
+  assert.match(formatAdvancedResult(r),/Bisection/);
+  assert.match(formatAdvancedResult(r,"ar"),/الجذر العددي: x = 1.25/);
+  assert.match(formatAdvancedResult(r,"ar"),/التنصيف/);
+});
+
+test("Advanced Solver UI exposes numerical root examples",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-advanced-example="nsolve\(cos\(x\)=x,x,0\.7\)"/);
+  assert.match(index,/data-advanced-example="nsolve\(x\^3-2=0,x,1,2\)"/);
+  assert.match(index,/data-i18n="exampleNumericRootGuess"/);
+  assert.match(index,/data-i18n="exampleNumericRootBracket"/);
+});
