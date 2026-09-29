@@ -1,0 +1,46 @@
+const PROFESSIONAL_EXPLANATIONS=Object.freeze({
+  accounting:Object.freeze({
+    "gross-profit":{en:"Shows the amount left from sales revenue after subtracting the direct cost of goods or services sold. It is used to evaluate the profitability of the core activity before operating expenses, finance costs, and tax.",ar:"يوضح المبلغ المتبقي من الإيرادات بعد طرح التكلفة المباشرة للبضاعة أو الخدمات المباعة. ويُستخدم لتقييم ربحية النشاط الأساسي قبل المصروفات التشغيلية وتكاليف التمويل والضرائب."},
+    "net-margin":{en:"Measures how much net profit is generated from each unit of revenue. A higher percentage generally means a larger share of sales remains as profit after all expenses.",ar:"يقيس مقدار صافي الربح المتحقق من كل وحدة إيراد. وكلما ارتفعت النسبة فهذا يعني عادةً أن جزءًا أكبر من المبيعات يبقى كربح بعد جميع المصروفات."},
+    "current-ratio":{en:"Compares current assets with current liabilities to indicate short-term liquidity and the ability to cover obligations due within the operating cycle.",ar:"يقارن الأصول المتداولة بالخصوم المتداولة لقياس السيولة قصيرة الأجل والقدرة على تغطية الالتزامات المستحقة خلال دورة التشغيل."},
+    "quick-ratio":{en:"A stricter liquidity measure than the current ratio because it focuses on the most liquid current assets and excludes inventory.",ar:"مقياس سيولة أكثر تحفظًا من نسبة التداول لأنه يركز على الأصول المتداولة الأعلى سيولة ويستبعد المخزون."},
+    "debt-equity":{en:"Compares total debt with owners' equity to show the relative use of borrowed funds versus shareholders' financing.",ar:"يقارن إجمالي الدين بحقوق الملكية لإظهار مدى اعتماد المنشأة على التمويل المقترض مقارنة بتمويل الملاك أو المساهمين."},
+    "roa":{en:"Measures how effectively the business generates net income from the assets employed in operations.",ar:"يقيس مدى كفاءة المنشأة في توليد صافي الدخل باستخدام الأصول الموظفة في النشاط."},
+    "roe":{en:"Measures the return generated on the owners' average equity during the period.",ar:"يقيس العائد المتحقق على متوسط حقوق الملكية خلال الفترة."},
+    "break-even":{en:"Calculates the number of units that must be sold so that total contribution margin exactly covers fixed costs, producing neither profit nor loss.",ar:"يحسب عدد الوحدات المطلوب بيعها بحيث يغطي هامش المساهمة إجمالي التكاليف الثابتة تمامًا دون تحقيق ربح أو خسارة."},
+    "inventory-turnover":{en:"Estimates how many times average inventory is sold or consumed during the period relative to cost of goods sold.",ar:"يقدّر عدد مرات بيع أو استهلاك متوسط المخزون خلال الفترة مقارنة بتكلفة البضاعة المباعة."}
+  }),
+  civil:Object.freeze({
+    "rect-area":{en:"Calculates the plan area of a rectangular surface by multiplying its length by its width. Use consistent length units; with metres, the result is in square metres.",ar:"يحسب المساحة الأفقية لسطح مستطيل بضرب الطول في العرض. استخدم وحدات طول متجانسة؛ وعند إدخال الأبعاد بالمتر تكون النتيجة بالمتر المربع."},
+    "concrete-volume":{en:"Calculates concrete volume for a rectangular slab or prism from length, width, and thickness. Enter all dimensions in metres to obtain cubic metres.",ar:"يحسب حجم الخرسانة لبلاطة أو منشور مستطيل من الطول والعرض والسمك. أدخل جميع الأبعاد بالمتر للحصول على النتيجة بالمتر المكعب."},
+    "footing-volume":{en:"Calculates the gross concrete volume of a rectangular footing from length, width, and depth. It does not deduct openings or account for waste.",ar:"يحسب الحجم الإجمالي لخرسانة قاعدة مستطيلة من الطول والعرض والعمق. ولا يخصم الفتحات أو يضيف نسبة الهالك."},
+    "slope-percent":{en:"Expresses slope as the vertical rise divided by horizontal run, multiplied by 100. For example, 1 m rise over 20 m run equals 5%.",ar:"يعبّر عن الميل كنسبة الارتفاع الرأسي إلى الامتداد الأفقي مضروبة في 100. مثال: ارتفاع 1 م على امتداد 20 م يساوي ميلًا قدره 5%."},
+    "bearing-pressure":{en:"Calculates average contact pressure beneath a loaded area by dividing the applied load by the bearing area. With kN and m², the result is kPa.",ar:"يحسب متوسط ضغط التلامس أسفل المساحة المحمّلة بقسمة الحمل على مساحة التحمل. عند استخدام kN وm² تكون النتيجة بوحدة kPa."},
+    "udl-moment":{en:"Gives the maximum bending moment at midspan for a simply supported beam carrying a uniformly distributed load over the full span. The formula assumes ideal simple supports and a uniform load.",ar:"يعطي أقصى عزم انحناء عند منتصف البحر لكمرة بسيطة الارتكاز تحمل حملًا موزعًا بانتظام على كامل البحر. يفترض القانون ارتكازات بسيطة مثالية وحملًا موزعًا منتظمًا."},
+    "center-load-moment":{en:"Gives the maximum midspan bending moment for a simply supported beam with a single point load applied at the centre of the span.",ar:"يعطي أقصى عزم انحناء عند منتصف البحر لكمرة بسيطة الارتكاز عليها حمل مركز واحد في منتصف البحر."},
+    "rebar-unit-weight":{en:"Calculates the theoretical mass per metre of a solid steel reinforcing bar from its diameter using steel density 7850 kg/m³.",ar:"يحسب الوزن النظري لكل متر طولي من سيخ تسليح فولاذي مصمت من قطره باستخدام كثافة فولاذ مقدارها 7850 كجم/م³."},
+    "rebar-total-weight":{en:"Calculates total reinforcing-steel mass by multiplying unit weight per metre by bar length and quantity.",ar:"يحسب الوزن الإجمالي لحديد التسليح بضرب وزن المتر الطولي في طول السيخ وعدد الأسياخ."}
+  }),
+  pmp:Object.freeze({
+    "cpi":{en:"Cost Performance Index compares earned value with actual cost. A value above 1 indicates cost efficiency better than planned; below 1 indicates cost inefficiency.",ar:"يقارن مؤشر أداء التكلفة بين القيمة المكتسبة والتكلفة الفعلية. القيمة الأكبر من 1 تشير إلى كفاءة تكلفة أفضل من المخطط، والأقل من 1 تشير إلى ضعف كفاءة التكلفة."},
+    "spi":{en:"Schedule Performance Index compares earned value with planned value. A value above 1 indicates progress ahead of the planned rate; below 1 indicates progress behind plan.",ar:"يقارن مؤشر أداء الجدول بين القيمة المكتسبة والقيمة المخططة. القيمة الأكبر من 1 تعني تقدمًا أسرع من المخطط، والأقل من 1 تعني تأخرًا عن الخطة."},
+    "cv":{en:"Cost Variance is the difference between earned value and actual cost. A positive result is favourable; a negative result indicates cost overrun.",ar:"تباين التكلفة هو الفرق بين القيمة المكتسبة والتكلفة الفعلية. النتيجة الموجبة مواتية، والسالبة تشير إلى تجاوز في التكلفة."},
+    "sv":{en:"Schedule Variance is the difference between earned value and planned value. A positive value indicates more work has been earned than planned at that point.",ar:"تباين الجدول هو الفرق بين القيمة المكتسبة والقيمة المخططة. القيمة الموجبة تعني أن حجم العمل المنجز بالقيمة المكتسبة أكبر من المخطط حتى تلك اللحظة."},
+    "eac-cpi":{en:"Forecasts total project cost at completion assuming the current cost-performance trend continues for the remaining work.",ar:"يتنبأ بالتكلفة الإجمالية للمشروع عند الإكمال بافتراض استمرار اتجاه أداء التكلفة الحالي على العمل المتبقي."},
+    "eac-remaining":{en:"Forecasts total cost by adding actual cost to date to the original budget for the remaining unearned work. It assumes future remaining work will be completed at the original budgeted rate.",ar:"يتنبأ بالتكلفة الإجمالية بإضافة التكلفة الفعلية حتى تاريخه إلى الميزانية الأصلية للعمل المتبقي غير المكتسب. ويفترض تنفيذ العمل المتبقي وفق المعدل الأصلي للميزانية."},
+    "vac":{en:"Variance at Completion compares the approved budget at completion with the latest estimate at completion. Positive values indicate a forecast under budget; negative values indicate over budget.",ar:"يقارن التباين عند الإكمال بين الميزانية المعتمدة عند الإكمال وأحدث تقدير للتكلفة عند الإكمال. القيمة الموجبة تشير إلى توقع أقل من الميزانية، والسالبة إلى تجاوزها."},
+    "tcpi":{en:"Shows the cost efficiency that must be achieved on the remaining work to meet the selected budget target. Values above 1 require stronger future cost performance.",ar:"يوضح كفاءة التكلفة المطلوب تحقيقها في العمل المتبقي للوصول إلى هدف الميزانية المحدد. القيم الأعلى من 1 تتطلب أداء تكلفة أقوى مستقبلًا."},
+    "pert":{en:"Computes a weighted expected duration from optimistic, most-likely, and pessimistic estimates. The most-likely estimate receives four times the weight of each extreme estimate.",ar:"يحسب مدة متوقعة موزونة من التقديرات المتفائل والأرجح والمتشائم. يحصل التقدير الأرجح على وزن يساوي أربعة أضعاف وزن كل من التقديرين الطرفيين."}
+  })
+});
+
+export function professionalFormulaExplanation(libraryId,formulaId,locale="en"){
+  const item=PROFESSIONAL_EXPLANATIONS[libraryId]?.[formulaId];
+  if(!item)return"";
+  return locale==="ar"?item.ar:item.en;
+}
+
+export function referenceFormulaExplanation(formula,locale="en"){
+  if(!formula)return"";
+  return locale==="ar"?formula.descriptionAr:formula.descriptionEn;
+}
