@@ -301,6 +301,60 @@ function estimateTwoSidedLimit(expression,variable,point){
   if(spread>1e-5*Math.max(1,Math.abs(last)))return null;
   return clean(last);
 }
+
+function numericRootFunction(equation,variable){
+  const parts=String(equation).split("=");
+  if(parts.length===1)return values=>{
+    const r=evalNumeric(parts[0],[variable],values,"RAD");
+    return r.kind==="value"?r.numeric:NaN;
+  };
+  if(parts.length===2&&parts[0].trim()&&parts[1].trim())return differenceFunction(parts[0].trim(),parts[1].trim(),[variable]);
+  return null;
+}
+
+function solveNumericRootNewton(equation,variable,guess){
+  const f=numericRootFunction(equation,variable);
+  if(!f||!Number.isFinite(guess))return null;
+  let x=guess;
+  for(let i=0;i<80;i++){
+    const fx=f([x]);
+    if(!Number.isFinite(fx))return null;
+    if(Math.abs(fx)<1e-10)return{value:clean(x),residual:clean(fx),method:"newton"};
+    const h=1e-6*Math.max(1,Math.abs(x));
+    const fp=f([x+h]),fm=f([x-h]);
+    if(!Number.isFinite(fp)||!Number.isFinite(fm))return null;
+    const d=(fp-fm)/(2*h);
+    if(!Number.isFinite(d)||Math.abs(d)<1e-12)return null;
+    const next=x-fx/d;
+    if(!Number.isFinite(next)||Math.abs(next)>1e12)return null;
+    if(Math.abs(next-x)<1e-12*Math.max(1,Math.abs(next))){
+      x=next;
+      const final=f([x]);
+      return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton"}:null;
+    }
+    x=next;
+  }
+  const final=f([x]);
+  return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton"}:null;
+}
+
+function solveNumericRootBracket(equation,variable,min,max){
+  const f=numericRootFunction(equation,variable);
+  if(!f||!Number.isFinite(min)||!Number.isFinite(max)||!(min<max))return null;
+  let a=min,b=max,fa=f([a]),fb=f([b]);
+  if(!Number.isFinite(fa)||!Number.isFinite(fb))return null;
+  if(Math.abs(fa)<1e-10)return{value:clean(a),residual:clean(fa),method:"bisection"};
+  if(Math.abs(fb)<1e-10)return{value:clean(b),residual:clean(fb),method:"bisection"};
+  if(fa*fb>0)return null;
+  for(let i=0;i<120;i++){
+    const m=(a+b)/2,fm=f([m]);
+    if(!Number.isFinite(fm))return null;
+    if(Math.abs(fm)<1e-10||Math.abs(b-a)<1e-12*Math.max(1,Math.abs(m)))return{value:clean(m),residual:clean(fm),method:"bisection"};
+    if(fa*fm<=0){b=m;fb=fm}else{a=m;fa=fm}
+  }
+  const m=(a+b)/2,fm=f([m]);
+  return Number.isFinite(fm)?{value:clean(m),residual:clean(fm),method:"bisection"}:null;
+}
 function parseEquations(source){
   const lines=source.split(/[\n;]/).map(s=>s.trim()).filter(Boolean);
   if(!lines.length)return[];
@@ -313,6 +367,24 @@ function parseEquations(source){
 
 export function solveAdvancedInput(source){
   source=normalize(source);
+  const nsolveCall=source.match(/^nsolve\((.*)\)$/i);
+  if(nsolveCall){
+    const args=splitTopLevelArgs(nsolveCall[1]);
+    if((args.length!==3&&args.length!==4)||!/^[A-Za-z]$/.test(args[1]))return{kind:"error",code:"INVALID_NUMERIC_SOLVE"};
+    const variable=args[1];
+    let solved=null;
+    if(args.length===3){
+      const guess=Number(args[2]);
+      if(!Number.isFinite(guess))return{kind:"error",code:"INVALID_NUMERIC_SOLVE",variables:[variable]};
+      solved=solveNumericRootNewton(args[0],variable,guess);
+    }else{
+      const min=Number(args[2]),max=Number(args[3]);
+      if(!Number.isFinite(min)||!Number.isFinite(max)||!(min<max))return{kind:"error",code:"INVALID_NUMERIC_SOLVE",variables:[variable]};
+      solved=solveNumericRootBracket(args[0],variable,min,max);
+    }
+    if(!solved)return{kind:"error",code:"NO_NUMERIC_ROOT",variables:[variable]};
+    return{kind:"numeric-root",variable,value:solved.value,residual:solved.residual,method:solved.method};
+  }
   const limitCall=source.match(/^limit\((.*)\)$/i);
   if(limitCall){
     const args=splitTopLevelArgs(limitCall[1]);
