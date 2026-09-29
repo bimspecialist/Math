@@ -70,3 +70,9 @@ test("app initializes ads, analytics, categories and ramp calculator",()=>{
   assert.match(app,/renderCalculatorCategories/);
   assert.match(app,/calculateRamp/);
 });
+
+test("index includes the exact AdSense ownership script in head",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-5386218928692257/);
+  assert.match(index,/crossorigin="anonymous"/);
+});
