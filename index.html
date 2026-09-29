@@ -33,7 +33,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1430">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1445">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -153,6 +153,10 @@
             <div class="tool-page-head">
               <div><small data-i18n="professionalKnowledgeKicker">Professional knowledge</small><h2 id="knowledge-title">Professional Library</h2><p id="knowledge-description"></p></div>
             </div>
+            <div class="formula-controls knowledge-controls">
+              <label><span data-i18n="search">Search</span><input id="knowledge-search" type="search" data-i18n-placeholder="knowledgeSearchPlaceholder" placeholder="Search this professional library..." autocomplete="off" aria-controls="knowledge-formulas" aria-describedby="knowledge-count"></label>
+            </div>
+            <div id="knowledge-count" class="formula-count" aria-live="polite"></div>
             <div id="knowledge-formulas" class="formula-grid knowledge-grid"></div>
           </div>
         </section>
@@ -311,5 +315,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1430"></script>
+<script type="module" src="./src/app.js?v=20260929-1445"></script>
 </body></html>
