@@ -453,7 +453,7 @@ function formatLabValue(value){
 function formatMathLabError(error){
   const code=error?.message??"MATHLAB_ERROR";
   const localized=translate(locale,"ml_"+code);
-  const message=localized==="ml_"+code?code:localized;
+  const message=localized==="ml_"+code?`${translate(locale,"invalidValue")} (${code})`:localized;
   const line=error?.line?`${translate(locale,"mathLabErrorLine")} ${error.line}: `:"";
   return line+message;
 }
