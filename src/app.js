@@ -37,7 +37,10 @@ function applyLocale(nextLocale){
   renderFormulaCategories();
   renderFormulaLibrary();
   renderProfessionalLibrary();
-  if(formulaDetailContext)renderFormulaDetail();
+  if(formulaDetailContext){
+    captureFormulaDetailValues();
+    renderFormulaDetail();
+  }
   renderCalculatorCategories();
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
@@ -117,6 +120,7 @@ document.addEventListener("keydown",event=>{
   }
 });
 window.addEventListener("hashchange",()=>{
+  if(restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
@@ -158,6 +162,7 @@ function escHtml(value){return String(value??"").replace(/[&<>"]/g,c=>({"&":"&am
 let activeKnowledgeLibrary="accounting";
 let formulaDetailContext=null;
 let formulaDetailBackTarget="formulas";
+let formulaDetailValues={};
 
 function selectProfessionalLibrary(id){
   if(!getProfessionalLibrary(id))return;
@@ -181,19 +186,40 @@ function renderProfessionalLibrary(){
     openProfessionalFormula(button.dataset.professionalLibrary,button.dataset.professionalFormula);
   }));
 }
-function openProfessionalFormula(libraryId,formulaId){
-  const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return;
+function formulaHashForContext(context=formulaDetailContext){
+  if(!context)return"#formulas";
+  if(context.kind==="professional")return`#formula/professional/${encodeURIComponent(context.libraryId)}/${encodeURIComponent(context.formulaId)}`;
+  return`#formula/reference/${encodeURIComponent(context.formulaId)}`;
+}
+function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
+  const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return false;
+  activeKnowledgeLibrary=libraryId;
   formulaDetailContext={kind:"professional",libraryId,formulaId};
   formulaDetailBackTarget="knowledge";
+  formulaDetailValues={};
+  renderProfessionalLibrary();
   renderFormulaDetail();
-  activateTool("formula-detail");
+  activateTool("formula-detail",{updateHash:false});
+  if(!fromHash)history.replaceState(null,"",formulaHashForContext());
+  return true;
 }
-function openReferenceFormula(formulaId){
-  const formula=FORMULAS.find(x=>x.id===formulaId);if(!formula)return;
+function openReferenceFormula(formulaId,{fromHash=false}={}){
+  const formula=FORMULAS.find(x=>x.id===formulaId);if(!formula)return false;
   formulaDetailContext={kind:"reference",formulaId};
   formulaDetailBackTarget="formulas";
+  formulaDetailValues={};
   renderFormulaDetail();
-  activateTool("formula-detail");
+  activateTool("formula-detail",{updateHash:false});
+  if(!fromHash)history.replaceState(null,"",formulaHashForContext());
+  return true;
+}
+function restoreFormulaHashRoute(){
+  const raw=decodeURIComponent(window.location.hash.slice(1));
+  const parts=raw.split("/");
+  if(parts[0]!=="formula")return false;
+  if(parts[1]==="professional"&&parts[2]&&parts[3])return openProfessionalFormula(parts[2],parts[3],{fromHash:true});
+  if(parts[1]==="reference"&&parts[2])return openReferenceFormula(parts[2],{fromHash:true});
+  return false;
 }
 function currentFormulaDetail(){
   if(!formulaDetailContext)return null;
@@ -219,6 +245,12 @@ function currentFormulaDetail(){
     variables:inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
     professional:null
   };
+}
+function captureFormulaDetailValues(){
+  const inputs=document.querySelectorAll("#formula-detail-form [data-formula-variable]");
+  if(!inputs.length)return;
+  formulaDetailValues={...formulaDetailValues};
+  inputs.forEach(input=>{formulaDetailValues[input.dataset.formulaVariable]=input.value});
 }
 function renderFormulaDetail(){
   const detail=currentFormulaDetail();if(!detail)return;
@@ -246,16 +278,33 @@ function renderFormulaDetail(){
   if(calculateButton)calculateButton.textContent=translate(locale,detail.professional?"substituteAndCalculate":"substituteValues");
   if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
     const label=locale==="ar"?variable.labelAr:variable.labelEn;
-    const value=variable.defaultValue??"";
-    return `<label><span>${escHtml(label)}</span><input type="number" step="any" inputmode="decimal" data-formula-variable="${escHtml(variable.id)}" value="${escHtml(value)}"></label>`;
+    const value=formulaDetailValues[variable.id]??variable.defaultValue??"";
+    return `<label><span>${escHtml(label)}</span><input type="number" step="any" inputmode="decimal" required data-formula-variable="${escHtml(variable.id)}" value="${escHtml(value)}" aria-invalid="false"></label>`;
   }).join(""):`<p class="empty-state">${escHtml(translate(locale,"referenceSubstitution"))}</p>`;
   if(substitution)substitution.textContent="";
   if(result)result.textContent="";
+  const status=document.querySelector("#formula-detail-status");if(status)status.textContent="";
 }
 function calculateFormulaDetail(){
   const detail=currentFormulaDetail();if(!detail)return;
+  const inputs=[...document.querySelectorAll("#formula-detail-form [data-formula-variable]")];
   const values={};
-  document.querySelectorAll("#formula-detail-form [data-formula-variable]").forEach(input=>{values[input.dataset.formulaVariable]=input.value});
+  let firstInvalid=null;
+  for(const input of inputs){
+    const raw=input.value.trim();
+    const valid=raw!==""&&Number.isFinite(Number(raw));
+    input.setAttribute("aria-invalid",String(!valid));
+    if(!valid&&!firstInvalid)firstInvalid=input;
+    values[input.dataset.formulaVariable]=raw;
+  }
+  formulaDetailValues={...values};
+  const status=document.querySelector("#formula-detail-status");
+  if(firstInvalid){
+    if(status)status.textContent=translate(locale,firstInvalid.value.trim()===""?"missingValue":"invalidValue");
+    firstInvalid.focus();
+    return;
+  }
+  if(status)status.textContent="";
   const substitution=document.querySelector("#formula-detail-substitution");
   const result=document.querySelector("#formula-detail-result");
   const substituted=substituteFormula(detail.expression,values);
@@ -267,11 +316,35 @@ function calculateFormulaDetail(){
     result.textContent=evaluated.code==="MISSING_VALUE"?translate(locale,"missingValue"):translate(locale,"invalidValue");
     return;
   }
-  const numeric=Number(evaluated.value.toPrecision(12));
+  const numeric=new Intl.NumberFormat(locale==="ar"?"ar":"en",{maximumSignificantDigits:12}).format(evaluated.value);
   result.textContent=`${translate(locale,"calculatedResult")}: ${numeric}${detail.professional.unit??""}`;
 }
-document.querySelector("#formula-detail-calculate")?.addEventListener("click",calculateFormulaDetail);
-document.querySelector("#formula-detail-back")?.addEventListener("click",()=>activateTool(formulaDetailBackTarget));
+function clearFormulaDetail(){
+  formulaDetailValues={};
+  renderFormulaDetail();
+  document.querySelector("#formula-detail-form [data-formula-variable]")?.focus();
+}
+async function copyFormulaDetailResult(){
+  const substitution=document.querySelector("#formula-detail-substitution")?.textContent?.trim()??"";
+  const result=document.querySelector("#formula-detail-result")?.textContent?.trim()??"";
+  const status=document.querySelector("#formula-detail-status");
+  const text=[substitution,result].filter(Boolean).join("\n");
+  if(!text||!navigator.clipboard?.writeText){if(status)status.textContent=translate(locale,"copyUnavailable");return}
+  try{
+    await navigator.clipboard.writeText(text);
+    if(status)status.textContent=translate(locale,"resultCopied");
+  }catch{
+    if(status)status.textContent=translate(locale,"copyUnavailable");
+  }
+}
+document.querySelector("#formula-detail-form")?.addEventListener("submit",event=>{event.preventDefault();calculateFormulaDetail()});
+document.querySelector("#formula-detail-clear")?.addEventListener("click",clearFormulaDetail);
+document.querySelector("#formula-detail-copy")?.addEventListener("click",copyFormulaDetailResult);
+document.querySelector("#formula-detail-back")?.addEventListener("click",()=>{
+  formulaDetailValues={};
+  formulaDetailContext=null;
+  activateTool(formulaDetailBackTarget);
+});
 
 function renderFormulaCategories(){
   const select=document.querySelector("#formula-category");
@@ -486,6 +559,8 @@ function setupConsent(){
 }
 setupConsent();
 
-const initialTool=decodeURIComponent(window.location.hash.slice(1));
-if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
-else activateTool("calculator",{updateHash:false,track:false});
+if(!restoreFormulaHashRoute()){
+  const initialTool=decodeURIComponent(window.location.hash.slice(1));
+  if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
+  else activateTool("calculator",{updateHash:false,track:false});
+}
