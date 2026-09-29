@@ -51,10 +51,8 @@ export class MathFieldAdapter{
  }
  _nameFor(frame,array){for(const k of["numerator","denominator","integer","base","exponent","radicand","index"])if(frame.node[k]===array)return k;return"root"}
  deleteBackward(){
-  if(this.current.length){
-    if(this.cursorIndex<this.current.length){this.current.splice(this.cursorIndex,1);return true}
-    if(this.cursorIndex>0){this.current.splice(this.cursorIndex-1,1);this.cursorIndex--;return true}
-  }
+  if(this.current.length&&this.cursorIndex>0){this.current.splice(this.cursorIndex-1,1);this.cursorIndex--;return true}
+  if(this.current.length&&this.cursorIndex===0)return false;
   const f=this.top();if(!f)return false;
   const allEmpty=Object.values(f.node).filter(Array.isArray).every(a=>a.length===0);if(!allEmpty)return false;
   const ix=f.parent.indexOf(f.node);if(ix>=0)f.parent.splice(ix,1);
