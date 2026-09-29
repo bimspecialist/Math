@@ -32,3 +32,19 @@ test("history recall preserves structured Natural Display instead of flattening 
   assert.equal(x.view().canonicalExpression,"(1)/(2)");
   assert.match(x.view().mathHtml,/math-fraction/);
 });
+
+
+test("REPLAY left and right edit the current root expression before history",()=> {
+  const x=new CalculatorController();
+  x.dispatch("DIGIT_1");x.dispatch("DIGIT_2");x.dispatch("DIGIT_3");
+  x.dispatch("REPLAY_LEFT");x.dispatch("REPLAY_LEFT");
+  x.dispatch("DEL");x.dispatch("DIGIT_9");
+  assert.equal(x.view().canonicalExpression,"193");
+});
+
+test("REPLAY left edits inside a fraction denominator and DEL replaces the selected digit",()=> {
+  const x=new CalculatorController();
+  x.dispatch("FRAC");x.dispatch("DIGIT_1");x.dispatch("REPLAY_DOWN");x.dispatch("DIGIT_3");x.dispatch("DIGIT_4");
+  x.dispatch("REPLAY_LEFT");x.dispatch("DEL");x.dispatch("DIGIT_2");
+  assert.equal(x.view().canonicalExpression,"(1)/(32)");
+});
