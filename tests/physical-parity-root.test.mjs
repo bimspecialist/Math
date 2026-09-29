@@ -9,8 +9,8 @@ const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const app = readFileSync(new URL("../src/app.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles/calculator.css", import.meta.url), "utf8");
 
-test("Arabic site shell is RTL while calculator remains fixed LTR", () => {
-  assert.match(index, /<html[^>]*lang="ar"[^>]*dir="rtl"/);
+test("English is default, Arabic switches the site RTL, and calculator geometry remains fixed LTR", () => {
+  assert.match(index, /<html[^>]*lang="en"[^>]*dir="ltr"/);
   assert.match(app, /document\.documentElement\.dir=locale==="ar"\?"rtl":"ltr"/);
   const html = renderCalculatorMarkup(new CalculatorController().view(), "ar");
   assert.match(html, /class="calculator-shell"[^>]*dir="ltr"/);
