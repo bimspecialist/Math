@@ -36,4 +36,4 @@ The website keeps the UI entry point for image/camera input and advanced solving
 
 ## Math Lab
 
-Math Lab is an expanding browser-based numerical workspace, not a MATLAB-compatible runtime. It currently supports persistent session variables, matrix algebra, linear systems, real 2×2 eigen analysis, array constructors, descriptive statistics, vector dot/cross operations, reshape/size helpers, and line-level error diagnostics.
+Math Lab is an expanding browser-based numerical workspace, not a MATLAB-compatible runtime. It currently supports persistent session variables, matrix algebra, linear systems, real 2×2 eigen analysis, array constructors, descriptive statistics, vector dot/cross operations, reshape/size helpers, and line-level error diagnostics. Trigonometric functions use radians by default, matching MATLAB-style numerical workflows.

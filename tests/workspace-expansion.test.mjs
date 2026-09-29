@@ -18,6 +18,16 @@ test("formula library filters by category and free text",()=>{
   assert.ok(pyth.some(x=>/a²/.test(x.formula)||/c²/.test(x.formula)));
 });
 
+
+
+test("Math Lab trigonometric functions use radians like numerical computing tools",()=>{
+  const r=runMathLabScript("sin(pi/2)\ncos(pi)\nasin(1)");
+  assert.equal(r.ok,true);
+  assert.ok(Math.abs(r.outputs[0].value-1)<1e-12);
+  assert.ok(Math.abs(r.outputs[1].value+1)<1e-12);
+  assert.ok(Math.abs(r.outputs[2].value-Math.PI/2)<1e-12);
+});
+
 test("Math Lab evaluates assignments and reuses workspace variables",()=>{
   const r=runMathLabScript("a = 5\nb = a^2 + 3\nb");
   assert.equal(r.ok,true);

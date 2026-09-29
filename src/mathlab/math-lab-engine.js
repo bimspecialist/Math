@@ -11,7 +11,7 @@ function numericExpression(source,workspace){
     if(typeof value!=="number")continue;
     s=s.replace(new RegExp("\\b"+name+"\\b","g"),`(${value})`);
   }
-  const r=evaluateExpression(s,{angleMode:"DEG",ans:"0"});
+  const r=evaluateExpression(s,{angleMode:"RAD",ans:"0"});
   if(r.kind!=="value")throw new Error(r.code||"INVALID_EXPRESSION");
   return r.numeric;
 }
