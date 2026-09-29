@@ -16,6 +16,7 @@ import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp } from "./construction/ramp-calculator.js";
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
+import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -202,6 +203,7 @@ function currentFormulaDetail(){
     return{
       title:locale==="ar"?formula.titleAr:formula.titleEn,
       description:"",
+      explanation:professionalFormulaExplanation(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale),
       expression:formula.formulaEn,
       variables:formula.variables,
       professional:formula
@@ -212,6 +214,7 @@ function currentFormulaDetail(){
   return{
     title:locale==="ar"?formula.titleAr:formula.titleEn,
     description:locale==="ar"?formula.descriptionAr:formula.descriptionEn,
+    explanation:referenceFormulaExplanation(formula,locale),
     expression:formula.formula,
     variables:inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
     professional:null
@@ -222,12 +225,23 @@ function renderFormulaDetail(){
   const title=document.querySelector("#formula-detail-title");
   const description=document.querySelector("#formula-detail-description");
   const expression=document.querySelector("#formula-detail-expression");
+  const explanation=document.querySelector("#formula-detail-explanation");
+  const variableGuide=document.querySelector("#formula-variable-guide");
   const form=document.querySelector("#formula-detail-form");
   const substitution=document.querySelector("#formula-detail-substitution");
   const result=document.querySelector("#formula-detail-result");
   if(title)title.textContent=detail.title;
   if(description)description.textContent=detail.description;
   if(expression)expression.textContent=detail.expression;
+  if(explanation)explanation.textContent=detail.explanation||detail.description||"";
+  if(variableGuide){
+    variableGuide.innerHTML=detail.variables.length
+      ?`<h4>${escHtml(translate(locale,"variableGuideTitle"))}</h4><dl>${detail.variables.map(variable=>{
+        const label=locale==="ar"?variable.labelAr:variable.labelEn;
+        return `<div><dt dir="ltr">${escHtml(variable.id)}</dt><dd>${escHtml(label)}</dd></div>`;
+      }).join("")}</dl>`
+      :"";
+  }
   const calculateButton=document.querySelector("#formula-detail-calculate");
   if(calculateButton)calculateButton.textContent=translate(locale,detail.professional?"substituteAndCalculate":"substituteValues");
   if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
