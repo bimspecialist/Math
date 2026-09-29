@@ -19,8 +19,21 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebApplication",
+    "name":"Math Workspace",
+    "url":"https://bimspecialist.github.io/Math/",
+    "applicationCategory":"EducationalApplication",
+    "operatingSystem":"Any",
+    "isAccessibleForFree":true,
+    "inLanguage":["en","ar"],
+    "description":"A browser-based scientific calculator and mathematics workspace with equation solving, formulas, graphing, unit conversion, programmer, date, construction, and numerical tools."
+  }
+  </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1030">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1100">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -124,7 +137,7 @@
               <div><small data-i18n="formulaKicker">Reference</small><h2 data-i18n="formulaTitle">Formula Library</h2><p data-i18n="formulaDescription">A searchable, extensible library organized by mathematical topic.</p></div>
             </div>
             <div class="formula-controls">
-              <label><span data-i18n="search">Search</span><input id="formula-search" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Formula name, symbol, or keyword..." autocomplete="off"></label>
+              <label><span data-i18n="search">Search</span><input id="formula-search" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Formula name, symbol, or keyword..." autocomplete="off" aria-controls="formula-grid" aria-describedby="formula-count"></label>
               <label><span data-i18n="category">Category</span><select id="formula-category"></select></label>
             </div>
             <div id="formula-count" class="formula-count" aria-live="polite"></div>
@@ -226,6 +239,31 @@ b</textarea></label>
       </div>
     </div>
 
+    <section class="workspace-info" aria-labelledby="workspace-info-title">
+      <h2 id="workspace-info-title" data-i18n="aboutWorkspaceTitle">About Math Workspace</h2>
+      <p data-i18n="aboutWorkspaceIntro">Math Workspace brings everyday, scientific, engineering, and numerical tools into one browser-based interface. Most calculations run locally in your browser for fast feedback and offline-friendly use after the page is loaded.</p>
+      <div class="workspace-info-grid">
+        <section>
+          <h3 data-i18n="aboutAccuracyTitle">Calculation scope</h3>
+          <p data-i18n="aboutAccuracyText">Use the scientific calculator for general numerical work, the Advanced Solver for supported algebra and calculus commands, Graphing for visual exploration, and the Formula Library as a reference. Specialized tools clearly state their limits when they are not a substitute for a code, standard, or professional review.</p>
+        </section>
+        <section>
+          <h3 data-i18n="aboutPrivacyTitle">Privacy and external services</h3>
+          <p data-i18n="aboutPrivacyText">Core math tools run in the browser. Advertising is provided through Google AdSense and its consent controls. Optional visitor analytics remain disabled unless a valid analytics configuration is enabled and consent is provided.</p>
+        </section>
+        <section>
+          <h3 data-i18n="aboutLanguagesTitle">English and Arabic</h3>
+          <p data-i18n="aboutLanguagesText">The interface supports English and Arabic, including RTL layout where appropriate, while mathematical expressions and the physical calculator layout remain left-to-right for consistency.</p>
+        </section>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <a href="./privacy.html" data-i18n="privacyPolicy">Privacy Policy</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://bimspecialist.github.io/" data-i18n="publisherHome">Publisher home</a>
+    </footer>
+
     <aside class="ad-slot ad-bottom" data-ad-placement="bottom-main" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
     <aside class="ad-slot ad-bottom-secondary" data-ad-placement="bottom-secondary" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
   </div>
@@ -236,6 +274,6 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" data-ad-placement="bottom-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
 </div>
 </main>
-<div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Privacy choices</strong><p data-i18n="consentText">Advertising and visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1030"></script>
+<div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
+<script type="module" src="./src/app.js?v=20260929-1100"></script>
 </body></html>
