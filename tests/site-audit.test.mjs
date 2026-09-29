@@ -82,3 +82,22 @@ test("vertical advertising rails stay in normal flow to avoid overlapping lower 
   const css=readFileSync(new URL("../styles/calculator.css",import.meta.url),"utf8");
   assert.match(css,/\.ad-left,\.ad-right,\.ad-outer-left,\.ad-outer-right\{height:720px;position:static;top:auto;align-self:start\}/);
 });
+
+
+test("site publishes structured application metadata and root privacy navigation",()=>{
+  assert.match(index,/type="application\/ld\+json"/);
+  assert.match(index,/"@type":"WebApplication"/);
+  assert.match(index,/href="https:\/\/bimspecialist\.github\.io\/privacy\.html"[^>]*data-i18n="privacyPolicy"/);
+});
+
+test("formula library exposes a localized empty-result state",()=>{
+  assert.ok(UI_STRINGS.en.formulaNoResults);
+  assert.ok(UI_STRINGS.ar.formulaNoResults);
+  assert.match(app,/class="empty-state" role="status"/);
+});
+
+test("active tool updates the visible and document headings",()=>{
+  assert.match(app,/function updateToolHeading\(target\)/);
+  assert.match(app,/heading\.textContent=title/);
+  assert.match(app,/document\.title=target==="calculator"/);
+});
