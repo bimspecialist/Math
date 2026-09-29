@@ -111,3 +111,22 @@ test("application shell exposes Graphing and Programmer tools",()=>{
   assert.match(app,/sampleGraphExpression/);
   assert.match(app,/parseInteger/);
 });
+
+
+test("date calculator computes day differences and date offsets without DST drift",async()=>{
+  const {daysBetween,addDays}=await import("../src/date/date-calculator.js");
+  assert.equal(daysBetween("2026-01-01","2026-01-31"),30);
+  assert.equal(addDays("2026-01-31",1),"2026-02-01");
+  assert.equal(addDays("2024-02-28",1),"2024-02-29");
+});
+
+test("application shell exposes date calculation tool",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/data-tool-target="date"/);
+  assert.match(index,/id="date-section"/);
+  assert.match(index,/id="date-start"/);
+  assert.match(index,/id="date-end"/);
+  assert.match(app,/daysBetween/);
+  assert.match(app,/addDays/);
+});
