@@ -47,3 +47,23 @@ test("application shell exposes sidebar, formulas and Math Lab pages",()=>{
   assert.match(app,/renderFormulaLibrary/);
   assert.match(app,/runMathLabScript/);
 });
+
+
+test("unit converter handles core engineering categories",async()=>{
+  const {convertUnit, CONVERTER_CATEGORIES}=await import("../src/converters/unit-converter.js");
+  assert.equal(convertUnit("length",1,"km","m"),1000);
+  assert.equal(convertUnit("temperature",0,"C","F"),32);
+  assert.ok(Math.abs(convertUnit("angle",180,"deg","rad")-Math.PI)<1e-12);
+  assert.equal(convertUnit("data",1,"MB","B"),1000000);
+  for(const id of ["volume","length","mass","temperature","energy","area","speed","time","power","data","pressure","angle"])
+    assert.ok(CONVERTER_CATEGORIES[id],id);
+});
+
+test("sidebar exposes converter categories and shared converter page",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/id="converter-section"/);
+  assert.match(index,/data-converter-category="length"/);
+  assert.match(index,/data-converter-category="temperature"/);
+  assert.match(index,/id="converter-input"/);
+  assert.match(index,/id="converter-result"/);
+});
