@@ -450,21 +450,27 @@ function formatLabValue(value){
   }
   return "["+value.map(v=>typeof v==="object"?JSON.stringify(v):String(v)).join(", ")+"]";
 }
+function formatMathLabError(error){
+  const code=error?.message??"MATHLAB_ERROR";
+  const localized=translate(locale,"ml_"+code);
+  const message=localized==="ml_"+code?code:localized;
+  const line=error?.line?`${translate(locale,"mathLabErrorLine")} ${error.line}: `:"";
+  return line+message;
+}
 function renderMathLabWorkspace(){
   if(!mathLabWorkspace)return;
   const entries=Object.entries(mathLabWorkspaceState);
-  mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>\`<div class="workspace-row"><strong>\${escHtml(name)}</strong><code dir="ltr">\${escHtml(formatLabValue(value))}</code></div>\`).join(""):\`<span class="muted">\${escHtml(translate(locale,"noVariables"))}</span>\`;
+  mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>`<div class="workspace-row"><strong>${escHtml(name)}</strong><code dir="ltr">${escHtml(formatLabValue(value))}</code></div>`).join(""):`<span class="muted">${escHtml(translate(locale,"noVariables"))}</span>`;
 }
 function runMathLab(){
   if(!mathLabInput)return;
   const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState);
   mathLabWorkspaceState={...result.workspace};
   if(mathLabOutput){
-    const lines=result.outputs.map(x=>\`>> \${x.source}\n\${formatLabValue(x.value)}\`);
+    const lines=result.outputs.map(x=>`>> ${x.source}\n${formatLabValue(x.value)}`);
     if(!result.ok){
-      const line=result.error?.line?\` (line \${result.error.line})\`:"";
-      const source=result.error?.source?\`\n>> \${result.error.source}\`:"";
-      lines.push(\`Error\${line}: \${result.error?.message??"MATHLAB_ERROR"}\${source}\`);
+      const source=result.error?.source?`\n>> ${result.error.source}`:"";
+      lines.push(`${formatMathLabError(result.error)}${source}`);
     }
     mathLabOutput.textContent=lines.length?lines.join("\n\n"):">> Ready";
   }
