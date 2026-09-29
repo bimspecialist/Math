@@ -144,3 +144,12 @@ test("Advanced Solver formatter localizes symbolic calculus labels",async()=>{
   assert.match(formatAdvancedResult(r),/Derivative:/);
   assert.match(formatAdvancedResult(r,"ar"),/المشتقة:/);
 });
+
+test("Advanced Solver UI exposes derivative and integral examples",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-advanced-example="diff\(x\^3\+2\*x,x\)"/);
+  assert.match(index,/data-advanced-example="integrate\(3\*x\^2\+2,x\)"/);
+  assert.match(index,/data-i18n="exampleDerivative"/);
+  assert.match(index,/data-i18n="exampleIntegral"/);
+});
