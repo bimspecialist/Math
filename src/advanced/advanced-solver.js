@@ -167,6 +167,91 @@ function solveLinearSystem(equations,variables){
   return parametricFromRref(rr,variables);
 }
 
+function solveNumericLinear(a,b){
+  const n=b.length,m=a.map((row,i)=>[...row,b[i]]);
+  for(let col=0;col<n;col++){
+    let p=col;
+    for(let r=col+1;r<n;r++)if(Math.abs(m[r][col])>Math.abs(m[p][col]))p=r;
+    if(Math.abs(m[p][col])<1e-12)return null;
+    [m[col],m[p]]=[m[p],m[col]];
+    const div=m[col][col];for(let j=col;j<=n;j++)m[col][j]/=div;
+    for(let r=0;r<n;r++){
+      if(r===col)continue;
+      const q=m[r][col];
+      for(let j=col;j<=n;j++)m[r][j]-=q*m[col][j];
+    }
+  }
+  return m.map(r=>r[n]);
+}
+
+function nonlinearSystemFunctions(equations,variables){
+  return equations.map(({left,right})=>differenceFunction(left,right,variables));
+}
+
+function residualNorm(fs,x){
+  const values=fs.map(fn=>fn(x));
+  if(values.some(v=>!Number.isFinite(v)))return{norm:Infinity,values};
+  return{norm:Math.sqrt(values.reduce((s,v)=>s+v*v,0)),values};
+}
+
+function jacobian(fs,x){
+  const n=x.length,j=[];
+  for(let i=0;i<fs.length;i++){
+    const row=[];
+    for(let k=0;k<n;k++){
+      const h=1e-6*Math.max(1,Math.abs(x[k]));
+      const xp=x.slice(),xm=x.slice();xp[k]+=h;xm[k]-=h;
+      const fp=fs[i](xp),fm=fs[i](xm);
+      row.push((fp-fm)/(2*h));
+    }
+    j.push(row);
+  }
+  return j;
+}
+
+function nonlinearSeeds(n){
+  const base=[-10,-5,-2,-1,0,1,2,5,10],out=[];
+  const build=(prefix)=>{
+    if(prefix.length===n){out.push(prefix);return}
+    for(const v of base)build([...prefix,v]);
+  };
+  build([]);
+  return out;
+}
+
+function samePoint(a,b){return a.every((v,i)=>Math.abs(v-b[i])<1e-6)}
+
+function solveNonlinearSystem(equations,variables){
+  if(equations.length!==variables.length||variables.length<2||variables.length>2)return null;
+  const fs=nonlinearSystemFunctions(equations,variables),roots=[];
+  for(const seed of nonlinearSeeds(variables.length)){
+    let x=seed.slice(),ok=false;
+    for(let iter=0;iter<60;iter++){
+      const r=residualNorm(fs,x);
+      if(r.norm<1e-9){ok=true;break}
+      const j=jacobian(fs,x);
+      if(j.some(row=>row.some(v=>!Number.isFinite(v))))break;
+      const dx=solveNumericLinear(j,r.values.map(v=>-v));
+      if(!dx)break;
+      const next=x.map((v,i)=>v+dx[i]);
+      if(next.some(v=>!Number.isFinite(v)||Math.abs(v)>1e9))break;
+      const step=Math.sqrt(dx.reduce((s,v)=>s+v*v,0));
+      x=next;
+      if(step<1e-11){ok=residualNorm(fs,x).norm<1e-8;break}
+    }
+    if(!ok&&residualNorm(fs,x).norm>=1e-7)continue;
+    x=x.map(clean);
+    if(!roots.some(r=>samePoint(r,x)))roots.push(x);
+  }
+  if(!roots.length)return{kind:"error",code:"NO_NUMERIC_SOLUTION",variables};
+  roots.sort((a,b)=>{for(let i=0;i<a.length;i++){if(Math.abs(a[i]-b[i])>1e-8)return a[i]-b[i]}return 0});
+  return{
+    kind:"system-solution-set",
+    variables,
+    solutions:roots.map(point=>Object.fromEntries(variables.map((v,i)=>[v,point[i]])))
+  };
+}
+
 function parseEquations(source){
   const lines=source.split(/[\n;]/).map(s=>s.trim()).filter(Boolean);
   if(!lines.length)return[];
@@ -214,5 +299,7 @@ export function solveAdvancedInput(source){
 
   const linear=solveLinearSystem(equations,vars);
   if(linear)return linear;
+  const nonlinear=solveNonlinearSystem(equations,vars);
+  if(nonlinear)return nonlinear;
   return{kind:"error",code:"NONLINEAR_SYSTEM_NOT_YET_SUPPORTED",variables:vars};
 }
