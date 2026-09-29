@@ -133,8 +133,8 @@ test("Advanced Solver integrates polynomial expressions symbolically",()=>{
   assert.deepEqual(r,{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"x^3 + 2*x + C"});
 });
 
-test("Advanced Solver returns an explicit limitation for non-polynomial symbolic calculus",()=>{
-  const r=solveAdvancedInput("diff(sin(x),x)");
+test("Advanced Solver returns an explicit limitation for unsupported symbolic calculus",()=>{
+  const r=solveAdvancedInput("diff(tan(x),x)");
   assert.deepEqual(r,{kind:"error",code:"SYMBOLIC_CALCULUS_UNSUPPORTED",variables:["x"]});
 });
 
