@@ -178,3 +178,12 @@ test("site no longer hardcodes workspace content to RTL for English",()=>{
   assert.doesNotMatch(css,/\.workspace-content\{[^}]*direction:rtl/);
   assert.match(css,/html\[dir="rtl"\] \.workspace-content/);
 });
+
+test("every formula has reviewed English and Arabic titles and descriptions",()=>{
+  for(const formula of FORMULAS){
+    assert.ok(formula.titleEn?.trim(),"missing English title "+formula.id);
+    assert.ok(formula.titleAr?.trim(),"missing Arabic title "+formula.id);
+    assert.ok(formula.descriptionEn?.trim(),"missing English description "+formula.id);
+    assert.ok(formula.descriptionAr?.trim(),"missing Arabic description "+formula.id);
+  }
+});
