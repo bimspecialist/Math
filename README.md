@@ -32,3 +32,8 @@ GitHub Pages deployment is gated by this verification command.
 ## Advanced Solver / Math Scan
 
 The website keeps the UI entry point for image/camera input and advanced solving, but no production OCR/handwriting-recognition or symbolic-solver provider is configured yet. No provider secret is shipped in the static site.
+
+
+## Math Lab
+
+Math Lab is an expanding browser-based numerical workspace, not a MATLAB-compatible runtime. It currently supports persistent session variables, matrix algebra, linear systems, real 2×2 eigen analysis, array constructors, descriptive statistics, vector dot/cross operations, reshape/size helpers, and line-level error diagnostics.
