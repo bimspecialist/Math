@@ -79,3 +79,20 @@ test("advanced result formatter presents parametric and expression analysis resu
   assert.match(formatAdvancedResult({kind:"parametric-system",freeVariables:["y"],expressions:{x:"5 - y",y:"y"}}),/x = 5 - y/);
   assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"X^2+4",variable:"X",degree:2,roots:["-2i","2i"]}),/Roots: -2i, 2i/);
 });
+
+
+test("advanced solver finds multiple real solutions of a two-variable nonlinear system",()=>{
+  const r=solveAdvancedInput("x^2+y^2=25\nx-y=1");
+  assert.equal(r.kind,"system-solution-set");
+  assert.equal(r.solutions.length,2);
+  const pts=r.solutions.map(p=>[Number(p.x.toFixed(6)),Number(p.y.toFixed(6))]).sort((a,b)=>a[0]-b[0]);
+  assert.deepEqual(pts,[[-3,-4],[4,3]]);
+});
+
+test("advanced solver verifies nonlinear system roots against every equation",()=>{
+  const r=solveAdvancedInput("x^2+y^2=25\nx-y=1");
+  for(const p of r.solutions){
+    assert.ok(Math.abs(p.x*p.x+p.y*p.y-25)<1e-7);
+    assert.ok(Math.abs(p.x-p.y-1)<1e-7);
+  }
+});
