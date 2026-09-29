@@ -21,6 +21,11 @@ const TEXT={
     SYMBOLIC_TRANSFORM_UNSUPPORTED:"This symbolic transformation is not supported yet.",
     INVALID_LIMIT:"The limit expression is invalid.",
     LIMIT_DOES_NOT_EXIST:"The two-sided limit does not exist as a finite value.",
+    INVALID_NUMERIC_SOLVE:"The numerical solve request is invalid. Use nsolve(equation, variable, guess) or nsolve(equation, variable, min, max).",
+    NO_NUMERIC_ROOT:"No numerical root was found from the supplied guess or bracket.",
+    numericRoot:"Numerical root",
+    method:"Method",
+    residual:"Residual",
     unknown:"Unknown result"
   },
   ar:{
@@ -43,6 +48,11 @@ const TEXT={
     SYMBOLIC_TRANSFORM_UNSUPPORTED:"هذا التحويل الرمزي غير مدعوم بعد.",
     INVALID_LIMIT:"صيغة النهاية غير صحيحة.",
     LIMIT_DOES_NOT_EXIST:"النهاية الثنائية لا توجد كقيمة منتهية.",
+    INVALID_NUMERIC_SOLVE:"طلب الحل العددي غير صحيح. استخدم nsolve(المعادلة, المتغير, قيمة ابتدائية) أو nsolve(المعادلة, المتغير, الحد الأدنى, الحد الأعلى).",
+    NO_NUMERIC_ROOT:"لم يتم العثور على جذر عددي انطلاقًا من القيمة أو المجال المحدد.",
+    numericRoot:"الجذر العددي",
+    method:"الطريقة",
+    residual:"الباقي",
     unknown:"نتيجة غير معروفة"
   }
 };
@@ -68,6 +78,10 @@ export function formatAdvancedResult(r,locale="en"){
   if(r.kind==="symbolic-calculus"){const label=r.operation==="integral"?(locale==="ar"?"التكامل":"Integral"):(locale==="ar"?"المشتقة":"Derivative");return `${label}: ${r.expression}`;}
   if(r.kind==="symbolic-transform"){const label=r.operation==="expand"?(locale==="ar"?"التوسيع":"Expanded"):(locale==="ar"?"التبسيط":"Simplified");return `${label}: ${r.expression}`;}
   if(r.kind==="limit")return locale==="ar"?`النهاية عندما ${r.variable} ← ${r.point}: ${r.value}`:`Limit as ${r.variable} → ${r.point}: ${r.value}`;
+  if(r.kind==="numeric-root"){
+    const method=r.method==="bisection"?(locale==="ar"?"التنصيف":"Bisection"):(locale==="ar"?"نيوتن":"Newton");
+    return `${t.numericRoot}: ${r.variable} = ${r.value}\n${t.method}: ${method}\n${t.residual}: ${r.residual}`;
+  }
   const suffix=r.variables?.length?` (${r.variables.join(", ")})`:"";
   return (t[r.code]??r.code??t.unknown)+suffix;
 }
