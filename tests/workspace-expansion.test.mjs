@@ -315,3 +315,37 @@ test("Math Lab UI exposes a numerical sampling example",()=>{
   assert.match(index,/data-mathlab-example="v = linspace\(0,1,5\).*norm\(\[3,4\]\)"/s);
   assert.match(index,/data-i18n="numericalTools"/);
 });
+
+
+test("Knowledge includes accounting engineering and PMP professional libraries",async()=>{
+  const {PROFESSIONAL_LIBRARIES,getProfessionalLibrary}=await import("../src/knowledge/professional-libraries.js");
+  for(const id of ["accounting","engineering","pmp"]){
+    const library=getProfessionalLibrary(id);
+    assert.ok(library,id);
+    assert.ok(library.formulas.length>=8,id+" formula count");
+    assert.ok(library.formulas.every(x=>x.variables.length>0&&x.calcExpression),id+" calculators");
+  }
+  assert.equal(PROFESSIONAL_LIBRARIES.length,3);
+});
+
+test("professional formula workbench substitutes and calculates values safely",async()=>{
+  const {getProfessionalFormula}=await import("../src/knowledge/professional-libraries.js");
+  const {evaluateProfessionalFormula,substituteFormula}=await import("../src/knowledge/formula-workbench.js");
+  const cpi=getProfessionalFormula("pmp","cpi");
+  const result=evaluateProfessionalFormula(cpi,{EV:"120",AC:"100"});
+  assert.equal(result.ok,true);
+  assert.equal(result.value,1.2);
+  assert.match(substituteFormula(cpi.formulaEn,{EV:120,AC:100}),/\(120\).*\(100\)/);
+});
+
+test("all general formula cards expose the interactive formula workbench",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/data-knowledge-library="accounting"/);
+  assert.match(index,/data-knowledge-library="engineering"/);
+  assert.match(index,/data-knowledge-library="pmp"/);
+  assert.match(index,/id="formula-detail-section"/);
+  assert.match(app,/data-general-formula-id/);
+  assert.match(app,/openReferenceFormula/);
+  assert.match(app,/openProfessionalFormula/);
+});
