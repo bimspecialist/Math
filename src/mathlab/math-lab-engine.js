@@ -42,21 +42,91 @@ const transpose=m=>{
 
 const flatten=m=>isMatrix(m)?m.flat():[m];
 
+function splitArgs(source){
+  const out=[];let current="",depth=0;
+  for(const ch of source){
+    if(ch==="["||ch==="(")depth++;
+    if(ch==="]"||ch===")")depth--;
+    if(ch===","&&depth===0){out.push(current.trim());current="";continue}
+    current+=ch;
+  }
+  if(current.trim()||source.trim()==="")out.push(current.trim());
+  return out.filter(x=>x.length);
+}
+
+function matrixShape(m){
+  if(!isMatrix(m)||!m.length||!m[0]?.length)throw new Error("INVALID_MATRIX");
+  const cols=m[0].length;if(m.some(r=>r.length!==cols))throw new Error("INVALID_MATRIX");
+  return[m.length,cols];
+}
+
+function matrixMultiply(a,b){
+  const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
+  if(ac!==br)throw new Error("MATRIX_DIMENSION_MISMATCH");
+  return Array.from({length:ar},(_,i)=>Array.from({length:bc},(_,j)=>{
+    let sum=0;for(let k=0;k<ac;k++)sum+=a[i][k]*b[k][j];return Math.abs(sum)<1e-12?0:sum;
+  }));
+}
+
+function inverse(m){
+  const [rows,cols]=matrixShape(m);if(rows!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  const n=rows,a=m.map((row,i)=>[...row,...Array.from({length:n},(_,j)=>i===j?1:0)]);
+  for(let col=0;col<n;col++){
+    let pivot=col;
+    for(let r=col+1;r<n;r++)if(Math.abs(a[r][col])>Math.abs(a[pivot][col]))pivot=r;
+    if(Math.abs(a[pivot][col])<1e-12)throw new Error("SINGULAR_MATRIX");
+    [a[col],a[pivot]]=[a[pivot],a[col]];
+    const div=a[col][col];for(let j=0;j<2*n;j++)a[col][j]/=div;
+    for(let r=0;r<n;r++){
+      if(r===col)continue;
+      const factor=a[r][col];
+      for(let j=0;j<2*n;j++)a[r][j]-=factor*a[col][j];
+    }
+  }
+  return a.map(row=>row.slice(n).map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
+function trace(m){
+  const [rows,cols]=matrixShape(m);if(rows!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  return m.reduce((sum,row,i)=>sum+row[i],0);
+}
+
+function identity(n){
+  n=Number(n);if(!Number.isInteger(n)||n<1||n>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+}
+
+function zeros(rows,cols){
+  rows=Number(rows);cols=Number(cols);
+  if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:rows},()=>Array(cols).fill(0));
+}
+
+function evalValue(source,workspace){
+  const text=source.trim();
+  if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
+  if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
+  return numericExpression(text,workspace);
+}
+
 function evalCommand(expr,workspace){
   const text=expr.trim();
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
-  const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\(([^()]*)\)$/);
+  const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
   if(call){
-    const fn=call[1].toLowerCase(),argName=call[2].trim();
-    const arg=Object.prototype.hasOwnProperty.call(workspace,argName)?workspace[argName]:null;
-    if(fn==="det"){if(arg===null)throw new Error("UNKNOWN_VARIABLE");return determinant(arg)}
-    if(fn==="transpose"){if(arg===null)throw new Error("UNKNOWN_VARIABLE");return transpose(arg)}
-    if(fn==="sum"){if(arg===null)throw new Error("UNKNOWN_VARIABLE");return flatten(arg).reduce((a,b)=>a+b,0)}
-    if(fn==="mean"){if(arg===null)throw new Error("UNKNOWN_VARIABLE");const a=flatten(arg);return a.reduce((x,y)=>x+y,0)/a.length}
-    if(fn==="size"){if(arg===null)throw new Error("UNKNOWN_VARIABLE");return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
+    const fn=call[1].toLowerCase(),args=splitArgs(call[2]).map(x=>evalValue(x,workspace));
+    if(fn==="det"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return determinant(args[0])}
+    if(fn==="transpose"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return transpose(args[0])}
+    if(fn==="inv"||fn==="inverse"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return inverse(args[0])}
+    if(fn==="matmul"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixMultiply(args[0],args[1])}
+    if(fn==="trace"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return trace(args[0])}
+    if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
+    if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
+    if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).reduce((a,b)=>a+b,0)}
+    if(fn==="mean"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const a=flatten(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
+    if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
   }
-  if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
-  return numericExpression(text,workspace);
+  return evalValue(text,workspace);
 }
 
 export function runMathLabScript(script,initialWorkspace={}){
