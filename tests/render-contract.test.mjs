@@ -24,3 +24,5 @@ test("scientific keys follow the approved traditional row order",()=>{const html
 
 test("calculator shell and face stay LTR in Arabic locale",()=>{const html=renderCalculatorMarkup(new CalculatorController().view(),"ar");assert.match(html,/class="calculator-shell" dir="ltr"/);assert.match(html,/class="calculator-face" dir="ltr"/)});
 test("exact fraction results render with vertical numerator and denominator",()=>{const c=new CalculatorController();c.dispatch("FRAC");c.dispatch("DIGIT_1");c.dispatch("REPLAY_DOWN");c.dispatch("DIGIT_2");c.dispatch("EQUALS");const html=renderCalculatorMarkup(c.view(),"ar");assert.match(html,/class="result-fraction"/);assert.match(html,/class="result-numerator">1</);assert.match(html,/class="result-denominator">2</)});
+
+test("keyboard caret maps to the calculator power template",()=>{assert.equal(mapKeyboardToKeyId("^"),"POWER");const c=new CalculatorController();c.dispatch("DIGIT_2");c.dispatch(mapKeyboardToKeyId("^"));c.dispatch("DIGIT_3");assert.equal(c.view().canonicalExpression,"(2)^(3)")});
