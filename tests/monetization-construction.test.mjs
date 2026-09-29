@@ -76,3 +76,9 @@ test("index includes the exact AdSense ownership script in head",()=>{
   assert.match(index,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-5386218928692257/);
   assert.match(index,/crossorigin="anonymous"/);
 });
+
+
+test("AdSense initializer reuses the ownership script instead of loading a duplicate",()=>{
+  const source=readFileSync(new URL("../src/monetization/adsense.js",import.meta.url),"utf8");
+  assert.match(source,/script\[src\*="pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js"\]/);
+});
