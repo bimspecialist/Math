@@ -96,3 +96,11 @@ test("advanced solver verifies nonlinear system roots against every equation",()
     assert.ok(Math.abs(p.x-p.y-1)<1e-7);
   }
 });
+
+
+test("advanced result formatter presents nonlinear system solution sets",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  const text=formatAdvancedResult({kind:"system-solution-set",solutions:[{x:-3,y:-4},{x:4,y:3}]});
+  assert.match(text,/x = -3, y = -4/);
+  assert.match(text,/x = 4, y = 3/);
+});
