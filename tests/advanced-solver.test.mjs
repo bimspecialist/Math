@@ -114,3 +114,11 @@ test("Advanced Solver UI advertises multi-equation input and provides working ex
   assert.match(index,/data-advanced-example="x\+y=5&#10;x-y=1"/);
   assert.match(app,/data-advanced-example/);
 });
+
+test("advanced result formatter localizes English by default and Arabic on request",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  assert.equal(formatAdvancedResult({kind:"error",code:"NO_SOLUTION"}),"No solution.");
+  assert.equal(formatAdvancedResult({kind:"error",code:"NO_SOLUTION"},"ar"),"لا يوجد حل.");
+  assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"x^2+1",variable:"x",degree:2,roots:["-i","i"]}),/Roots:/);
+  assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"x^2+1",variable:"x",degree:2,roots:["-i","i"]},"ar"),/الجذور:/);
+});
