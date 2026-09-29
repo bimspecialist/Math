@@ -34,7 +34,7 @@ test("AdSense and Analytics identifiers are validated without guessing account v
   assert.equal(validateAdSlot(""),false);
   assert.equal(validateMeasurementId("G-ABC123XYZ9"),true);
   assert.equal(validateMeasurementId("UA-123"),false);
-  assert.equal(SITE_CONFIG.adsense.client,"");
+  assert.equal(SITE_CONFIG.adsense.client,"ca-pub-5386218928692257");
   assert.equal(SITE_CONFIG.analytics.measurementId,"");
 });
 
