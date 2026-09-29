@@ -21,13 +21,15 @@ function applyLocale(nextLocale){
   document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=translate(locale,el.dataset.i18n)});
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{el.setAttribute("placeholder",translate(locale,el.dataset.i18nPlaceholder))});
   document.querySelectorAll("[data-i18n-aria-label]").forEach(el=>{el.setAttribute("aria-label",translate(locale,el.dataset.i18nAriaLabel))});
+  document.querySelectorAll("[data-i18n-alt]").forEach(el=>{el.setAttribute("alt",translate(locale,el.dataset.i18nAlt))});
   const langToggle=document.querySelector("#lang-toggle");
   if(langToggle)langToggle.textContent=locale==="en"?"AR":"EN";
   mounted.setLocale(locale);
   renderFormulaCategories();
   renderFormulaLibrary();
-  updateConverter();
+  selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
+  if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 const toolSidebar=document.querySelector("#tool-sidebar");
@@ -53,8 +55,10 @@ document.querySelector("#camera-upload")?.addEventListener("change",e=>handleIma
 
 const advancedInput=document.querySelector("#advanced-input");
 const advancedResult=document.querySelector("#advanced-result");
+let lastAdvancedResult=null;
 document.querySelector("#advanced-solve")?.addEventListener("click",()=>{
   const result=solveAdvancedInput(advancedInput?.value??"");
+  lastAdvancedResult=result;
   if(advancedResult){advancedResult.textContent=formatAdvancedResult(result,locale);advancedResult.dataset.kind=result.kind}
 });
 advancedInput?.addEventListener("keydown",event=>{
