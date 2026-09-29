@@ -305,19 +305,19 @@ document.querySelector("#ramp-calculate")?.addEventListener("click",updateRampCa
 for(const el of [rampRise,rampRun,rampLength,rampUnit])el?.addEventListener("input",updateRampCalculator);
 updateRampCalculator();
 
-const CONSENT_KEY="math.external-services-consent";
-function enableExternalServices(){
-  initAdSense(SITE_CONFIG.adsense);
+const CONSENT_KEY="math.analytics-consent";
+function enableAnalytics(){
   initGoogleAnalytics(SITE_CONFIG.analytics);
 }
 function setupConsent(){
+  initAdSense(SITE_CONFIG.adsense);
   const banner=document.querySelector("#consent-banner");if(!banner)return;
+  if(!SITE_CONFIG.analytics.measurementId)return;
   let choice=null;try{choice=localStorage.getItem(CONSENT_KEY)}catch{}
-  if(choice==="accepted"){enableExternalServices();return}
+  if(choice==="accepted"){enableAnalytics();return}
   if(choice==="rejected")return;
-  if(!SITE_CONFIG.adsense.client&&!SITE_CONFIG.analytics.measurementId)return;
   banner.hidden=false;
-  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableExternalServices()});
+  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableAnalytics()});
   document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
 setupConsent();
