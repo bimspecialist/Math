@@ -119,6 +119,17 @@ export const UI_STRINGS = Object.freeze({
     unit:"Unit",calculate:"Calculate",rampCodeNote:"This calculator gives geometry only. Check the building or accessibility code that applies to your project.",
     RAMP_REQUIRES_TWO_VALUES:"Enter any two ramp measurements.",INVALID_RAMP_VALUE:"Ramp measurements must be positive numbers.",INVALID_RAMP_GEOMETRY:"The supplied ramp geometry is impossible.",
     consentTitle:"Analytics choices",consentText:"Optional visitor analytics stay off until you choose to enable them.",accept:"Accept",reject:"Reject",
+    formulaNoResults:"No formulas match your current search and category.",
+    aboutWorkspaceTitle:"About Math Workspace",
+    aboutWorkspaceIntro:"Math Workspace brings everyday, scientific, engineering, and numerical tools into one browser-based interface. Most calculations run locally in your browser for fast feedback and offline-friendly use after the page is loaded.",
+    aboutAccuracyTitle:"Calculation scope",
+    aboutAccuracyText:"Use the scientific calculator for general numerical work, the Advanced Solver for supported algebra and calculus commands, Graphing for visual exploration, and the Formula Library as a reference. Specialized tools clearly state their limits when they are not a substitute for a code, standard, or professional review.",
+    aboutPrivacyTitle:"Privacy and external services",
+    aboutPrivacyText:"Core math tools run in the browser. Advertising is provided through Google AdSense and its consent controls. Optional visitor analytics remain disabled unless a valid analytics configuration is enabled and consent is provided.",
+    aboutLanguagesTitle:"English and Arabic",
+    aboutLanguagesText:"The interface supports English and Arabic, including RTL layout where appropriate, while mathematical expressions and the physical calculator layout remain left-to-right for consistency.",
+    privacyPolicy:"Privacy Policy",
+    publisherHome:"Publisher home",
     mathWorkspace:"Math Workspace"
   }),
   ar:Object.freeze({
@@ -241,6 +252,17 @@ export const UI_STRINGS = Object.freeze({
     unit:"الوحدة",calculate:"احسب",rampCodeNote:"تعطي هذه الحاسبة الهندسة فقط. تحقّق من كود البناء أو متطلبات الوصول المطبقة على مشروعك.",
     RAMP_REQUIRES_TWO_VALUES:"أدخل أي قياسين للمنحدر.",INVALID_RAMP_VALUE:"يجب أن تكون قياسات المنحدر أرقامًا موجبة.",INVALID_RAMP_GEOMETRY:"هندسة المنحدر المدخلة غير ممكنة.",
     consentTitle:"خيارات التحليلات",consentText:"تبقى تحليلات الزوار الاختيارية متوقفة حتى تختار تفعيلها.",accept:"موافقة",reject:"رفض",
+    formulaNoResults:"لا توجد قوانين مطابقة لبحثك وتصنيفك الحاليين.",
+    aboutWorkspaceTitle:"حول مساحة عمل الرياضيات",
+    aboutWorkspaceIntro:"تجمع مساحة عمل الرياضيات أدوات يومية وعلمية وهندسية وعددية في واجهة واحدة تعمل داخل المتصفح. تُنفَّذ معظم الحسابات محليًا في المتصفح للاستجابة السريعة وإتاحة استخدام العديد من الأدوات دون اتصال بعد تحميل الصفحة.",
+    aboutAccuracyTitle:"نطاق الحسابات",
+    aboutAccuracyText:"استخدم الحاسبة العلمية للأعمال العددية العامة، والحل المتقدم للأوامر الجبرية والتفاضلية المدعومة، والرسم البياني للاستكشاف البصري، ومكتبة القوانين كمرجع. توضّح الأدوات المتخصصة حدودها عندما لا تكون بديلًا عن كود أو معيار أو مراجعة مهنية.",
+    aboutPrivacyTitle:"الخصوصية والخدمات الخارجية",
+    aboutPrivacyText:"تعمل أدوات الرياضيات الأساسية داخل المتصفح. تُقدَّم الإعلانات عبر Google AdSense وأدوات الموافقة التابعة له. تبقى تحليلات الزوار الاختيارية متوقفة ما لم تتم تهيئة خدمة تحليلات صالحة وتُمنح الموافقة.",
+    aboutLanguagesTitle:"العربية والإنجليزية",
+    aboutLanguagesText:"تدعم الواجهة العربية والإنجليزية مع اتجاه RTL عند الحاجة، بينما تبقى التعبيرات الرياضية وتخطيط الحاسبة المادية من اليسار إلى اليمين للحفاظ على الاتساق.",
+    privacyPolicy:"سياسة الخصوصية",
+    publisherHome:"صفحة الناشر",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
 });
