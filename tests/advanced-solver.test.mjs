@@ -177,3 +177,30 @@ test("Advanced Solver UI exposes expand and simplify examples",async()=>{
   assert.match(index,/data-i18n="exampleExpand"/);
   assert.match(index,/data-i18n="exampleSimplify"/);
 });
+
+test("Advanced Solver differentiates common elementary functions",()=>{
+  assert.deepEqual(solveAdvancedInput("diff(sin(x),x)"),{kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"cos(x)"});
+  assert.deepEqual(solveAdvancedInput("diff(cos(x),x)"),{kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"-sin(x)"});
+  assert.deepEqual(solveAdvancedInput("diff(exp(x),x)"),{kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"exp(x)"});
+  assert.deepEqual(solveAdvancedInput("diff(ln(x),x)"),{kind:"symbolic-calculus",operation:"derivative",variable:"x",expression:"1/x"});
+});
+
+test("Advanced Solver integrates common elementary functions",()=>{
+  assert.deepEqual(solveAdvancedInput("integrate(sin(x),x)"),{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"-cos(x) + C"});
+  assert.deepEqual(solveAdvancedInput("integrate(cos(x),x)"),{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"sin(x) + C"});
+  assert.deepEqual(solveAdvancedInput("integrate(exp(x),x)"),{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"exp(x) + C"});
+  assert.deepEqual(solveAdvancedInput("integrate(1/x,x)"),{kind:"symbolic-calculus",operation:"integral",variable:"x",expression:"ln(abs(x)) + C"});
+});
+
+test("Advanced Solver estimates a finite two-sided limit",()=>{
+  const r=solveAdvancedInput("limit(sin(x)/x,x,0)");
+  assert.equal(r.kind,"limit");
+  assert.equal(r.variable,"x");
+  assert.equal(r.point,0);
+  assert.ok(Math.abs(r.value-1)<1e-6);
+});
+
+test("Advanced Solver does not invent a finite two-sided limit when sides disagree",()=>{
+  const r=solveAdvancedInput("limit(1/x,x,0)");
+  assert.deepEqual(r,{kind:"error",code:"LIMIT_DOES_NOT_EXIST",variables:["x"]});
+});
