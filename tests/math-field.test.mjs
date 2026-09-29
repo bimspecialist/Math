@@ -61,3 +61,42 @@ test("left arrow never behaves like up inside a fraction", () => {
   assert.equal(x.moveUp(),true);
   assert.equal(x.focusSlot(),"numerator");
 });
+
+
+test("left and right arrows move a real cursor inside root expression", () => {
+  const f=new MathFieldAdapter();
+  f.insertText("1");f.insertText("2");f.insertText("3");
+  assert.equal(f.cursorPosition(),3);
+  assert.equal(f.moveLeft(),true);
+  assert.equal(f.cursorPosition(),2);
+  assert.equal(f.moveRight(),true);
+  assert.equal(f.cursorPosition(),3);
+});
+
+test("DEL at an internal cursor removes the token under the cursor", () => {
+  const f=new MathFieldAdapter();
+  f.insertText("1");f.insertText("2");f.insertText("3");
+  f.moveLeft();f.moveLeft();
+  assert.equal(f.cursorPosition(),1);
+  assert.equal(f.deleteBackward(),true);
+  assert.equal(f.getCanonicalExpression(),"13");
+  f.insertText("9");
+  assert.equal(f.getCanonicalExpression(),"193");
+});
+
+test("cursor can correct a denominator without leaving the fraction", () => {
+  const f=new MathFieldAdapter();
+  f.insertFraction();f.insertText("1");f.moveDown();f.insertText("3");f.insertText("4");
+  assert.equal(f.focusSlot(),"denominator");
+  f.moveLeft();
+  assert.equal(f.cursorPosition(),1);
+  f.deleteBackward();
+  f.insertText("2");
+  assert.equal(f.getCanonicalExpression(),"(1)/(32)");
+});
+
+test("rendered math exposes a visible cursor at the active insertion point", () => {
+  const f=new MathFieldAdapter();
+  f.insertText("1");f.insertText("2");f.moveLeft();
+  assert.match(f.renderHtml(),/math-cursor/);
+});
