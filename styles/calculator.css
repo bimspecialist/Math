@@ -379,3 +379,56 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 .site-footer a{color:inherit;text-underline-offset:3px}
 .empty-state{grid-column:1/-1;margin:0;padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
 @media(max-width:800px){.workspace-info-grid{grid-template-columns:1fr}.workspace-info{padding:14px}}
+
+
+/* Knowledge libraries and formula workbench */
+.formula-open{
+  width:100%;
+  display:block;
+  border:0;
+  background:transparent;
+  color:inherit;
+  text-align:inherit;
+  padding:0;
+}
+.formula-open:hover .formula-card-action{text-decoration:underline}
+.formula-card-action{display:inline-block;margin-top:10px;color:var(--focus);font-weight:700;font-size:.82rem}
+.knowledge-page .formula-grid{margin-top:16px}
+.formula-detail-toolbar{display:flex;justify-content:flex-start;margin-bottom:12px}
+.formula-detail-expression{
+  margin:16px 0;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--page);
+  font-family:"Cambria Math","Times New Roman",serif;
+  font-size:1.15rem;
+  overflow-x:auto;
+}
+.formula-detail-form{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.formula-detail-form label{display:grid;gap:6px}
+.formula-detail-form input{
+  min-height:44px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--panel);
+  color:var(--text);
+  padding:8px 10px;
+}
+.formula-detail-actions{margin-top:14px}
+.formula-detail-result{
+  display:block;
+  min-height:46px;
+  margin-top:12px;
+  padding:12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--page);
+  line-height:1.5;
+}
+.formula-detail-result-primary{font-weight:800}
+@media(max-width:700px){.formula-detail-form{grid-template-columns:1fr}}
