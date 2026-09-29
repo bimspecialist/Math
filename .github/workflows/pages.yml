@@ -2,7 +2,9 @@ name: Verify and Deploy GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - "automation/**"
   pull_request:
   workflow_dispatch:
 
