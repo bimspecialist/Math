@@ -24,7 +24,8 @@ export function initAdSense(config={}){
   document.querySelectorAll("[data-ad-placement]").forEach(container=>{
     const placement=container.dataset.adPlacement;
     const slot=String(slots[placement]??"").trim();
-    if(!validateAdSlot(slot))return;
+    if(!validateAdSlot(slot)){container.hidden=true;return}
+    container.hidden=false;
     if(container.querySelector("ins.adsbygoogle"))return;
     container.replaceChildren();
     const ins=document.createElement("ins");
