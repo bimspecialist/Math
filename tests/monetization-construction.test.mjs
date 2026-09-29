@@ -82,3 +82,13 @@ test("AdSense initializer reuses the ownership script instead of loading a dupli
   const source=readFileSync(new URL("../src/monetization/adsense.js",import.meta.url),"utf8");
   assert.match(source,/script\[src\*="pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js"\]/);
 });
+
+
+test("local consent banner gates optional analytics without blocking AdSense initialization",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/const CONSENT_KEY="math\.analytics-consent"/);
+  assert.match(app,/function setupConsent\(\)\{\s*initAdSense\(SITE_CONFIG\.adsense\)/);
+  assert.match(app,/if\(!SITE_CONFIG\.analytics\.measurementId\)return/);
+  assert.match(app,/function enableAnalytics\(\)\{\s*initGoogleAnalytics\(SITE_CONFIG\.analytics\)/);
+  assert.doesNotMatch(app,/function enableExternalServices/);
+});
