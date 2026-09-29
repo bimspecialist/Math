@@ -187,3 +187,20 @@ test("every formula has reviewed English and Arabic titles and descriptions",()=
     assert.ok(formula.descriptionAr?.trim(),"missing Arabic description "+formula.id);
   }
 });
+
+test("English-first source markup contains no hardcoded Arabic UI text",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.doesNotMatch(index,/[\u0600-\u06FF]/);
+});
+
+test("locale switching refreshes category-specific converter terminology",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  const block=app.match(/function applyLocale\(nextLocale\)\{[\s\S]*?\n\}/)?.[0]??"";
+  assert.match(block,/selectConverterCategory\(activeConverterCategory\)/);
+});
+
+test("Advanced Solver result is reformatted when the language changes",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/lastAdvancedResult/);
+  assert.match(app,/formatAdvancedResult\(lastAdvancedResult,locale\)/);
+});
