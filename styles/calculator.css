@@ -456,3 +456,35 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 .formula-detail-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .formula-detail-status{display:block;min-height:1.35em;margin-top:8px;color:var(--muted);font-weight:700}
 .formula-detail-form input[aria-invalid="true"]{border-color:#c62828;outline:2px solid color-mix(in srgb,#c62828 35%,transparent);outline-offset:1px}
+
+
+/* Searchable tool navigation */
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
+.tool-search{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:10px;
+  background:var(--panel);
+  border-bottom:1px solid var(--line);
+}
+.tool-search input{
+  width:100%;
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--page);
+  color:var(--text);
+  padding:8px 10px;
+}
+.tool-group[hidden],.tool-item[hidden],.tool-item-static[hidden]{display:none!important}
