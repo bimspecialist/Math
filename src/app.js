@@ -22,3 +22,10 @@ document.querySelector("#advanced-solve")?.addEventListener("click",()=>{
 advancedInput?.addEventListener("keydown",event=>{
   if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();document.querySelector("#advanced-solve")?.click()}
 });
+
+document.querySelectorAll("[data-advanced-example]").forEach(button=>button.addEventListener("click",()=>{
+  if(!advancedInput)return;
+  advancedInput.value=button.dataset.advancedExample??"";
+  advancedInput.focus();
+  document.querySelector("#advanced-solve")?.click();
+}));
