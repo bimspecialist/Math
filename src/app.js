@@ -41,7 +41,11 @@ function applyLocale(nextLocale){
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 const toolSidebar=document.querySelector("#tool-sidebar");
 function activateTool(target){
-  document.querySelectorAll("[data-tool-target]").forEach(x=>x.classList.toggle("active",x.dataset.toolTarget===target));
+  document.querySelectorAll("[data-tool-target]").forEach(x=>{
+    const selected=x.dataset.toolTarget===target;
+    x.classList.toggle("active",selected);
+    x.setAttribute("aria-pressed",String(selected));
+  });
   document.querySelectorAll(".page-section").forEach(section=>section.classList.toggle("active",section.id===target+"-section"));
   trackVirtualPage("/#"+target,document.title);
   if(window.matchMedia?.("(max-width: 900px)").matches){
@@ -49,10 +53,13 @@ function activateTool(target){
     document.querySelector("#sidebar-toggle")?.setAttribute("aria-expanded","false");
   }
 }
-document.querySelectorAll("[data-tool-target]").forEach(button=>button.addEventListener("click",()=>{
+document.querySelectorAll("[data-tool-target]").forEach(button=>{
+  button.setAttribute("aria-pressed",String(button.classList.contains("active")));
+  button.addEventListener("click",()=>{
   if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
   activateTool(button.dataset.toolTarget);
-}));
+  });
+});
 document.querySelector("#sidebar-toggle")?.addEventListener("click",event=>{
   const open=toolSidebar?.classList.toggle("open")??false;
   event.currentTarget.setAttribute("aria-expanded",String(open));
