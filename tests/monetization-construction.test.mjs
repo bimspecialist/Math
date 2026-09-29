@@ -92,3 +92,10 @@ test("local consent banner gates optional analytics without blocking AdSense ini
   assert.match(app,/function enableAnalytics\(\)\{\s*initGoogleAnalytics\(SITE_CONFIG\.analytics\)/);
   assert.doesNotMatch(app,/function enableExternalServices/);
 });
+
+
+test("manual ad containers collapse when no valid slot id is configured",()=>{
+  const source=readFileSync(new URL("../src/monetization/adsense.js",import.meta.url),"utf8");
+  assert.match(source,/if\(!validateAdSlot\(slot\)\)\{container\.hidden=true;return\}/);
+  assert.match(source,/container\.hidden=false/);
+});
