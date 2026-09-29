@@ -204,3 +204,17 @@ test("Advanced Solver does not invent a finite two-sided limit when sides disagr
   const r=solveAdvancedInput("limit(1/x,x,0)");
   assert.deepEqual(r,{kind:"error",code:"LIMIT_DOES_NOT_EXIST",variables:["x"]});
 });
+
+test("Advanced Solver formatter presents limits in both languages",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  const r={kind:"limit",variable:"x",point:0,value:1};
+  assert.equal(formatAdvancedResult(r),"Limit as x → 0: 1");
+  assert.equal(formatAdvancedResult(r,"ar"),"النهاية عندما x ← 0: 1");
+});
+
+test("Advanced Solver UI exposes a finite-limit example",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-advanced-example="limit\(sin\(x\)\/x,x,0\)"/);
+  assert.match(index,/data-i18n="exampleLimit"/);
+});
