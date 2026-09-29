@@ -56,3 +56,23 @@ test("site exposes indexable metadata and accessible skip navigation",()=>{
 test("tool selection state is exposed to assistive technology",()=>{
   assert.match(app,/setAttribute\("aria-pressed",String\(selected\)\)/);
 });
+
+
+test("tool navigation supports stable hash deep links and mobile escape recovery",()=>{
+  assert.match(app,/history\.replaceState\(null,"","#"\+target\)/);
+  assert.match(app,/window\.addEventListener\("hashchange"/);
+  assert.match(app,/event\.key==="Escape"/);
+  assert.match(app,/closeToolSidebar\(\{restoreFocus:true\}\)/);
+});
+
+test("graph rendering is lazy until graphing is activated",()=>{
+  assert.match(app,/if\(target==="graphing"&&!graphInitialized\)drawGraph\(\)/);
+  assert.match(app,/let graphInitialized=false/);
+  assert.doesNotMatch(app,/graphExpression\?\.addEventListener[^\n]+\n?drawGraph\(\);/);
+});
+
+test("web asset cache-busting versions are synchronized",()=>{
+  const versions=[...index.matchAll(/(?:calculator\.css|src\/app\.js)\?v=([0-9-]+)/g)].map(m=>m[1]);
+  assert.equal(versions.length,2);
+  assert.equal(new Set(versions).size,1);
+});
