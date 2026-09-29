@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1106">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1122">
 </head>
 <body>
 <main class="site-shell">
@@ -123,6 +123,7 @@
                   <button type="button" data-mathlab-example="a = 5&#10;b = a^2 + 3&#10;b" data-i18n="variables">Variables</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;det(A)&#10;transpose(A)" data-i18n="matrix">Matrix</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;B = inv(A)&#10;matmul(A,B)&#10;trace(A)" data-i18n="advancedMatrix">Advanced matrix</button>
+                  <button type="button" data-mathlab-example="A = [2,1;1,2]&#10;eig(A)&#10;eigvec(A)" data-i18n="eigenAnalysis">Eigen analysis</button>
                 </div>
                 <label><span data-i18n="script">Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false">a = 5
 b = a^2 + 3
@@ -141,12 +142,12 @@ b</textarea></label>
           <div class="tool-page graphing-page">
             <div class="tool-page-head"><div><small data-i18n="graphingKicker">Graphing</small><h2 data-i18n="graphingTitle">Graphing Calculator</h2><p data-i18n="graphingDescription">Plot a function of x locally in your browser. Trigonometric functions use radians.</p></div></div>
             <div class="graph-controls">
-              <label><span>y =</span><input id="graph-expression" dir="ltr" value="sin(x)"></label>
+              <label class="graph-expression-field"><span>y =</span><textarea id="graph-expression" dir="ltr" rows="4" spellcheck="false">sin(x)&#10;cos(x)</textarea><small data-i18n="graphingMultiHint">One function per line, up to six. Press Ctrl+Enter to draw.</small></label>
               <label><span data-i18n="xMin">x min</span><input id="graph-min-x" type="number" value="-10" step="any"></label>
               <label><span data-i18n="xMax">x max</span><input id="graph-max-x" type="number" value="10" step="any"></label>
               <button id="graph-draw" type="button" class="advanced-solve" data-i18n="draw">Draw</button>
             </div>
-            <div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" data-i18n-aria-label="functionGraph" aria-label="Function graph"></svg></div>
+            <div id="graph-legend" class="graph-legend" aria-label="Graph legend"></div><div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" data-i18n-aria-label="functionGraph" aria-label="Function graph"></svg></div>
             <div id="graph-status" class="formula-count" aria-live="polite"></div>
           </div>
         </section>
@@ -210,5 +211,5 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1106"></script>
+<script type="module" src="./src/app.js?v=20260929-1122"></script>
 </body></html>
