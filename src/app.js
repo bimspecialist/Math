@@ -4,6 +4,7 @@ import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
+import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="en"?"en":"ar";
@@ -19,7 +20,10 @@ function activateTool(target){
     document.querySelector("#sidebar-toggle")?.setAttribute("aria-expanded","false");
   }
 }
-document.querySelectorAll("[data-tool-target]").forEach(button=>button.addEventListener("click",()=>activateTool(button.dataset.toolTarget)));
+document.querySelectorAll("[data-tool-target]").forEach(button=>button.addEventListener("click",()=>{
+  if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
+  activateTool(button.dataset.toolTarget);
+}));
 document.querySelector("#sidebar-toggle")?.addEventListener("click",event=>{
   const open=toolSidebar?.classList.toggle("open")??false;
   event.currentTarget.setAttribute("aria-expanded",String(open));
@@ -90,3 +94,32 @@ document.querySelectorAll("[data-mathlab-example]").forEach(button=>button.addEv
   mathLabInput.focus();
   document.querySelector("#mathlab-run")?.click();
 }));
+
+let activeConverterCategory="length";
+const converterInput=document.querySelector("#converter-input");
+const converterFrom=document.querySelector("#converter-from");
+const converterTo=document.querySelector("#converter-to");
+const converterResult=document.querySelector("#converter-result");
+function renderConverterUnits(){
+  if(!converterFrom||!converterTo)return;
+  const units=unitsFor(activeConverterCategory);
+  const options=units.map(u=>`<option value="${u}">${u}</option>`).join("");
+  converterFrom.innerHTML=options;converterTo.innerHTML=options;
+  if(units.length>1)converterTo.selectedIndex=1;
+}
+function updateConverter(){
+  if(!converterInput||!converterFrom||!converterTo||!converterResult)return;
+  try{
+    const value=convertUnit(activeConverterCategory,converterInput.value,converterFrom.value,converterTo.value);
+    converterResult.textContent=`${converterInput.value} ${converterFrom.value} = ${Number(value.toPrecision(12))} ${converterTo.value}`;
+  }catch(error){converterResult.textContent=error.message}
+}
+function selectConverterCategory(category){
+  if(!CONVERTER_CATEGORIES[category])return;
+  activeConverterCategory=category;
+  const title=document.querySelector("#converter-title");if(title)title.textContent=category[0].toUpperCase()+category.slice(1)+" Converter";
+  renderConverterUnits();updateConverter();
+}
+converterInput?.addEventListener("input",updateConverter);converterFrom?.addEventListener("change",updateConverter);converterTo?.addEventListener("change",updateConverter);
+document.querySelector("#converter-swap")?.addEventListener("click",()=>{if(!converterFrom||!converterTo)return;const a=converterFrom.value;converterFrom.value=converterTo.value;converterTo.value=a;updateConverter()});
+renderConverterUnits();updateConverter();
