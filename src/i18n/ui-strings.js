@@ -118,7 +118,7 @@ export const UI_STRINGS = Object.freeze({
     rampRise:"Rise",rampRun:"Run",rampLength:"Ramp length",rampAngle:"Slope angle",rampGrade:"Grade",rampRatio:"Rise-to-run ratio",
     unit:"Unit",calculate:"Calculate",rampCodeNote:"This calculator gives geometry only. Check the building or accessibility code that applies to your project.",
     RAMP_REQUIRES_TWO_VALUES:"Enter any two ramp measurements.",INVALID_RAMP_VALUE:"Ramp measurements must be positive numbers.",INVALID_RAMP_GEOMETRY:"The supplied ramp geometry is impossible.",
-    consentTitle:"Privacy choices",consentText:"Advertising and visitor analytics stay off until you choose to enable them.",accept:"Accept",reject:"Reject",
+    consentTitle:"Analytics choices",consentText:"Optional visitor analytics stay off until you choose to enable them.",accept:"Accept",reject:"Reject",
     mathWorkspace:"Math Workspace"
   }),
   ar:Object.freeze({
@@ -240,7 +240,7 @@ export const UI_STRINGS = Object.freeze({
     rampRise:"الارتفاع",rampRun:"الامتداد الأفقي",rampLength:"طول المنحدر",rampAngle:"زاوية الميل",rampGrade:"نسبة الميل",rampRatio:"نسبة الارتفاع إلى الامتداد",
     unit:"الوحدة",calculate:"احسب",rampCodeNote:"تعطي هذه الحاسبة الهندسة فقط. تحقّق من كود البناء أو متطلبات الوصول المطبقة على مشروعك.",
     RAMP_REQUIRES_TWO_VALUES:"أدخل أي قياسين للمنحدر.",INVALID_RAMP_VALUE:"يجب أن تكون قياسات المنحدر أرقامًا موجبة.",INVALID_RAMP_GEOMETRY:"هندسة المنحدر المدخلة غير ممكنة.",
-    consentTitle:"خيارات الخصوصية",consentText:"تبقى الإعلانات وتحليلات الزوار متوقفة حتى تختار تفعيلها.",accept:"موافقة",reject:"رفض",
+    consentTitle:"خيارات التحليلات",consentText:"تبقى تحليلات الزوار الاختيارية متوقفة حتى تختار تفعيلها.",accept:"موافقة",reject:"رفض",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
 });
