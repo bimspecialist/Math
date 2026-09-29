@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1015">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1026">
 </head>
 <body>
 <main class="site-shell">
@@ -40,11 +40,26 @@
           <div class="tool-group-title">Tools</div>
           <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span>Math Lab</span></button>
         </div>
+        <div class="tool-group">
+          <div class="tool-group-title">Converter</div>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="length"><span class="tool-icon">↔</span><span>Length</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="volume"><span class="tool-icon">◫</span><span>Volume</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="mass"><span class="tool-icon">⚖</span><span>Weight & mass</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="temperature"><span class="tool-icon">°</span><span>Temperature</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="energy"><span class="tool-icon">◉</span><span>Energy</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="area"><span class="tool-icon">▧</span><span>Area</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="speed"><span class="tool-icon">➜</span><span>Speed</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="time"><span class="tool-icon">◷</span><span>Time</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="power"><span class="tool-icon">ϟ</span><span>Power</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="data"><span class="tool-icon">◈</span><span>Data</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="pressure"><span class="tool-icon">⌁</span><span>Pressure</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="angle"><span class="tool-icon">∠</span><span>Angle</span></button>
+        </div>
         <div class="tool-group tool-group-muted" aria-label="Planned tools">
           <div class="tool-group-title">Next</div>
           <div class="tool-item-static"><span class="tool-icon">⌁</span><span>Graphing</span><small>soon</small></div>
-          <div class="tool-item-static"><span class="tool-icon">↔</span><span>Converters</span><small>soon</small></div>
           <div class="tool-item-static"><span class="tool-icon">&lt;/&gt;</span><span>Programmer</span><small>soon</small></div>
+          <div class="tool-item-static"><span class="tool-icon">¤</span><span>Currency</span><small>online</small></div>
         </div>
       </aside>
 
@@ -112,6 +127,19 @@ b</textarea></label>
             </div>
           </div>
         </section>
+
+        <section id="converter-section" class="page-section">
+          <div class="tool-page converter-page">
+            <div class="tool-page-head"><div><small>Converter</small><h2 id="converter-title">Unit Converter</h2><p>تحويل وحدات هندسية ورياضية محليًا بدون اتصال.</p></div></div>
+            <div class="converter-card">
+              <label><span>Value</span><input id="converter-input" type="number" value="1" step="any"></label>
+              <label><span>From</span><select id="converter-from"></select></label>
+              <button id="converter-swap" type="button" aria-label="Swap units">⇄</button>
+              <label><span>To</span><select id="converter-to"></select></label>
+            </div>
+            <output id="converter-result" class="converter-result" aria-live="polite"></output>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -125,5 +153,5 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" aria-label="مساحة إعلان سفلية يمين"><span>Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1015"></script>
+<script type="module" src="./src/app.js?v=20260929-1026"></script>
 </body></html>
