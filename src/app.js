@@ -40,29 +40,52 @@ function applyLocale(nextLocale){
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 const toolSidebar=document.querySelector("#tool-sidebar");
-function activateTool(target){
+const sidebarToggle=document.querySelector("#sidebar-toggle");
+const toolTargets=new Set([...document.querySelectorAll("[data-tool-target]")].map(x=>x.dataset.toolTarget).filter(Boolean));
+function closeToolSidebar({restoreFocus=false}={}){
+  const wasOpen=toolSidebar?.classList.contains("open")??false;
+  toolSidebar?.classList.remove("open");
+  sidebarToggle?.setAttribute("aria-expanded","false");
+  if(restoreFocus&&wasOpen)sidebarToggle?.focus();
+}
+function activateTool(target,{updateHash=true,track=true}={}){
+  if(!toolTargets.has(target))target="calculator";
   document.querySelectorAll("[data-tool-target]").forEach(x=>{
     const selected=x.dataset.toolTarget===target;
     x.classList.toggle("active",selected);
     x.setAttribute("aria-pressed",String(selected));
   });
-  document.querySelectorAll(".page-section").forEach(section=>section.classList.toggle("active",section.id===target+"-section"));
-  trackVirtualPage("/#"+target,document.title);
-  if(window.matchMedia?.("(max-width: 900px)").matches){
-    toolSidebar?.classList.remove("open");
-    document.querySelector("#sidebar-toggle")?.setAttribute("aria-expanded","false");
-  }
+  document.querySelectorAll(".page-section").forEach(section=>{
+    const selected=section.id===target+"-section";
+    section.classList.toggle("active",selected);
+    section.setAttribute("aria-hidden",String(!selected));
+  });
+  if(target==="graphing"&&!graphInitialized)drawGraph();
+  if(updateHash&&window.location.hash!=="#"+target)history.replaceState(null,"","#"+target);
+  if(track)trackVirtualPage("/#"+target,document.title);
+  if(window.matchMedia?.("(max-width: 900px)").matches)closeToolSidebar();
 }
 document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.setAttribute("aria-pressed",String(button.classList.contains("active")));
   button.addEventListener("click",()=>{
-  if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
-  activateTool(button.dataset.toolTarget);
+    if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
+    activateTool(button.dataset.toolTarget);
   });
 });
-document.querySelector("#sidebar-toggle")?.addEventListener("click",event=>{
+sidebarToggle?.addEventListener("click",event=>{
   const open=toolSidebar?.classList.toggle("open")??false;
   event.currentTarget.setAttribute("aria-expanded",String(open));
+  if(open)toolSidebar?.querySelector("[data-tool-target]")?.focus();
+});
+document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&toolSidebar?.classList.contains("open")){
+    event.preventDefault();
+    closeToolSidebar({restoreFocus:true});
+  }
+});
+window.addEventListener("hashchange",()=>{
+  const target=decodeURIComponent(window.location.hash.slice(1));
+  if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
 function handleImage(file){if(!file)return;const preview=document.querySelector("#scan-preview");preview.src=URL.createObjectURL(file);preview.hidden=false;document.querySelector("#scan-note").textContent=translate(locale,"scanSelected")}
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
@@ -181,6 +204,7 @@ const graphMinX=document.querySelector("#graph-min-x");
 const graphMaxX=document.querySelector("#graph-max-x");
 const graphCanvas=document.querySelector("#graph-canvas");
 const graphStatus=document.querySelector("#graph-status");
+let graphInitialized=false;
 function drawGraph(){
   if(!graphCanvas)return;
   const result=sampleGraphExpressions(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:501});
@@ -213,10 +237,10 @@ function drawGraph(){
     }
   });
   if(graphStatus)graphStatus.textContent=`x: [${result.minX}, ${result.maxX}] · y: [${Number(minY.toPrecision(5))}, ${Number(maxY.toPrecision(5))}]`;
+  graphInitialized=true;
 }
 document.querySelector("#graph-draw")?.addEventListener("click",drawGraph);
 graphExpression?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();drawGraph()}});
-drawGraph();
 
 const programmerInput=document.querySelector("#programmer-input");
 const programmerBase=document.querySelector("#programmer-base");
@@ -297,3 +321,7 @@ function setupConsent(){
   document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
 setupConsent();
+
+const initialTool=decodeURIComponent(window.location.hash.slice(1));
+if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
+else activateTool("calculator",{updateHash:false,track:false});
