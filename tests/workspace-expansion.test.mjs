@@ -130,3 +130,51 @@ test("application shell exposes date calculation tool",()=>{
   assert.match(app,/daysBetween/);
   assert.match(app,/addDays/);
 });
+
+test("English is the default site language and Arabic is the alternate locale",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/<html[^>]*lang="en"[^>]*dir="ltr"/);
+  assert.match(index,/id="lang-toggle"[^>]*>AR<\/button>/);
+});
+
+test("localization dictionary has complete English and Arabic terminology for every UI key",async()=>{
+  const {UI_STRINGS}=await import("../src/i18n/ui-strings.js");
+  assert.ok(UI_STRINGS.en&&UI_STRINGS.ar);
+  const enKeys=Object.keys(UI_STRINGS.en).sort(),arKeys=Object.keys(UI_STRINGS.ar).sort();
+  assert.deepEqual(arKeys,enKeys);
+  assert.ok(enKeys.length>=55);
+  for(const key of enKeys){
+    assert.ok(String(UI_STRINGS.en[key]).trim(),"empty English "+key);
+    assert.ok(String(UI_STRINGS.ar[key]).trim(),"empty Arabic "+key);
+  }
+  assert.equal(UI_STRINGS.en.navScientific,"Scientific");
+  assert.equal(UI_STRINGS.ar.navScientific,"علمي");
+  assert.equal(UI_STRINGS.en.navGraphing,"Graphing");
+  assert.equal(UI_STRINGS.ar.navGraphing,"الرسم البياني");
+  assert.equal(UI_STRINGS.en.navProgrammer,"Programmer");
+  assert.equal(UI_STRINGS.ar.navProgrammer,"مبرمج");
+  assert.equal(UI_STRINGS.en.navDateCalculation,"Date calculation");
+  assert.equal(UI_STRINGS.ar.navDateCalculation,"حساب التاريخ");
+});
+
+test("site markup uses localization hooks for headings navigation controls and tool descriptions",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  for(const key of ["pageTitle","navScientific","navAdvancedSolver","navFormulaLibrary","navMathLab","navGraphing","navProgrammer","navDateCalculation","converterLength","converterTemperature","advancedTitle","formulaTitle","mathLabTitle","graphingTitle","programmerTitle","dateTitle","converterTitle"]){
+    assert.match(index,new RegExp('data-i18n="'+key+'"'),key);
+  }
+});
+
+test("language application updates html direction and rerenders localized dynamic content",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/applyLocale/);
+  assert.match(app,/document\.documentElement\.lang=locale/);
+  assert.match(app,/document\.documentElement\.dir=locale==="ar"\?"rtl":"ltr"/);
+  assert.match(app,/renderFormulaLibrary\(\)/);
+});
+
+test("site no longer hardcodes workspace content to RTL for English",()=>{
+  const css=readFileSync(new URL("../styles/calculator.css",import.meta.url),"utf8");
+  assert.doesNotMatch(css,/\.workspace-content\{[^}]*direction:rtl/);
+  assert.match(css,/html\[dir="rtl"\] \.workspace-content/);
+});
