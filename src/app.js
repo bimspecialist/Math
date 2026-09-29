@@ -45,7 +45,8 @@ function applyLocale(nextLocale){
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
   if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
-  const activeTarget=document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
+  const activeSection=document.querySelector(".page-section.active");
+  const activeTarget=activeSection?.id?.replace(/-section$/,"")||document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
   updateToolHeading(activeTarget);
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
