@@ -34,17 +34,17 @@ test("history recall preserves structured Natural Display instead of flattening 
 });
 
 
-test("REPLAY left and right edit the current root expression before history",()=> {
+test("REPLAY left and DEL correct the digit immediately left of the cursor",()=> {
   const x=new CalculatorController();
-  x.dispatch("DIGIT_1");x.dispatch("DIGIT_2");x.dispatch("DIGIT_3");
-  x.dispatch("REPLAY_LEFT");x.dispatch("REPLAY_LEFT");
+  for(const id of ["DIGIT_1","DIGIT_2","DIGIT_3","DIGIT_4","DIGIT_5","DIGIT_6"])x.dispatch(id);
+  x.dispatch("REPLAY_LEFT");x.dispatch("REPLAY_LEFT");x.dispatch("REPLAY_LEFT");
   x.dispatch("DEL");x.dispatch("DIGIT_9");
-  assert.equal(x.view().canonicalExpression,"193");
+  assert.equal(x.view().canonicalExpression,"129456");
 });
 
 test("REPLAY left edits inside a fraction denominator and DEL replaces the selected digit",()=> {
   const x=new CalculatorController();
   x.dispatch("FRAC");x.dispatch("DIGIT_1");x.dispatch("REPLAY_DOWN");x.dispatch("DIGIT_3");x.dispatch("DIGIT_4");
   x.dispatch("REPLAY_LEFT");x.dispatch("DEL");x.dispatch("DIGIT_2");
-  assert.equal(x.view().canonicalExpression,"(1)/(32)");
+  assert.equal(x.view().canonicalExpression,"(1)/(24)");
 });
