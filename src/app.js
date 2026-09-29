@@ -79,7 +79,9 @@ function closeToolSidebar({restoreFocus=false}={}){
 function activateTool(target,{updateHash=true,track=true}={}){
   if(!toolTargets.has(target))target="calculator";
   document.querySelectorAll("[data-tool-target]").forEach(x=>{
-    const selected=x.dataset.toolTarget===target;
+    let selected=x.dataset.toolTarget===target;
+    if(selected&&x.dataset.converterCategory)selected=x.dataset.converterCategory===activeConverterCategory;
+    if(selected&&x.dataset.knowledgeLibrary)selected=x.dataset.knowledgeLibrary===activeKnowledgeLibrary;
     x.classList.toggle("active",selected);
     x.setAttribute("aria-pressed",String(selected));
   });
@@ -200,7 +202,7 @@ function currentFormulaDetail(){
     return{
       title:locale==="ar"?formula.titleAr:formula.titleEn,
       description:"",
-      expression:locale==="ar"?formula.formulaAr:formula.formulaEn,
+      expression:formula.formulaEn,
       variables:formula.variables,
       professional:formula
     };
@@ -226,6 +228,8 @@ function renderFormulaDetail(){
   if(title)title.textContent=detail.title;
   if(description)description.textContent=detail.description;
   if(expression)expression.textContent=detail.expression;
+  const calculateButton=document.querySelector("#formula-detail-calculate");
+  if(calculateButton)calculateButton.textContent=translate(locale,detail.professional?"substituteAndCalculate":"substituteValues");
   if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
     const label=locale==="ar"?variable.labelAr:variable.labelEn;
     const value=variable.defaultValue??"";
