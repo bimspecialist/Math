@@ -33,7 +33,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1515">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1600">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -204,12 +204,21 @@
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;det(A)&#10;transpose(A)" data-i18n="matrix">Matrix</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;B = inv(A)&#10;matmul(A,B)&#10;trace(A)" data-i18n="advancedMatrix">Advanced matrix</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,2]&#10;eig(A)&#10;eigvec(A)" data-i18n="eigenAnalysis">Eigen analysis</button>
-                  <button type="button" data-mathlab-example="v = linspace(0,1,5)&#10;O = ones(2,3)&#10;diag([1,2;3,4])&#10;norm([3,4])" data-i18n="numericalTools">Numerical tools</button>
+                  <button type="button" data-mathlab-example="A = [2,1;1,-1]&#10;b = [5;1]&#10;x = solve(A,b)&#10;x" data-i18n="linearSystems">Linear systems</button>
+                  <button type="button" data-mathlab-example="v = [2,4,4,4,5,5,7,9]&#10;mean(v)&#10;median(v)&#10;std(v)&#10;min(v)&#10;max(v)" data-i18n="statistics">Statistics</button>
+                  <button type="button" data-mathlab-example="u = [1,2,3]&#10;v = [4,5,6]&#10;dot(u,v)&#10;cross(u,v)&#10;norm(u)" data-i18n="vectors">Vectors</button>
+                  <button type="button" data-mathlab-example="v = linspace(0,1,5)&#10;O = ones(2,3)&#10;reshape([1,2,3,4],2,2)&#10;numel(O)&#10;size(O)" data-i18n="numericalTools">Numerical tools</button>
                 </div>
-                <label><span data-i18n="script">Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false">a = 5
+                <label><span data-i18n="script">Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false" aria-describedby="mathlab-run-hint">a = 5
 b = a^2 + 3
 b</textarea></label>
-                <button id="mathlab-run" type="button" class="advanced-solve"><span data-i18n="run">Run</span> ▶</button>
+                <p id="mathlab-run-hint" class="advanced-note" data-i18n="mathLabRunHint">Workspace variables persist between runs. Press Ctrl+Enter to run.</p>
+                <div class="mathlab-actions">
+                  <button id="mathlab-run" type="button" class="advanced-solve"><span data-i18n="run">Run</span> ▶</button>
+                  <button id="mathlab-clear-workspace" type="button" class="category-tool" data-i18n="clearWorkspace">Clear workspace</button>
+                  <button id="mathlab-clear-output" type="button" class="category-tool" data-i18n="clearOutput">Clear output</button>
+                </div>
+                <output id="mathlab-status" class="formula-detail-status" aria-live="polite"></output>
               </div>
               <div class="mathlab-results">
                 <section><h3 data-i18n="commandWindow">Command Window</h3><pre id="mathlab-output" aria-live="polite">&gt;&gt; Ready</pre></section>
@@ -322,5 +331,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1515"></script>
+<script type="module" src="./src/app.js?v=20260929-1600"></script>
 </body></html>
