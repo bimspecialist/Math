@@ -26,8 +26,8 @@ function substitute(source,variables,values){
   return out;
 }
 
-function evalNumeric(source,variables=[],values=[]){
-  return evaluateExpression(substitute(source,variables,values),{angleMode:"DEG",ans:"0"});
+function evalNumeric(source,variables=[],values=[],angleMode="DEG"){
+  return evaluateExpression(substitute(source,variables,values),{angleMode,ans:"0"});
 }
 
 function differenceFunction(left,right,variables){
@@ -253,6 +253,54 @@ function solveNonlinearSystem(equations,variables){
   };
 }
 
+function splitTopLevelArgs(source){
+  const out=[];let current="",depth=0;
+  for(const ch of String(source)){
+    if(ch==="("||ch==="["||ch==="{")depth++;
+    if(ch===")"||ch==="]"||ch==="}")depth--;
+    if(ch===","&&depth===0){out.push(current.trim());current="";continue}
+    current+=ch;
+  }
+  if(current.trim())out.push(current.trim());
+  return out;
+}
+
+function elementaryCalculus(operation,source,variable){
+  const compact=String(source).replace(/\s+/g,"");
+  const lower=compact.toLowerCase(),v=variable.toLowerCase();
+  if(operation==="derivative"){
+    if(lower==="sin("+v+")")return "cos("+variable+")";
+    if(lower==="cos("+v+")")return "-sin("+variable+")";
+    if(lower==="exp("+v+")")return "exp("+variable+")";
+    if(lower==="ln("+v+")")return "1/"+variable;
+  }
+  if(operation==="integral"){
+    if(lower==="sin("+v+")")return "-cos("+variable+") + C";
+    if(lower==="cos("+v+")")return "sin("+variable+") + C";
+    if(lower==="exp("+v+")")return "exp("+variable+") + C";
+    if(lower==="1/"+v)return "ln(abs("+variable+")) + C";
+  }
+  return null;
+}
+
+function estimateTwoSidedLimit(expression,variable,point){
+  const hs=[1e-1,5e-2,1e-2,5e-3,1e-3,5e-4,1e-4,5e-5,1e-5,5e-6,1e-6];
+  const left=[],right=[];
+  for(const h of hs){
+    const lv=evalNumeric(expression,[variable],[point-h],"RAD");
+    const rv=evalNumeric(expression,[variable],[point+h],"RAD");
+    if(lv.kind!=="value"||rv.kind!=="value"||!Number.isFinite(lv.numeric)||!Number.isFinite(rv.numeric))continue;
+    left.push(lv.numeric);right.push(rv.numeric);
+  }
+  if(left.length<4)return null;
+  const l=left.at(-1),r=right.at(-1);
+  const scale=Math.max(1,Math.abs(l),Math.abs(r));
+  if(Math.abs(l)>1e8||Math.abs(r)>1e8||Math.abs(l-r)>1e-5*scale)return null;
+  const l4=left.slice(-4),r4=right.slice(-4),avgs=l4.map((v,i)=>0.5*(v+r4[i]));
+  const last=avgs.at(-1),spread=Math.max(...avgs.map(v=>Math.abs(v-last)));
+  if(spread>1e-5*Math.max(1,Math.abs(last)))return null;
+  return clean(last);
+}
 function parseEquations(source){
   const lines=source.split(/[\n;]/).map(s=>s.trim()).filter(Boolean);
   if(!lines.length)return[];
@@ -265,6 +313,16 @@ function parseEquations(source){
 
 export function solveAdvancedInput(source){
   source=normalize(source);
+  const limitCall=source.match(/^limit\((.*)\)$/i);
+  if(limitCall){
+    const args=splitTopLevelArgs(limitCall[1]);
+    if(args.length!==3||!/^[A-Za-z]$/.test(args[1]))return{kind:"error",code:"INVALID_LIMIT"};
+    const variable=args[1],point=Number(args[2]);
+    if(!Number.isFinite(point))return{kind:"error",code:"INVALID_LIMIT"};
+    const value=estimateTwoSidedLimit(args[0],variable,point);
+    if(value===null)return{kind:"error",code:"LIMIT_DOES_NOT_EXIST",variables:[variable]};
+    return{kind:"limit",variable,point,value};
+  }
   const transform=source.match(/^(expand|simplify)\((.*)\)$/i);
   if(transform){
     const variables=[...new Set((transform[2].match(/\b[A-Za-z]\b/g)||[]).filter(v=>v.toLowerCase()!=="e"))];
@@ -280,7 +338,9 @@ export function solveAdvancedInput(source){
   const calculus=source.match(/^(diff|differentiate|integrate)\((.*),\s*([A-Za-z])\)$/i);
   if(calculus){
     const operation=/^integrate$/i.test(calculus[1])?"integral":"derivative";
-    const variable=calculus[3],expression=runPolynomialCalculus(operation,calculus[2],variable);
+    const variable=calculus[3];
+    let expression=runPolynomialCalculus(operation,calculus[2],variable);
+    if(expression===null)expression=elementaryCalculus(operation,calculus[2],variable);
     if(expression!==null)return{kind:"symbolic-calculus",operation,variable,expression};
     return{kind:"error",code:"SYMBOLIC_CALCULUS_UNSUPPORTED",variables:[variable]};
   }
