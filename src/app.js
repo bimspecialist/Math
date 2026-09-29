@@ -34,6 +34,7 @@ function applyLocale(nextLocale){
   const langToggle=document.querySelector("#lang-toggle");
   if(langToggle)langToggle.textContent=locale==="en"?"AR":"EN";
   mounted.setLocale(locale);
+  filterToolNavigation();
   renderFormulaCategories();
   renderFormulaLibrary();
   renderProfessionalLibrary();
@@ -50,6 +51,34 @@ function applyLocale(nextLocale){
   updateToolHeading(activeTarget);
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
+
+const toolSearch=document.querySelector("#tool-search");
+const toolSearchStatus=document.querySelector("#tool-search-status");
+function filterToolNavigation(){
+  const query=(toolSearch?.value??"").trim().toLocaleLowerCase(locale==="ar"?"ar":"en");
+  let visibleCount=0;
+  document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+    let groupVisible=0;
+    group.querySelectorAll(".tool-item,.tool-item-static").forEach(item=>{
+      const text=(item.textContent??"").trim().toLocaleLowerCase(locale==="ar"?"ar":"en");
+      const matches=!query||text.includes(query);
+      item.hidden=!matches;
+      if(matches){groupVisible++;visibleCount++}
+    });
+    group.hidden=groupVisible===0;
+  });
+  if(toolSearchStatus)toolSearchStatus.textContent=`${translate(locale,"toolSearchResults")}: ${visibleCount}`;
+}
+toolSearch?.addEventListener("input",filterToolNavigation);
+toolSearch?.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&toolSearch.value){
+    event.preventDefault();
+    toolSearch.value="";
+    filterToolNavigation();
+  }
+});
+filterToolNavigation();
+
 const toolSidebar=document.querySelector("#tool-sidebar");
 const sidebarToggle=document.querySelector("#sidebar-toggle");
 const toolTargets=new Set([...document.querySelectorAll("[data-tool-target]")].map(x=>x.dataset.toolTarget).filter(Boolean));
