@@ -309,3 +309,9 @@ test("Math Lab validates linspace count and matrix constructor sizes",()=>{
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"INVALID_SAMPLE_COUNT");
 });
+
+test("Math Lab UI exposes a numerical sampling example",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-mathlab-example="v = linspace\(0,1,5\).*norm\(\[3,4\]\)"/s);
+  assert.match(index,/data-i18n="numericalTools"/);
+});
