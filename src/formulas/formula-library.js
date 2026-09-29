@@ -12,7 +12,7 @@ export const FORMULA_CATEGORIES = Object.freeze([
 
 const f=(id,category,titleAr,titleEn,formula,descriptionAr,tags=[])=>({id,category,titleAr,titleEn,formula,descriptionAr,tags});
 
-export const FORMULAS = Object.freeze([
+const RAW_FORMULAS = [
   f("quad","algebra","القانون العام للمعادلة التربيعية","Quadratic formula","x = (-b ± √(b²-4ac)) / 2a","لحل ax²+bx+c=0",["roots","polynomial"]),
   f("disc","algebra","المميّز","Discriminant","Δ = b² - 4ac","يحدد طبيعة جذور المعادلة التربيعية",["quadratic"]),
   f("diff-sq","algebra","فرق مربعين","Difference of squares","a² - b² = (a-b)(a+b)","تحليل فرق مربعين",["factor"]),
@@ -70,14 +70,69 @@ export const FORMULAS = Object.freeze([
   f("inv2","linear-algebra","معكوس 2×2","2×2 inverse","A⁻¹ = 1/(ad-bc) [[d,-b],[-c,a]]","إذا det(A)≠0",["matrix"]),
   f("dot","linear-algebra","الضرب النقطي","Dot product","a·b = Σ aᵢbᵢ","للشعاعات",["vector"]),
   f("matmul","linear-algebra","ضرب المصفوفات","Matrix multiplication","Cᵢⱼ = Σₖ AᵢₖBₖⱼ","قاعدة ضرب مصفوفتين",["matrix"])
-]);
+];
+
+const EN_DESCRIPTIONS = Object.freeze({
+  quad:"Solves ax² + bx + c = 0.",
+  disc:"Determines the nature of quadratic roots.",
+  "diff-sq":"Factors a difference of two squares.",
+  "sq-sum":"Algebraic identity for the square of a sum.",
+  "sq-diff":"Algebraic identity for the square of a difference.",
+  slope:"Slope of a line through two points.",
+  line:"Point-slope form of a straight line.",
+  percent:"Calculates a percentage from a part and a whole.",
+  pyth:"Relationship between side lengths in a right triangle.",
+  "tri-area":"Area from a base and perpendicular height.",
+  "rect-area":"Area of a rectangle.",
+  "circle-area":"Area of a circle of radius r.",
+  "circle-circ":"Circumference of a circle.",
+  "sphere-vol":"Volume of a sphere.",
+  "sphere-area":"Surface area of a sphere.",
+  "cyl-vol":"Volume of a cylinder.",
+  "cone-vol":"Volume of a cone.",
+  "sin-def":"Sine ratio in a right triangle.",
+  "cos-def":"Cosine ratio in a right triangle.",
+  "tan-def":"Tangent ratio in a right triangle.",
+  "pyth-id":"Fundamental trigonometric identity.",
+  "law-sines":"Relates sides and opposite angles in any triangle.",
+  "law-cos":"Relates three sides and one angle in any triangle.",
+  "sin-double":"Double-angle identity for sine.",
+  "cos-double":"Double-angle identity for cosine.",
+  "der-power":"Basic differentiation rule for powers.",
+  "der-product":"Derivative of a product of two functions.",
+  "der-quot":"Derivative of a quotient of two functions.",
+  "der-chain":"Derivative rule for composite functions.",
+  "int-power":"Basic antiderivative rule for powers.",
+  "int-log":"Antiderivative of 1/x.",
+  ftc:"Connects definite integration with antiderivatives.",
+  mean:"Arithmetic average of a data set.",
+  variance:"Population measure of spread around the mean.",
+  std:"Square root of the population variance.",
+  zscore:"Standardizes a value relative to mean and standard deviation.",
+  comb:"Number of selections when order does not matter.",
+  perm:"Number of selections when order matters.",
+  "arith-n":"Nth term of an arithmetic sequence.",
+  "arith-sum":"Sum of the first n terms of an arithmetic sequence.",
+  "geo-n":"Nth term of a geometric sequence.",
+  "geo-sum":"Sum of the first n terms of a geometric sequence.",
+  "geo-inf":"Sum of a convergent infinite geometric series.",
+  "complex-mod":"Magnitude of a complex number.",
+  "complex-conj":"Property relating a complex number to its conjugate.",
+  euler:"Connects complex exponentials with sine and cosine.",
+  det2:"Determinant of a 2×2 matrix.",
+  inv2:"Inverse of a nonsingular 2×2 matrix.",
+  dot:"Dot product of two vectors.",
+  matmul:"Element rule for matrix multiplication."
+});
+
+export const FORMULAS = Object.freeze(RAW_FORMULAS.map(x=>Object.freeze({...x,descriptionEn:EN_DESCRIPTIONS[x.id]??x.titleEn})));
 
 export function filterFormulas({category="all",query=""}={}){
   const q=String(query).trim().toLowerCase();
   return FORMULAS.filter(x=>{
     if(category!=="all"&&x.category!==category)return false;
     if(!q)return true;
-    const hay=[x.titleAr,x.titleEn,x.formula,x.descriptionAr,...x.tags].join(" ").toLowerCase();
+    const hay=[x.titleAr,x.titleEn,x.formula,x.descriptionAr,x.descriptionEn,...x.tags].join(" ").toLowerCase();
     return hay.includes(q);
   });
 }
