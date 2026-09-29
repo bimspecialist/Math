@@ -92,6 +92,8 @@ export const UI_STRINGS = Object.freeze({
     to:"To",
     swapUnits:"Swap units",
     advertisement:"Advertisement",
+    equationImagePreview:"Equation image preview",
+    plannedTools:"Planned tools",
     menu:"Open navigation",
     mathWorkspace:"Math Workspace"
   }),
@@ -188,6 +190,8 @@ export const UI_STRINGS = Object.freeze({
     to:"إلى",
     swapUnits:"تبديل الوحدات",
     advertisement:"إعلان",
+    equationImagePreview:"معاينة صورة المعادلة",
+    plannedTools:"أدوات مخطط لها",
     menu:"فتح التنقل",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
