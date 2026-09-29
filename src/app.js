@@ -10,7 +10,7 @@ const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="en"?"en":"ar";
 const mounted=mountCalculator(calculatorRoot,controller,locale);
 document.addEventListener("keydown",event=>{if(event.target instanceof HTMLTextAreaElement||event.target instanceof HTMLInputElement)return;mounted.keydown(event)});
-document.querySelector("#lang-toggle")?.addEventListener("click",event=>{locale=locale==="ar"?"en":"ar";document.documentElement.lang=locale;document.documentElement.dir=locale==="ar"?"rtl":"ltr";event.currentTarget.textContent=locale==="ar"?"EN":"AR";document.querySelector("#page-title").textContent=locale==="ar"?"الحاسبة العلمية":"Scientific Calculator";document.querySelector("[data-tab-target='calculator']").textContent=locale==="ar"?"الحاسبة":"Calculator";mounted.setLocale(locale)});
+document.querySelector("#lang-toggle")?.addEventListener("click",event=>{locale=locale==="ar"?"en":"ar";document.documentElement.lang=locale;document.documentElement.dir=locale==="ar"?"rtl":"ltr";event.currentTarget.textContent=locale==="ar"?"EN":"AR";document.querySelector("#page-title").textContent=locale==="ar"?"الحاسبة العلمية":"Scientific Calculator";document.querySelector("[data-tool-target='calculator'] span:last-child")?.replaceChildren(document.createTextNode(locale==="ar"?"Scientific":"Scientific"));mounted.setLocale(locale)});
 const toolSidebar=document.querySelector("#tool-sidebar");
 function activateTool(target){
   document.querySelectorAll("[data-tool-target]").forEach(x=>x.classList.toggle("active",x.dataset.toolTarget===target));
