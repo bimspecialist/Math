@@ -67,3 +67,8 @@ test("sidebar exposes converter categories and shared converter page",()=>{
   assert.match(index,/id="converter-input"/);
   assert.match(index,/id="converter-result"/);
 });
+
+test("language toggle no longer depends on removed top-tab markup",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.doesNotMatch(app,/data-tab-target/);
+});
