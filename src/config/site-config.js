@@ -3,8 +3,10 @@ export const SITE_CONFIG=Object.freeze({
     client:"",
     autoAds:true,
     slots:Object.freeze({
+      "outer-left":"",
       "side-left":"",
       "side-right":"",
+      "outer-right":"",
       "bottom-main":"",
       "bottom-secondary":"",
       "bottom-left":"",
