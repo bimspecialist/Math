@@ -271,3 +271,7 @@
 
 .advanced-solve{min-height:42px;border:1px solid var(--line);background:var(--text);color:var(--panel);border-radius:10px;padding:7px 16px;font-weight:800}
 .advanced-result{display:block;min-height:48px;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--page);direction:ltr;text-align:left;font-family:Consolas,"Courier New",monospace;font-size:1rem}
+
+.advanced-examples{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.advanced-examples button{min-height:38px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--text);padding:6px 11px;font-size:.86rem}
+.advanced-examples button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
