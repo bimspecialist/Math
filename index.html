@@ -33,7 +33,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1145">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1400">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -62,6 +62,9 @@
         <div class="tool-group">
           <div class="tool-group-title" data-i18n="navKnowledgeGroup">Knowledge</div>
           <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span data-i18n="navFormulaLibrary">Formula Library</span></button>
+          <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="accounting"><span class="tool-icon">₿</span><span data-i18n="navAccountingLibrary">Accounting Library</span></button>
+          <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="engineering"><span class="tool-icon">∠</span><span data-i18n="navEngineeringLibrary">Engineering Library</span></button>
+          <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="pmp"><span class="tool-icon">◆</span><span data-i18n="navPmpLibrary">PMP Library</span></button>
         </div>
         <div class="tool-group">
           <div class="tool-group-title" data-i18n="navToolsGroup">Tools</div>
@@ -142,6 +145,29 @@
             </div>
             <div id="formula-count" class="formula-count" aria-live="polite"></div>
             <div id="formula-grid" class="formula-grid"></div>
+          </div>
+        </section>
+
+        <section id="knowledge-section" class="page-section">
+          <div class="tool-page knowledge-page">
+            <div class="tool-page-head">
+              <div><small data-i18n="professionalKnowledgeKicker">Professional knowledge</small><h2 id="knowledge-title">Professional Library</h2><p id="knowledge-description"></p></div>
+            </div>
+            <div id="knowledge-formulas" class="formula-grid knowledge-grid"></div>
+          </div>
+        </section>
+
+        <section id="formula-detail-section" class="page-section">
+          <div class="tool-page formula-detail-page">
+            <div class="formula-detail-toolbar"><button id="formula-detail-back" type="button" class="category-tool" data-i18n="backToLibrary">Back to library</button></div>
+            <div class="tool-page-head">
+              <div><small data-i18n="formulaCalculatorKicker">Formula calculator</small><h2 id="formula-detail-title">Formula</h2><p id="formula-detail-description"></p></div>
+            </div>
+            <div id="formula-detail-expression" class="formula-detail-expression" dir="ltr"></div>
+            <form id="formula-detail-form" class="formula-detail-form"></form>
+            <div class="formula-detail-actions"><button id="formula-detail-calculate" type="button" class="advanced-solve" data-i18n="substituteAndCalculate">Substitute & calculate</button></div>
+            <output id="formula-detail-substitution" class="formula-detail-result" aria-live="polite"></output>
+            <output id="formula-detail-result" class="formula-detail-result formula-detail-result-primary" aria-live="polite"></output>
           </div>
         </section>
 
@@ -275,5 +301,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1145"></script>
+<script type="module" src="./src/app.js?v=20260929-1400"></script>
 </body></html>
