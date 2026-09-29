@@ -48,8 +48,10 @@ test("calculator catalog includes the requested category structure and Ramp Calc
 test("site exposes monetization-ready ad placements, analytics consent, favicon, categories and Ramp Calculator",()=>{
   const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
   assert.match(index,/rel="icon"[^>]*href="\.\/assets\/favicon\.svg"/);
+  assert.match(index,/data-ad-placement="outer-left"/);
   assert.match(index,/data-ad-placement="side-left"/);
   assert.match(index,/data-ad-placement="side-right"/);
+  assert.match(index,/data-ad-placement="outer-right"/);
   assert.match(index,/data-ad-placement="bottom-main"/);
   assert.match(index,/id="consent-banner"/);
   assert.match(index,/data-tool-target="categories"/);
