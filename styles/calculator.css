@@ -279,13 +279,17 @@
 
 /* Workspace navigation inspired by desktop calculator tool pickers. */
 .site-brand{display:flex;align-items:center;gap:10px}.sidebar-toggle{display:none;min-width:42px;min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}
-.workspace-shell{direction:ltr;display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:start}
+.workspace-shell{direction:inherit;display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:start}
 .tool-sidebar{position:sticky;top:14px;max-height:calc(100vh - 28px);overflow:auto;background:color-mix(in srgb,var(--panel) 94%,transparent);border:1px solid var(--line);border-radius:16px;padding:10px;box-shadow:0 8px 28px rgba(20,30,40,.07)}
 .tool-group+.tool-group{margin-top:14px}.tool-group-title{padding:4px 9px 7px;color:var(--muted);font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.035em}
 .tool-item,.tool-item-static{width:100%;min-height:44px;display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:7px;border:0;border-radius:9px;padding:7px 9px;background:transparent;color:var(--text);text-align:left}
 .tool-item:hover{background:color-mix(in srgb,var(--line) 28%,transparent)}.tool-item.active{background:color-mix(in srgb,var(--focus) 12%,var(--panel));box-shadow:inset 3px 0 var(--focus);font-weight:700}
 .tool-icon{font-size:1.05rem;text-align:center}.tool-item-static{opacity:.55}.tool-item-static small{font-size:.62rem;color:var(--muted)}
-.workspace-content{min-width:0;direction:rtl}.workspace-content .page-section{min-width:0}
+.workspace-content{min-width:0;direction:ltr}.workspace-content .page-section{min-width:0}
+html[dir="rtl"] .workspace-content{direction:rtl}
+html[dir="rtl"] .tool-sidebar{direction:rtl}
+html[dir="rtl"] .tool-item,html[dir="rtl"] .tool-item-static{text-align:right}
+html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 
 .tool-page{max-width:1000px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}.tool-page-head h2{margin:.15rem 0 .35rem}.tool-page-head p,.tool-page-head small,.muted{color:var(--muted)}
 .formula-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,260px);gap:12px;margin:16px 0}.formula-controls label{display:grid;gap:6px}.formula-controls input,.formula-controls select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 10px}.formula-count{margin:0 0 10px;color:var(--muted);font-size:.88rem}
