@@ -320,3 +320,11 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 
 .date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}.date-grid section{border:1px solid var(--line);border-radius:12px;padding:14px;background:color-mix(in srgb,var(--panel) 96%,var(--page))}.date-grid h3{margin:0 0 12px}.date-grid label{display:grid;gap:6px;margin-bottom:10px}.date-grid input{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 10px}.date-grid output{display:block;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:11px;background:var(--page);direction:ltr;text-align:left;font-weight:700}
 @media(max-width:700px){.date-grid{grid-template-columns:1fr}}
+
+.graph-controls textarea{min-height:96px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 10px;font-family:Consolas,"Courier New",monospace;resize:vertical}
+.graph-expression-field small{color:var(--muted);font-size:.78rem;line-height:1.35}
+.graph-legend{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px;direction:ltr}
+.graph-legend-item{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 9px;font:12px/1.2 Consolas,"Courier New",monospace}
+.graph-legend-item::before{content:"";display:inline-block;width:18px;border-top:3px solid currentColor}
+.graph-path.graph-series-1{stroke-dasharray:8 5}.graph-path.graph-series-2{stroke-dasharray:3 4}.graph-path.graph-series-3{stroke-dasharray:12 4 3 4}.graph-path.graph-series-4{stroke-dasharray:1 4}.graph-path.graph-series-5{stroke-dasharray:9 3 2 3 2 3}
+.graph-legend-item.graph-series-1::before{border-top-style:dashed}.graph-legend-item.graph-series-2::before{border-top-style:dotted}
