@@ -37,11 +37,32 @@ function applyLocale(nextLocale){
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
   if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
+  const activeTarget=document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
+  updateToolHeading(activeTarget);
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 const toolSidebar=document.querySelector("#tool-sidebar");
 const sidebarToggle=document.querySelector("#sidebar-toggle");
 const toolTargets=new Set([...document.querySelectorAll("[data-tool-target]")].map(x=>x.dataset.toolTarget).filter(Boolean));
+const TOOL_TITLE_KEYS=Object.freeze({
+  categories:"categoriesTitle",
+  calculator:"pageTitle",
+  advanced:"advancedTitle",
+  formulas:"formulaTitle",
+  mathlab:"mathLabTitle",
+  converter:"converterTitle",
+  graphing:"graphingTitle",
+  ramp:"rampTitle",
+  programmer:"programmerTitle",
+  date:"dateTitle"
+});
+function updateToolHeading(target){
+  const key=TOOL_TITLE_KEYS[target]||"pageTitle";
+  const title=translate(locale,key);
+  const heading=document.querySelector("#page-title");
+  if(heading)heading.textContent=title;
+  document.title=target==="calculator"?translate(locale,"siteTitle"):`${title} — Math`;
+}
 function closeToolSidebar({restoreFocus=false}={}){
   const wasOpen=toolSidebar?.classList.contains("open")??false;
   toolSidebar?.classList.remove("open");
@@ -60,6 +81,7 @@ function activateTool(target,{updateHash=true,track=true}={}){
     section.classList.toggle("active",selected);
     section.setAttribute("aria-hidden",String(!selected));
   });
+  updateToolHeading(target);
   if(target==="graphing"&&!graphInitialized)drawGraph();
   if(updateHash&&window.location.hash!=="#"+target)history.replaceState(null,"","#"+target);
   if(track)trackVirtualPage("/#"+target,document.title);
@@ -132,12 +154,12 @@ function renderFormulaLibrary(){
   if(!select||!grid)return;
   if(!select.options.length)renderFormulaCategories();
   const rows=filterFormulas({category:select.value||"all",query:search?.value??""});
-  grid.innerHTML=rows.map(x=>{
+  grid.innerHTML=rows.length?rows.map(x=>{
     const title=locale==="ar"?x.titleAr:x.titleEn;
     const secondary=locale==="ar"?x.titleEn:x.titleAr;
     const description=locale==="ar"?x.descriptionAr:x.descriptionEn;
     return `<article class="formula-card"><div class="formula-card-meta">${escHtml(secondary)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p></article>`;
-  }).join("");
+  }).join(""):`<p class="empty-state" role="status">${escHtml(translate(locale,"formulaNoResults"))}</p>`;
   if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
 }
 document.querySelector("#formula-search")?.addEventListener("input",renderFormulaLibrary);
