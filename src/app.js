@@ -38,6 +38,7 @@ function applyLocale(nextLocale){
   renderFormulaCategories();
   renderFormulaLibrary();
   renderProfessionalLibrary();
+  renderMathLabWorkspace();
   if(formulaDetailContext){
     captureFormulaDetailValues();
     renderFormulaDetail();
@@ -439,25 +440,61 @@ renderProfessionalLibrary();
 const mathLabInput=document.querySelector("#mathlab-input");
 const mathLabOutput=document.querySelector("#mathlab-output");
 const mathLabWorkspace=document.querySelector("#mathlab-workspace");
-function formatLabValue(value){return Array.isArray(value)?JSON.stringify(value):String(value)}
-function renderMathLabResult(result){
+const mathLabStatus=document.querySelector("#mathlab-status");
+let mathLabWorkspaceState={};
+
+function formatLabValue(value){
+  if(!Array.isArray(value))return String(value);
+  if(value.every(Array.isArray)){
+    return "[\n"+value.map(row=>"  "+row.map(v=>String(v)).join("  ")).join("\n")+"\n]";
+  }
+  return "["+value.map(v=>typeof v==="object"?JSON.stringify(v):String(v)).join(", ")+"]";
+}
+function renderMathLabWorkspace(){
+  if(!mathLabWorkspace)return;
+  const entries=Object.entries(mathLabWorkspaceState);
+  mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>\`<div class="workspace-row"><strong>\${escHtml(name)}</strong><code dir="ltr">\${escHtml(formatLabValue(value))}</code></div>\`).join(""):\`<span class="muted">\${escHtml(translate(locale,"noVariables"))}</span>\`;
+}
+function runMathLab(){
+  if(!mathLabInput)return;
+  const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState);
+  mathLabWorkspaceState={...result.workspace};
   if(mathLabOutput){
-    const lines=result.outputs.map(x=>`>> ${x.source}\n${formatLabValue(x.value)}`);
-    if(!result.ok)lines.push(`Error: ${result.error?.message??"MATHLAB_ERROR"}`);
+    const lines=result.outputs.map(x=>\`>> \${x.source}\n\${formatLabValue(x.value)}\`);
+    if(!result.ok){
+      const line=result.error?.line?\` (line \${result.error.line})\`:"";
+      const source=result.error?.source?\`\n>> \${result.error.source}\`:"";
+      lines.push(\`Error\${line}: \${result.error?.message??"MATHLAB_ERROR"}\${source}\`);
+    }
     mathLabOutput.textContent=lines.length?lines.join("\n\n"):">> Ready";
   }
-  if(mathLabWorkspace){
-    const entries=Object.entries(result.workspace);
-    mathLabWorkspace.innerHTML=entries.length?entries.map(([name,value])=>`<div class="workspace-row"><strong>${escHtml(name)}</strong><code dir="ltr">${escHtml(formatLabValue(value))}</code></div>`).join(""):`<span class="muted">${escHtml(translate(locale,"noVariables"))}</span>`;
-  }
+  renderMathLabWorkspace();
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,result.ok?"mathLabRunSuccess":"mathLabRunError");
+  return result;
 }
-document.querySelector("#mathlab-run")?.addEventListener("click",()=>renderMathLabResult(runMathLabScript(mathLabInput?.value??"")));
+document.querySelector("#mathlab-run")?.addEventListener("click",runMathLab);
+document.querySelector("#mathlab-clear-workspace")?.addEventListener("click",()=>{
+  mathLabWorkspaceState={};
+  renderMathLabWorkspace();
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"workspaceCleared");
+});
+document.querySelector("#mathlab-clear-output")?.addEventListener("click",()=>{
+  if(mathLabOutput)mathLabOutput.textContent=">> Ready";
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"outputCleared");
+});
+mathLabInput?.addEventListener("keydown",event=>{
+  if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){
+    event.preventDefault();
+    runMathLab();
+  }
+});
 document.querySelectorAll("[data-mathlab-example]").forEach(button=>button.addEventListener("click",()=>{
   if(!mathLabInput)return;
   mathLabInput.value=button.dataset.mathlabExample??"";
   mathLabInput.focus();
-  document.querySelector("#mathlab-run")?.click();
+  runMathLab();
 }));
+renderMathLabWorkspace();
 
 let activeConverterCategory="length";
 const converterInput=document.querySelector("#converter-input");
