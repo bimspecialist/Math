@@ -2,6 +2,7 @@ export const SITE_CONFIG=Object.freeze({
   adsense:Object.freeze({
     client:"ca-pub-5386218928692257",
     autoAds:true,
+    showReservedSlots:true,
     slots:Object.freeze({
       "outer-left":"",
       "side-left":"",
