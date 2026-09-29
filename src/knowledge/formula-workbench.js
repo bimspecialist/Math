@@ -1,13 +1,13 @@
 import { evaluateExpression } from "../calculator/math-engine.js";
 
-const RESERVED=new Set(["sin","cos","tan","sqrt","abs","log","ln","exp","det","root","ncr","npr","pi","e"]);
+const RESERVED=new Set(["sin","cos","tan","sqrt","abs","log","ln","exp","det","root","ncr","npr","pi","π","e"]);
 
 export function inferReferenceVariables(formulaText=""){
   const text=String(formulaText);
   const [left="",...rest]=text.split("=");
   const right=rest.join("=")||left;
-  const target=/^\s*([A-Za-z][A-Za-z0-9_]*)\s*$/.exec(left)?.[1]??null;
-  const tokens=[...right.matchAll(/[A-Za-z][A-Za-z0-9_]*/g)].map(m=>m[0]);
+  const target=/^\s*([A-Za-z][A-Za-z0-9_]*|[Δσμθρλ])\s*$/.exec(left)?.[1]??null;
+  const tokens=[...right.matchAll(/[A-Za-z][A-Za-z0-9_]*|[Δσμθρλπ]/g)].map(m=>m[0]);
   const vars=[];
   for(const token of tokens){
     const lower=token.toLowerCase();
@@ -24,7 +24,8 @@ export function substituteFormula(formulaText,values={}){
     .sort(([a],[b])=>b.length-a.length);
   for(const [key,value] of entries){
     const safe=String(value).trim();
-    result=result.replace(new RegExp("\\b"+escapeRegExp(key)+"\\b","g"),"("+safe+")");
+    const pattern=/^[A-Za-z][A-Za-z0-9_]*$/.test(key)?"\\b"+escapeRegExp(key)+"\\b":escapeRegExp(key);
+    result=result.replace(new RegExp(pattern,"g"),"("+safe+")");
   }
   return result;
 }
