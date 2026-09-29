@@ -104,3 +104,13 @@ test("advanced result formatter presents nonlinear system solution sets",async()
   assert.match(text,/x = -3, y = -4/);
   assert.match(text,/x = 4, y = 3/);
 });
+
+
+test("Advanced Solver UI advertises multi-equation input and provides working examples",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/data-advanced-example="A\*5=5\*2\^2"/);
+  assert.match(index,/data-advanced-example="x\+y=5&#10;x-y=1"/);
+  assert.match(app,/data-advanced-example/);
+});
