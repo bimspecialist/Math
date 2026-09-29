@@ -1,5 +1,6 @@
 export const UI_STRINGS = Object.freeze({
   en:Object.freeze({
+    siteTitle:"Math — Scientific Calculator",
     pageTitle:"Scientific Calculator",
     navCalculatorGroup:"Calculator",
     navScientific:"Scientific",
@@ -98,6 +99,7 @@ export const UI_STRINGS = Object.freeze({
     mathWorkspace:"Math Workspace"
   }),
   ar:Object.freeze({
+    siteTitle:"Math — الحاسبة العلمية",
     pageTitle:"الحاسبة العلمية",
     navCalculatorGroup:"الحاسبة",
     navScientific:"علمي",
