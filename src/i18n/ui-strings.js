@@ -75,6 +75,8 @@ export const UI_STRINGS = Object.freeze({
     exampleExpand:"Expand",
     exampleSimplify:"Simplify",
     exampleLimit:"Limit",
+    exampleNumericRootGuess:"Numerical root",
+    exampleNumericRootBracket:"Bracketed root",
     formulaKicker:"Reference",
     formulaTitle:"Formula Library",
     formulaDescription:"A searchable, extensible library organized by mathematical topic.",
