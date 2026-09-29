@@ -33,7 +33,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1500">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1515">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -127,6 +127,8 @@
               <button type="button" data-advanced-example="expand((x+1)^2)" data-i18n="exampleExpand">Expand</button>
               <button type="button" data-advanced-example="simplify(x+x+2)" data-i18n="exampleSimplify">Simplify</button>
               <button type="button" data-advanced-example="limit(sin(x)/x,x,0)" data-i18n="exampleLimit">Limit</button>
+              <button type="button" data-advanced-example="nsolve(cos(x)=x,x,0.7)" data-i18n="exampleNumericRootGuess">Numerical root</button>
+              <button type="button" data-advanced-example="nsolve(x^3-2=0,x,1,2)" data-i18n="exampleNumericRootBracket">Bracketed root</button>
             </div>
             <div class="advanced-actions">
               <button id="advanced-solve" type="button" class="advanced-solve" data-i18n="solve">Solve</button>
@@ -320,5 +322,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1500"></script>
+<script type="module" src="./src/app.js?v=20260929-1515"></script>
 </body></html>
