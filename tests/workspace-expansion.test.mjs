@@ -294,3 +294,18 @@ test("graphing UI supports multiple expressions",()=>{
   assert.match(index,/id="graph-expression"[^>]*textarea|<textarea[^>]*id="graph-expression"/);
   assert.match(index,/data-i18n="graphingMultiHint"/);
 });
+
+test("Math Lab provides MATLAB-style constructors and vector utilities",()=>{
+  const r=runMathLabScript("O = ones(2,3)\nv = linspace(0,1,5)\ndiag([1,2;3,4])\nnorm([3,4])");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.O,[[1,1,1],[1,1,1]]);
+  assert.deepEqual(r.workspace.v,[0,0.25,0.5,0.75,1]);
+  assert.deepEqual(r.outputs[2].value,[1,4]);
+  assert.equal(r.outputs[3].value,5);
+});
+
+test("Math Lab validates linspace count and matrix constructor sizes",()=>{
+  const r=runMathLabScript("linspace(0,1,1)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_SAMPLE_COUNT");
+});
