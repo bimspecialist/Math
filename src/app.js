@@ -2,7 +2,7 @@ import { CalculatorController } from "./calculator/calculator-controller.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
 import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
-import { FORMULA_CATEGORIES, filterFormulas } from "./formulas/formula-library.js";
+import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, graphBounds } from "./graphing/graph-engine.js";
@@ -14,6 +14,8 @@ import { initAdSense } from "./monetization/adsense.js";
 import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp } from "./construction/ramp-calculator.js";
+import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
+import { inferReferenceVariables, substituteFormula, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -33,6 +35,8 @@ function applyLocale(nextLocale){
   mounted.setLocale(locale);
   renderFormulaCategories();
   renderFormulaLibrary();
+  renderProfessionalLibrary();
+  if(formulaDetailContext)renderFormulaDetail();
   renderCalculatorCategories();
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
@@ -44,11 +48,14 @@ document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale
 const toolSidebar=document.querySelector("#tool-sidebar");
 const sidebarToggle=document.querySelector("#sidebar-toggle");
 const toolTargets=new Set([...document.querySelectorAll("[data-tool-target]")].map(x=>x.dataset.toolTarget).filter(Boolean));
+toolTargets.add("formula-detail");
 const TOOL_TITLE_KEYS=Object.freeze({
   categories:"categoriesTitle",
   calculator:"pageTitle",
   advanced:"advancedTitle",
   formulas:"formulaTitle",
+  knowledge:"professionalKnowledgeKicker",
+  "formula-detail":"formulaCalculatorKicker",
   mathlab:"mathLabTitle",
   converter:"converterTitle",
   graphing:"graphingTitle",
@@ -91,6 +98,7 @@ document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.setAttribute("aria-pressed",String(button.classList.contains("active")));
   button.addEventListener("click",()=>{
     if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
+    if(button.dataset.knowledgeLibrary)selectProfessionalLibrary(button.dataset.knowledgeLibrary);
     activateTool(button.dataset.toolTarget);
   });
 });
@@ -143,6 +151,110 @@ document.querySelectorAll("[data-advanced-example]").forEach(button=>button.addE
 }));
 
 function escHtml(value){return String(value??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+let activeKnowledgeLibrary="accounting";
+let formulaDetailContext=null;
+let formulaDetailBackTarget="formulas";
+
+function selectProfessionalLibrary(id){
+  if(!getProfessionalLibrary(id))return;
+  activeKnowledgeLibrary=id;
+  renderProfessionalLibrary();
+}
+function renderProfessionalLibrary(){
+  const library=getProfessionalLibrary(activeKnowledgeLibrary)??PROFESSIONAL_LIBRARIES[0];
+  const title=document.querySelector("#knowledge-title");
+  const description=document.querySelector("#knowledge-description");
+  const grid=document.querySelector("#knowledge-formulas");
+  if(!library||!grid)return;
+  if(title)title.textContent=locale==="ar"?library.labelAr:library.labelEn;
+  if(description)description.textContent=locale==="ar"?library.descriptionAr:library.descriptionEn;
+  grid.innerHTML=library.formulas.map(formula=>{
+    const titleText=locale==="ar"?formula.titleAr:formula.titleEn;
+    const expression=locale==="ar"?formula.formulaAr:formula.formulaEn;
+    return `<article class="formula-card"><button type="button" class="formula-open" data-professional-library="${escHtml(library.id)}" data-professional-formula="${escHtml(formula.id)}"><h3>${escHtml(titleText)}</h3><div class="formula-expression" dir="ltr">${escHtml(expression)}</div><span class="formula-card-action">${escHtml(translate(locale,"enterValues"))} →</span></button></article>`;
+  }).join("");
+  grid.querySelectorAll("[data-professional-formula]").forEach(button=>button.addEventListener("click",()=>{
+    openProfessionalFormula(button.dataset.professionalLibrary,button.dataset.professionalFormula);
+  }));
+}
+function openProfessionalFormula(libraryId,formulaId){
+  const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return;
+  formulaDetailContext={kind:"professional",libraryId,formulaId};
+  formulaDetailBackTarget="knowledge";
+  renderFormulaDetail();
+  activateTool("formula-detail");
+}
+function openReferenceFormula(formulaId){
+  const formula=FORMULAS.find(x=>x.id===formulaId);if(!formula)return;
+  formulaDetailContext={kind:"reference",formulaId};
+  formulaDetailBackTarget="formulas";
+  renderFormulaDetail();
+  activateTool("formula-detail");
+}
+function currentFormulaDetail(){
+  if(!formulaDetailContext)return null;
+  if(formulaDetailContext.kind==="professional"){
+    const formula=getProfessionalFormula(formulaDetailContext.libraryId,formulaDetailContext.formulaId);
+    if(!formula)return null;
+    return{
+      title:locale==="ar"?formula.titleAr:formula.titleEn,
+      description:"",
+      expression:locale==="ar"?formula.formulaAr:formula.formulaEn,
+      variables:formula.variables,
+      professional:formula
+    };
+  }
+  const formula=FORMULAS.find(x=>x.id===formulaDetailContext.formulaId);
+  if(!formula)return null;
+  return{
+    title:locale==="ar"?formula.titleAr:formula.titleEn,
+    description:locale==="ar"?formula.descriptionAr:formula.descriptionEn,
+    expression:formula.formula,
+    variables:inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
+    professional:null
+  };
+}
+function renderFormulaDetail(){
+  const detail=currentFormulaDetail();if(!detail)return;
+  const title=document.querySelector("#formula-detail-title");
+  const description=document.querySelector("#formula-detail-description");
+  const expression=document.querySelector("#formula-detail-expression");
+  const form=document.querySelector("#formula-detail-form");
+  const substitution=document.querySelector("#formula-detail-substitution");
+  const result=document.querySelector("#formula-detail-result");
+  if(title)title.textContent=detail.title;
+  if(description)description.textContent=detail.description;
+  if(expression)expression.textContent=detail.expression;
+  if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
+    const label=locale==="ar"?variable.labelAr:variable.labelEn;
+    const value=variable.defaultValue??"";
+    return `<label><span>${escHtml(label)}</span><input type="number" step="any" inputmode="decimal" data-formula-variable="${escHtml(variable.id)}" value="${escHtml(value)}"></label>`;
+  }).join(""):`<p class="empty-state">${escHtml(translate(locale,"referenceSubstitution"))}</p>`;
+  if(substitution)substitution.textContent="";
+  if(result)result.textContent="";
+}
+function calculateFormulaDetail(){
+  const detail=currentFormulaDetail();if(!detail)return;
+  const values={};
+  document.querySelectorAll("#formula-detail-form [data-formula-variable]").forEach(input=>{values[input.dataset.formulaVariable]=input.value});
+  const substitution=document.querySelector("#formula-detail-substitution");
+  const result=document.querySelector("#formula-detail-result");
+  const substituted=substituteFormula(detail.expression,values);
+  if(substitution)substitution.textContent=`${translate(locale,"substitutedFormula")}: ${substituted}`;
+  if(!result)return;
+  if(!detail.professional){result.textContent=translate(locale,"referenceSubstitution");return}
+  const evaluated=evaluateProfessionalFormula(detail.professional,values);
+  if(!evaluated.ok){
+    result.textContent=evaluated.code==="MISSING_VALUE"?translate(locale,"missingValue"):translate(locale,"invalidValue");
+    return;
+  }
+  const numeric=Number(evaluated.value.toPrecision(12));
+  result.textContent=`${translate(locale,"calculatedResult")}: ${numeric}${detail.professional.unit??""}`;
+}
+document.querySelector("#formula-detail-calculate")?.addEventListener("click",calculateFormulaDetail);
+document.querySelector("#formula-detail-back")?.addEventListener("click",()=>activateTool(formulaDetailBackTarget));
+
 function renderFormulaCategories(){
   const select=document.querySelector("#formula-category");
   if(!select)return;
@@ -168,14 +280,16 @@ function renderFormulaLibrary(){
     const title=locale==="ar"?x.titleAr:x.titleEn;
     const secondary=locale==="ar"?x.titleEn:x.titleAr;
     const description=locale==="ar"?x.descriptionAr:x.descriptionEn;
-    return `<article class="formula-card"><div class="formula-card-meta">${escHtml(secondary)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p></article>`;
+    return `<article class="formula-card"><button type="button" class="formula-open" data-general-formula-id="${escHtml(x.id)}"><div class="formula-card-meta">${escHtml(secondary)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p><span class="formula-card-action">${escHtml(translate(locale,"enterValues"))} →</span></button></article>`;
   }).join(""):`<p class="empty-state" role="status">${escHtml(translate(locale,"formulaNoResults"))}</p>`;
+  grid.querySelectorAll("[data-general-formula-id]").forEach(button=>button.addEventListener("click",()=>openReferenceFormula(button.dataset.generalFormulaId)));
   if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
 }
 document.querySelector("#formula-search")?.addEventListener("input",renderFormulaLibrary);
 document.querySelector("#formula-category")?.addEventListener("change",renderFormulaLibrary);
 renderFormulaCategories();
 renderFormulaLibrary();
+renderProfessionalLibrary();
 
 const mathLabInput=document.querySelector("#mathlab-input");
 const mathLabOutput=document.querySelector("#mathlab-output");
