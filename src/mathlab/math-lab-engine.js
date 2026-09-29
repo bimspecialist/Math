@@ -180,6 +180,49 @@ function euclideanNorm(value){
   return Math.sqrt(values.reduce((sum,v)=>sum+v*v,0));
 }
 
+function numericValues(value){
+  const values=flatten(value).map(Number);
+  if(!values.length||values.some(v=>!Number.isFinite(v)))throw new Error("INVALID_VALUE");
+  return values;
+}
+
+function median(value){
+  const values=numericValues(value).slice().sort((a,b)=>a-b);
+  const mid=Math.floor(values.length/2);
+  return values.length%2?values[mid]:(values[mid-1]+values[mid])/2;
+}
+
+function variance(value){
+  const values=numericValues(value);
+  if(values.length<2)return 0;
+  const mean=values.reduce((a,b)=>a+b,0)/values.length;
+  return values.reduce((sum,v)=>sum+(v-mean)**2,0)/(values.length-1);
+}
+
+function dot(a,b){
+  const av=numericValues(a),bv=numericValues(b);
+  if(av.length!==bv.length)throw new Error("VECTOR_DIMENSION_MISMATCH");
+  return av.reduce((sum,v,i)=>sum+v*bv[i],0);
+}
+
+function cross(a,b){
+  const av=numericValues(a),bv=numericValues(b);
+  if(av.length!==3||bv.length!==3)throw new Error("CROSS_REQUIRES_3D");
+  return[
+    av[1]*bv[2]-av[2]*bv[1],
+    av[2]*bv[0]-av[0]*bv[2],
+    av[0]*bv[1]-av[1]*bv[0]
+  ].map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14)));
+}
+
+function reshape(value,rows,cols){
+  rows=Number(rows);cols=Number(cols);
+  if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
+  const values=numericValues(value);
+  if(values.length!==rows*cols)throw new Error("RESHAPE_SIZE_MISMATCH");
+  return Array.from({length:rows},(_,r)=>values.slice(r*cols,(r+1)*cols));
+}
+
 function evalValue(source,workspace){
   const text=source.trim();
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
@@ -207,8 +250,19 @@ function evalCommand(expr,workspace){
     if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
     if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
     if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
-    if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).reduce((a,b)=>a+b,0)}
-    if(fn==="mean"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const a=flatten(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
+    if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).reduce((a,b)=>a+b,0)}
+    if(fn==="mean"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const a=numericValues(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
+    if(fn==="median"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return median(args[0])}
+    if(fn==="min"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.min(...numericValues(args[0]))}
+    if(fn==="max"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.max(...numericValues(args[0]))}
+    if(fn==="var"||fn==="variance"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return variance(args[0])}
+    if(fn==="std"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.sqrt(variance(args[0]))}
+    if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
+    if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
+    if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
+    if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).length}
+    if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
+    if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
     if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
   }
   return evalValue(text,workspace);
@@ -218,10 +272,10 @@ export function runMathLabScript(script,initialWorkspace={}){
   const workspace={...initialWorkspace};
   const outputs=[];
   const lines=String(script??"").split(/\r?\n/);
-  try{
-    for(let i=0;i<lines.length;i++){
-      const source=lines[i].trim();
-      if(!source||source.startsWith("%")||source.startsWith("#"))continue;
+  for(let i=0;i<lines.length;i++){
+    const source=lines[i].trim();
+    if(!source||source.startsWith("%")||source.startsWith("#"))continue;
+    try{
       const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
       if(assignment){
         const value=evalCommand(assignment[2],workspace);
@@ -230,9 +284,9 @@ export function runMathLabScript(script,initialWorkspace={}){
       }else{
         outputs.push({line:i+1,source,value:clone(evalCommand(source,workspace))});
       }
+    }catch(error){
+      return{ok:false,workspace,outputs,error:{message:error.message||"MATHLAB_ERROR",line:i+1,source}};
     }
-    return{ok:true,workspace,outputs};
-  }catch(error){
-    return{ok:false,workspace,outputs,error:{message:error.message||"MATHLAB_ERROR"}};
   }
+  return{ok:true,workspace,outputs};
 }
