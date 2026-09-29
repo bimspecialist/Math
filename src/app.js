@@ -168,6 +168,7 @@ let formulaDetailValues={};
 function selectProfessionalLibrary(id){
   if(!getProfessionalLibrary(id))return;
   activeKnowledgeLibrary=id;
+  const search=document.querySelector("#knowledge-search");if(search)search.value="";
   renderProfessionalLibrary();
 }
 function renderProfessionalLibrary(){
@@ -175,14 +176,25 @@ function renderProfessionalLibrary(){
   const title=document.querySelector("#knowledge-title");
   const description=document.querySelector("#knowledge-description");
   const grid=document.querySelector("#knowledge-formulas");
+  const count=document.querySelector("#knowledge-count");
+  const search=document.querySelector("#knowledge-search");
   if(!library||!grid)return;
   if(title)title.textContent=locale==="ar"?library.labelAr:library.labelEn;
   if(description)description.textContent=locale==="ar"?library.descriptionAr:library.descriptionEn;
-  grid.innerHTML=library.formulas.map(formula=>{
+  const q=(search?.value??"").trim().toLowerCase();
+  const rows=library.formulas.filter(formula=>{
+    if(!q)return true;
+    const explanationEn=professionalFormulaExplanation(library.id,formula.id,"en");
+    const explanationAr=professionalFormulaExplanation(library.id,formula.id,"ar");
+    const hay=[formula.titleEn,formula.titleAr,formula.formulaEn,formula.formulaAr,explanationEn,explanationAr].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+  grid.innerHTML=rows.length?rows.map(formula=>{
     const titleText=locale==="ar"?formula.titleAr:formula.titleEn;
     const expression=locale==="ar"?formula.formulaAr:formula.formulaEn;
     return `<article class="formula-card"><button type="button" class="formula-open" data-professional-library="${escHtml(library.id)}" data-professional-formula="${escHtml(formula.id)}"><h3>${escHtml(titleText)}</h3><div class="formula-expression" dir="ltr">${escHtml(expression)}</div><span class="formula-card-action">${escHtml(translate(locale,"enterValues"))} →</span></button></article>`;
-  }).join("");
+  }).join(""):`<p class="empty-state" role="status">${escHtml(translate(locale,"knowledgeNoResults"))}</p>`;
+  if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
   grid.querySelectorAll("[data-professional-formula]").forEach(button=>button.addEventListener("click",()=>{
     openProfessionalFormula(button.dataset.professionalLibrary,button.dataset.professionalFormula);
   }));
@@ -379,6 +391,7 @@ function renderFormulaLibrary(){
 }
 document.querySelector("#formula-search")?.addEventListener("input",renderFormulaLibrary);
 document.querySelector("#formula-category")?.addEventListener("change",renderFormulaLibrary);
+document.querySelector("#knowledge-search")?.addEventListener("input",renderProfessionalLibrary);
 renderFormulaCategories();
 renderFormulaLibrary();
 renderProfessionalLibrary();
