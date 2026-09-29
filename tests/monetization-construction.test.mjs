@@ -94,8 +94,9 @@ test("local consent banner gates optional analytics without blocking AdSense ini
 });
 
 
-test("manual ad containers collapse when no valid slot id is configured",()=>{
+test("manual ad containers can remain as reserved zones until real slot ids are supplied",()=>{
   const source=readFileSync(new URL("../src/monetization/adsense.js",import.meta.url),"utf8");
-  assert.match(source,/if\(!validateAdSlot\(slot\)\)\{container\.hidden=true;return\}/);
+  assert.match(source,/container\.hidden=!config\.showReservedSlots/);
+  assert.equal(SITE_CONFIG.adsense.showReservedSlots,true);
   assert.match(source,/container\.hidden=false/);
 });
