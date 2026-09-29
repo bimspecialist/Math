@@ -380,3 +380,30 @@ test("formula calculator UI renders explanation and variable guide",()=>{
   assert.match(app,/professionalFormulaExplanation/);
   assert.match(app,/referenceFormulaExplanation/);
 });
+
+
+test("formula workbench validates required numeric inputs and supports clear/copy actions",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/id="formula-detail-clear"/);
+  assert.match(index,/id="formula-detail-copy"/);
+  assert.match(index,/id="formula-detail-status"/);
+  assert.match(app,/setAttribute\("aria-invalid",String\(!valid\)\)/);
+  assert.match(app,/function clearFormulaDetail\(\)/);
+  assert.match(app,/async function copyFormulaDetailResult\(\)/);
+});
+
+test("formula detail routes are shareable and restore professional or reference formulas",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/#formula\/professional/);
+  assert.match(app,/#formula\/reference/);
+  assert.match(app,/function restoreFormulaHashRoute\(\)/);
+  assert.match(app,/openProfessionalFormula\(parts\[2\],parts\[3\],\{fromHash:true\}\)/);
+  assert.match(app,/openReferenceFormula\(parts\[2\],\{fromHash:true\}\)/);
+});
+
+test("formula input values survive language re-rendering",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/captureFormulaDetailValues\(\)/);
+  assert.match(app,/formulaDetailValues\[variable\.id\]\?\?variable\.defaultValue/);
+});
