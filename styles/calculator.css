@@ -488,3 +488,26 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
   padding:8px 10px;
 }
 .tool-group[hidden],.tool-item[hidden],.tool-item-static[hidden]{display:none!important}
+
+
+/* Math Lab command reference */
+.mathlab-command-reference{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--panel);
+}
+.mathlab-command-reference summary{
+  cursor:pointer;
+  padding:10px 12px;
+  font-weight:700;
+}
+.mathlab-command-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px 12px;
+  padding:0 12px 12px;
+}
+.mathlab-command-grid p{display:grid;gap:4px;margin:0}
+.mathlab-command-grid code{overflow-wrap:anywhere;color:var(--muted);font-size:.82rem}
+@media(max-width:700px){.mathlab-command-grid{grid-template-columns:1fr}}
