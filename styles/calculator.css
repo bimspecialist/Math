@@ -306,3 +306,6 @@
   .tool-page{padding:12px;border-radius:12px}
   .mathlab-editor-panel textarea{min-height:240px}
 }
+
+.converter-card{display:grid;grid-template-columns:minmax(120px,1fr) minmax(120px,1fr) auto minmax(120px,1fr);gap:10px;align-items:end;margin-top:18px}.converter-card label{display:grid;gap:6px}.converter-card input,.converter-card select{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 10px}.converter-card button{min-width:44px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text)}.converter-result{display:block;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--page);direction:ltr;text-align:left;font:600 1.05rem/1.4 Consolas,"Courier New",monospace}
+@media(max-width:700px){.converter-card{grid-template-columns:1fr 1fr}.converter-card>label:first-child{grid-column:1/-1}.converter-card button{order:4}}
