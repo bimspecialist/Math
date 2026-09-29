@@ -91,6 +91,39 @@ function trace(m){
   return m.reduce((sum,row,i)=>sum+row[i],0);
 }
 
+function eigenvalues2(m){
+  const [rows,cols]=matrixShape(m);
+  if(rows!==2||cols!==2)throw new Error("EIGEN_2X2_REAL_ONLY");
+  const a=m[0][0],b=m[0][1],c=m[1][0],d=m[1][1];
+  const tr=a+d,det=a*d-b*c,disc=tr*tr-4*det;
+  if(disc<-1e-12)throw new Error("COMPLEX_EIGENVALUES_NOT_SUPPORTED");
+  const s=Math.sqrt(Math.max(0,disc));
+  const vals=[(tr-s)/2,(tr+s)/2].map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14)));
+  return vals;
+}
+
+function normalizeVector(v){
+  const norm=Math.hypot(...v);
+  if(norm<1e-12)throw new Error("EIGENVECTOR_FAILURE");
+  let out=v.map(x=>x/norm);
+  const first=out.find(x=>Math.abs(x)>1e-12);
+  if(first<0)out=out.map(x=>-x);
+  return out.map(x=>Math.abs(x)<1e-12?0:Number(x.toPrecision(14)));
+}
+
+function eigenvectorFor2(m,lambda){
+  const a=m[0][0]-lambda,b=m[0][1],c=m[1][0],d=m[1][1]-lambda;
+  let v;
+  if(Math.abs(a)+Math.abs(b)>=Math.abs(c)+Math.abs(d))v=Math.abs(b)>Math.abs(a)?[1,-a/b]:[-b/a,1];
+  else v=Math.abs(d)>Math.abs(c)?[1,-c/d]:[-d/c,1];
+  if(!v.every(Number.isFinite))v=[1,0];
+  return normalizeVector(v);
+}
+
+function eigenvectors2(m){
+  return eigenvalues2(m).map(value=>({value,vector:eigenvectorFor2(m,value)}));
+}
+
 function solveLinearMatrix(a,b){
   const [n,cols]=matrixShape(a),[br,bc]=matrixShape(b);
   if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
@@ -141,6 +174,8 @@ function evalCommand(expr,workspace){
     if(fn==="inv"||fn==="inverse"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return inverse(args[0])}
     if(fn==="matmul"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixMultiply(args[0],args[1])}
     if(fn==="trace"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return trace(args[0])}
+    if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues2(args[0])}
+    if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors2(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
     if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
     if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
