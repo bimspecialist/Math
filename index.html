@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1055">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1128">
 </head>
 <body>
 <main class="site-shell">
@@ -19,51 +19,51 @@
   <div class="center-column">
     <header class="site-header">
       <div class="site-brand">
-        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="tool-sidebar" aria-expanded="false">☰</button>
-        <div><small>Math Workspace</small><h1 id="page-title">الحاسبة العلمية</h1></div>
+        <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="tool-sidebar" aria-expanded="false" data-i18n-aria-label="menu">☰</button>
+        <div><small data-i18n="mathWorkspace">Math Workspace</small><h1 id="page-title" data-i18n="pageTitle">Scientific Calculator</h1></div>
       </div>
-      <div class="site-actions"><button id="lang-toggle" type="button">EN</button></div>
+      <div class="site-actions"><button id="lang-toggle" type="button">AR</button></div>
     </header>
 
     <div class="workspace-shell">
       <aside id="tool-sidebar" class="tool-sidebar" aria-label="Math tools">
         <div class="tool-group">
-          <div class="tool-group-title">Calculator</div>
-          <button type="button" class="tool-item active" data-tool-target="calculator"><span class="tool-icon">▦</span><span>Scientific</span></button>
-          <button type="button" class="tool-item" data-tool-target="advanced"><span class="tool-icon">∑</span><span>Advanced Solver</span></button>
+          <div class="tool-group-title" data-i18n="navCalculatorGroup">Calculator</div>
+          <button type="button" class="tool-item active" data-tool-target="calculator"><span class="tool-icon">▦</span><span data-i18n="navScientific">Scientific</span></button>
+          <button type="button" class="tool-item" data-tool-target="advanced"><span class="tool-icon">∑</span><span data-i18n="navAdvancedSolver">Advanced Solver</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title">Knowledge</div>
-          <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span>Formula Library</span></button>
+          <div class="tool-group-title" data-i18n="navKnowledgeGroup">Knowledge</div>
+          <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span data-i18n="navFormulaLibrary">Formula Library</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title">Tools</div>
-          <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span>Math Lab</span></button>
+          <div class="tool-group-title" data-i18n="navToolsGroup">Tools</div>
+          <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span data-i18n="navMathLab">Math Lab</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title">Converter</div>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="length"><span class="tool-icon">↔</span><span>Length</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="volume"><span class="tool-icon">◫</span><span>Volume</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="mass"><span class="tool-icon">⚖</span><span>Weight & mass</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="temperature"><span class="tool-icon">°</span><span>Temperature</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="energy"><span class="tool-icon">◉</span><span>Energy</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="area"><span class="tool-icon">▧</span><span>Area</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="speed"><span class="tool-icon">➜</span><span>Speed</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="time"><span class="tool-icon">◷</span><span>Time</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="power"><span class="tool-icon">ϟ</span><span>Power</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="data"><span class="tool-icon">◈</span><span>Data</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="pressure"><span class="tool-icon">⌁</span><span>Pressure</span></button>
-          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="angle"><span class="tool-icon">∠</span><span>Angle</span></button>
+          <div class="tool-group-title" data-i18n="navConverterGroup">Converter</div>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="length"><span class="tool-icon">↔</span><span data-i18n="converterLength">Length</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="volume"><span class="tool-icon">◫</span><span data-i18n="converterVolume">Volume</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="mass"><span class="tool-icon">⚖</span><span data-i18n="converterMass">Weight & mass</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="temperature"><span class="tool-icon">°</span><span data-i18n="converterTemperature">Temperature</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="energy"><span class="tool-icon">◉</span><span data-i18n="converterEnergy">Energy</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="area"><span class="tool-icon">▧</span><span data-i18n="converterArea">Area</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="speed"><span class="tool-icon">➜</span><span data-i18n="converterSpeed">Speed</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="time"><span class="tool-icon">◷</span><span data-i18n="converterTime">Time</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="power"><span class="tool-icon">ϟ</span><span data-i18n="converterPower">Power</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="data"><span class="tool-icon">◈</span><span data-i18n="converterData">Data</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="pressure"><span class="tool-icon">⌁</span><span data-i18n="converterPressure">Pressure</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="angle"><span class="tool-icon">∠</span><span data-i18n="converterAngle">Angle</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title">More tools</div>
-          <button type="button" class="tool-item" data-tool-target="graphing"><span class="tool-icon">⌁</span><span>Graphing</span></button>
-          <button type="button" class="tool-item" data-tool-target="programmer"><span class="tool-icon">&lt;/&gt;</span><span>Programmer</span></button>
+          <div class="tool-group-title" data-i18n="navMoreTools">More tools</div>
+          <button type="button" class="tool-item" data-tool-target="graphing"><span class="tool-icon">⌁</span><span data-i18n="navGraphing">Graphing</span></button>
+          <button type="button" class="tool-item" data-tool-target="programmer"><span class="tool-icon">&lt;/&gt;</span><span data-i18n="navProgrammer">Programmer</span></button>
         </div>
         <div class="tool-group tool-group-muted" aria-label="Planned tools">
-          <div class="tool-group-title">Next</div>
-          <div class="tool-item-static"><span class="tool-icon">¤</span><span>Currency</span><small>online</small></div>
-          <button type="button" class="tool-item" data-tool-target="date"><span class="tool-icon">◫</span><span>Date calculation</span></button>
+          <div class="tool-group-title" data-i18n="navNext">Next</div>
+          <div class="tool-item-static"><span class="tool-icon">¤</span><span data-i18n="navCurrency">Currency</span><small data-i18n="online">online</small></div>
+          <button type="button" class="tool-item" data-tool-target="date"><span class="tool-icon">◫</span><span data-i18n="navDateCalculation">Date calculation</span></button>
         </div>
       </aside>
 
@@ -74,34 +74,34 @@
 
         <section id="advanced-section" class="page-section">
           <div class="advanced-panel">
-            <h2>Advanced Solver · الحل المتقدم</h2>
-            <p class="advanced-note">اكتب تعبيرًا أو معادلة، وللأنظمة ضع كل معادلة في سطر مستقل. يدعم الآن المعادلات الخطية متعددة المجاهيل، التربيعية بمجهول واحد، وأنظمة غير خطية بمجهولين عدديًا.</p>
-            <label><span>Equation / المعادلة</span><textarea id="advanced-input" dir="ltr" spellcheck="false">x^2-4=0</textarea></label>
-            <div class="advanced-examples" aria-label="أمثلة">
+            <h2 data-i18n="advancedTitle">Advanced Solver</h2>
+            <p class="advanced-note" data-i18n="advancedDescription">Enter an expression or equation. For systems, put each equation on a separate line.</p>
+            <label><span data-i18n="equation">Equation</span><textarea id="advanced-input" dir="ltr" spellcheck="false">x^2-4=0</textarea></label>
+            <div class="advanced-examples" data-i18n-aria-label="examples" aria-label="Examples">
               <button type="button" data-advanced-example="A*5=5*2^2">A*5=5*2^2</button>
               <button type="button" data-advanced-example="X^2+4">X^2+4</button>
-              <button type="button" data-advanced-example="x+y=5&#10;x-y=1">نظام خطي</button>
-              <button type="button" data-advanced-example="x^2+y^2=25&#10;x-y=1">نظام غير خطي</button>
+              <button type="button" data-advanced-example="x+y=5&#10;x-y=1">Linear system</button>
+              <button type="button" data-advanced-example="x^2+y^2=25&#10;x-y=1">Nonlinear system</button>
             </div>
             <div class="advanced-actions">
-              <button id="advanced-solve" type="button" class="advanced-solve">حل / Solve</button>
-              <label class="file-action">رفع صورة<input id="image-upload" type="file" accept="image/*"></label>
-              <label class="file-action">الكاميرا<input id="camera-upload" type="file" accept="image/*" capture="environment"></label>
+              <button id="advanced-solve" type="button" class="advanced-solve" data-i18n="solve">Solve</button>
+              <label class="file-action"><span data-i18n="uploadImage">Upload image</span><input id="image-upload" type="file" accept="image/*"></label>
+              <label class="file-action"><span data-i18n="camera">Camera</span><input id="camera-upload" type="file" accept="image/*" capture="environment"></label>
             </div>
-            <output id="advanced-result" class="advanced-result" aria-live="polite">جاهز للحل</output>
-            <img id="scan-preview" alt="معاينة صورة المعادلة" hidden style="max-width:100%;max-height:300px;margin-top:12px;border-radius:10px">
-            <p id="scan-note" class="advanced-note">لن يتم إرسال صورة إلى أي مزود خارجي في هذه النسخة.</p>
+            <output id="advanced-result" class="advanced-result" aria-live="polite" data-i18n="readyToSolve">Ready to solve</output>
+            <img id="scan-preview" alt="Equation image preview" hidden style="max-width:100%;max-height:300px;margin-top:12px;border-radius:10px">
+            <p id="scan-note" class="advanced-note" data-i18n="scanPrivacy">Images are not sent to any external provider in this version.</p>
           </div>
         </section>
 
         <section id="formulas-section" class="page-section">
           <div class="tool-page formula-page">
             <div class="tool-page-head">
-              <div><small>Reference</small><h2>مكتبة القوانين الرياضية · Formula Library</h2><p>مكتبة قابلة للبحث والتوسعة، مصنفة حسب المجال.</p></div>
+              <div><small data-i18n="formulaKicker">Reference</small><h2 data-i18n="formulaTitle">Formula Library</h2><p data-i18n="formulaDescription">A searchable, extensible library organized by mathematical topic.</p></div>
             </div>
             <div class="formula-controls">
-              <label><span>بحث</span><input id="formula-search" type="search" placeholder="اسم القانون، الرمز، أو الكلمة..." autocomplete="off"></label>
-              <label><span>التصنيف</span><select id="formula-category"></select></label>
+              <label><span data-i18n="search">Search</span><input id="formula-search" type="search" data-i18n-placeholder="searchPlaceholder" placeholder="Formula name, symbol, or keyword..." autocomplete="off"></label>
+              <label><span data-i18n="category">Category</span><select id="formula-category"></select></label>
             </div>
             <div id="formula-count" class="formula-count" aria-live="polite"></div>
             <div id="formula-grid" class="formula-grid"></div>
@@ -111,22 +111,22 @@
         <section id="mathlab-section" class="page-section">
           <div class="tool-page mathlab-page">
             <div class="tool-page-head">
-              <div><small>Numerical Workspace</small><h2>Math Lab</h2><p>مساحة عمل رقمية بأسلوب MATLAB: متغيرات، تعبيرات، مصفوفات وأوامر أساسية — محليًا داخل المتصفح.</p></div>
+              <div><small data-i18n="mathLabKicker">Numerical Workspace</small><h2 data-i18n="mathLabTitle">Math Lab</h2><p data-i18n="mathLabDescription">A MATLAB-style numerical workspace for variables, expressions, matrices, and core commands — running locally in your browser.</p></div>
             </div>
             <div class="mathlab-layout">
               <div class="mathlab-editor-panel">
                 <div class="mathlab-toolbar">
-                  <button type="button" data-mathlab-example="a = 5&#10;b = a^2 + 3&#10;b">Variables</button>
-                  <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;det(A)&#10;transpose(A)">Matrix</button>
+                  <button type="button" data-mathlab-example="a = 5&#10;b = a^2 + 3&#10;b" data-i18n="variables">Variables</button>
+                  <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;det(A)&#10;transpose(A)" data-i18n="matrix">Matrix</button>
                 </div>
-                <label><span>Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false">a = 5
+                <label><span data-i18n="script">Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false">a = 5
 b = a^2 + 3
 b</textarea></label>
-                <button id="mathlab-run" type="button" class="advanced-solve">Run ▶</button>
+                <button id="mathlab-run" type="button" class="advanced-solve"><span data-i18n="run">Run</span> ▶</button>
               </div>
               <div class="mathlab-results">
-                <section><h3>Command Window</h3><pre id="mathlab-output" aria-live="polite">&gt;&gt; Ready</pre></section>
-                <section><h3>Workspace</h3><div id="mathlab-workspace" class="mathlab-workspace"><span class="muted">No variables yet</span></div></section>
+                <section><h3 data-i18n="commandWindow">Command Window</h3><pre id="mathlab-output" aria-live="polite">&gt;&gt; Ready</pre></section>
+                <section><h3 data-i18n="workspace">Workspace</h3><div id="mathlab-workspace" class="mathlab-workspace"><span class="muted" data-i18n="noVariables">No variables yet</span></div></section>
               </div>
             </div>
           </div>
@@ -134,27 +134,27 @@ b</textarea></label>
 
         <section id="graphing-section" class="page-section">
           <div class="tool-page graphing-page">
-            <div class="tool-page-head"><div><small>Graphing</small><h2>Graphing Calculator</h2><p>ارسم دالة في x محليًا داخل المتصفح. الدوال المثلثية في الرسم تستخدم radians.</p></div></div>
+            <div class="tool-page-head"><div><small data-i18n="graphingKicker">Graphing</small><h2 data-i18n="graphingTitle">Graphing Calculator</h2><p data-i18n="graphingDescription">Plot a function of x locally in your browser. Trigonometric functions use radians.</p></div></div>
             <div class="graph-controls">
               <label><span>y =</span><input id="graph-expression" dir="ltr" value="sin(x)"></label>
-              <label><span>x min</span><input id="graph-min-x" type="number" value="-10" step="any"></label>
-              <label><span>x max</span><input id="graph-max-x" type="number" value="10" step="any"></label>
-              <button id="graph-draw" type="button" class="advanced-solve">Draw</button>
+              <label><span data-i18n="xMin">x min</span><input id="graph-min-x" type="number" value="-10" step="any"></label>
+              <label><span data-i18n="xMax">x max</span><input id="graph-max-x" type="number" value="10" step="any"></label>
+              <button id="graph-draw" type="button" class="advanced-solve" data-i18n="draw">Draw</button>
             </div>
-            <div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" aria-label="Function graph"></svg></div>
+            <div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" data-i18n-aria-label="functionGraph" aria-label="Function graph"></svg></div>
             <div id="graph-status" class="formula-count" aria-live="polite"></div>
           </div>
         </section>
 
         <section id="programmer-section" class="page-section">
           <div class="tool-page programmer-page">
-            <div class="tool-page-head"><div><small>Programmer</small><h2>Programmer Calculator</h2><p>تحويل بين BIN / OCT / DEC / HEX وتنفيذ العمليات البتية الأساسية.</p></div></div>
+            <div class="tool-page-head"><div><small data-i18n="programmerKicker">Programmer</small><h2 data-i18n="programmerTitle">Programmer Calculator</h2><p data-i18n="programmerDescription">Convert between BIN, OCT, DEC, and HEX and perform common bitwise operations.</p></div></div>
             <div class="programmer-grid">
-              <label><span>Value A</span><input id="programmer-input" dir="ltr" value="FF"></label>
-              <label><span>Base</span><select id="programmer-base"><option value="16">HEX</option><option value="10">DEC</option><option value="8">OCT</option><option value="2">BIN</option></select></label>
-              <label><span>Value B / Shift</span><input id="programmer-b" dir="ltr" value="0F"></label>
-              <label><span>Operation</span><select id="programmer-op"><option value="convert">Convert</option><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option><option value="shl">Shift left</option><option value="shr">Shift right</option><option value="not">NOT (64-bit)</option></select></label>
-              <button id="programmer-run" type="button" class="advanced-solve">Run</button>
+              <label><span data-i18n="valueA">Value A</span><input id="programmer-input" dir="ltr" value="FF"></label>
+              <label><span data-i18n="base">Base</span><select id="programmer-base"><option value="16">HEX</option><option value="10">DEC</option><option value="8">OCT</option><option value="2">BIN</option></select></label>
+              <label><span data-i18n="valueBShift">Value B / Shift</span><input id="programmer-b" dir="ltr" value="0F"></label>
+              <label><span data-i18n="operation">Operation</span><select id="programmer-op"><option value="convert" data-i18n="convert">Convert</option><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option><option value="shl" data-i18n="shiftLeft">Shift left</option><option value="shr" data-i18n="shiftRight">Shift right</option><option value="not" data-i18n="not64">NOT (64-bit)</option></select></label>
+              <button id="programmer-run" type="button" class="advanced-solve" data-i18n="run">Run</button>
             </div>
             <div id="programmer-result" class="programmer-result" aria-live="polite"></div>
           </div>
@@ -162,18 +162,18 @@ b</textarea></label>
 
         <section id="date-section" class="page-section">
           <div class="tool-page date-page">
-            <div class="tool-page-head"><div><small>Date calculation</small><h2>Date Calculator</h2><p>احسب الفرق بين تاريخين أو أضف/اطرح أيامًا من تاريخ محدد.</p></div></div>
+            <div class="tool-page-head"><div><small data-i18n="dateKicker">Date calculation</small><h2 data-i18n="dateTitle">Date Calculator</h2><p data-i18n="dateDescription">Calculate the difference between two dates, or add/subtract days from a date.</p></div></div>
             <div class="date-grid">
               <section>
-                <h3>Difference</h3>
-                <label><span>Start</span><input id="date-start" type="date" value="2026-01-01"></label>
-                <label><span>End</span><input id="date-end" type="date" value="2026-01-31"></label>
+                <h3 data-i18n="differenceBetweenDates">Difference between dates</h3>
+                <label><span data-i18n="start">From</span><input id="date-start" type="date" value="2026-01-01"></label>
+                <label><span data-i18n="end">To</span><input id="date-end" type="date" value="2026-01-31"></label>
                 <output id="date-difference" aria-live="polite"></output>
               </section>
               <section>
-                <h3>Add / subtract days</h3>
-                <label><span>Date</span><input id="date-base" type="date" value="2026-01-31"></label>
-                <label><span>Days</span><input id="date-offset" type="number" value="1" step="1"></label>
+                <h3 data-i18n="addSubtractDays">Add or subtract days</h3>
+                <label><span data-i18n="date">Date</span><input id="date-base" type="date" value="2026-01-31"></label>
+                <label><span data-i18n="days">Days</span><input id="date-offset" type="number" value="1" step="1"></label>
                 <output id="date-offset-result" aria-live="polite"></output>
               </section>
             </div>
@@ -182,12 +182,12 @@ b</textarea></label>
 
         <section id="converter-section" class="page-section">
           <div class="tool-page converter-page">
-            <div class="tool-page-head"><div><small>Converter</small><h2 id="converter-title">Unit Converter</h2><p>تحويل وحدات هندسية ورياضية محليًا بدون اتصال.</p></div></div>
+            <div class="tool-page-head"><div><small data-i18n="converterKicker">Converter</small><h2 id="converter-title" data-i18n="converterTitle">Unit Converter</h2><p data-i18n="converterDescription">Convert engineering and mathematical units locally without an internet connection.</p></div></div>
             <div class="converter-card">
-              <label><span>Value</span><input id="converter-input" type="number" value="1" step="any"></label>
-              <label><span>From</span><select id="converter-from"></select></label>
-              <button id="converter-swap" type="button" aria-label="Swap units">⇄</button>
-              <label><span>To</span><select id="converter-to"></select></label>
+              <label><span data-i18n="value">Value</span><input id="converter-input" type="number" value="1" step="any"></label>
+              <label><span data-i18n="from">From</span><select id="converter-from"></select></label>
+              <button id="converter-swap" type="button" data-i18n-aria-label="swapUnits" aria-label="Swap units">⇄</button>
+              <label><span data-i18n="to">To</span><select id="converter-to"></select></label>
             </div>
             <output id="converter-result" class="converter-result" aria-live="polite"></output>
           </div>
@@ -205,5 +205,5 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" aria-label="مساحة إعلان سفلية يمين"><span>Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1055"></script>
+<script type="module" src="./src/app.js?v=20260929-1128"></script>
 </body></html>
