@@ -5,6 +5,7 @@ export function formatAdvancedResult(r){
   if(r.kind==="value")return`= ${r.exact??r.numeric}`;
   if(r.kind==="solution-set")return`${r.variable} = ${r.solutions.join(", ")}`;
   if(r.kind==="system-solution")return joinLines(r.values);
+  if(r.kind==="system-solution-set")return r.solutions.map((s,i)=>`#${i+1}: `+Object.entries(s).map(([k,v])=>`${k} = ${v}`).join(", ")).join("\n");
   if(r.kind==="parametric-system"){
     const body=joinLines(r.expressions);
     const free=r.freeVariables?.length?`\nFree: ${r.freeVariables.join(", ")}`:"";
