@@ -66,3 +66,16 @@ test("advanced solver reports an inconsistent linear system",()=>{
   const r=solveAdvancedInput("x+y=1\nx+y=2");
   assert.deepEqual(r,{kind:"error",code:"NO_SOLUTION",variables:["x","y"]});
 });
+
+
+test("advanced result formatter presents all roots and system values",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  assert.equal(formatAdvancedResult({kind:"solution-set",variable:"x",solutions:[-2,2]}),"x = -2, 2");
+  assert.equal(formatAdvancedResult({kind:"system-solution",values:{x:3,y:2}}),"x = 3\ny = 2");
+});
+
+test("advanced result formatter presents parametric and expression analysis results",async()=>{
+  const {formatAdvancedResult}=await import("../src/advanced/advanced-result-format.js");
+  assert.match(formatAdvancedResult({kind:"parametric-system",freeVariables:["y"],expressions:{x:"5 - y",y:"y"}}),/x = 5 - y/);
+  assert.match(formatAdvancedResult({kind:"expression-analysis",expression:"X^2+4",variable:"X",degree:2,roots:["-2i","2i"]}),/Roots: -2i, 2i/);
+});
