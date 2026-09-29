@@ -25,3 +25,14 @@ test("advanced solver accepts calculator multiplication and division glyphs",()=
   assert.equal(r.kind,"value");
   assert.equal(r.numeric,21);
 });
+
+
+test("Advanced Solver UI exposes solve action and result region",async()=>{
+  const {readFileSync}=await import("node:fs");
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/id="advanced-solve"/);
+  assert.match(index,/id="advanced-result"/);
+  assert.match(app,/solveAdvancedInput/);
+  assert.match(app,/advanced-solve/);
+});
