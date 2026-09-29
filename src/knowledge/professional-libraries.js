@@ -32,17 +32,17 @@ export const PROFESSIONAL_LIBRARIES=Object.freeze([
     ])
   }),
   Object.freeze({
-    id:"engineering",labelEn:"Engineering Library",labelAr:"مكتبة المهندسين",descriptionEn:"Core formulas for mechanics, fluids, electricity, and general engineering calculations.",descriptionAr:"قوانين أساسية للميكانيكا والموائع والكهرباء والحسابات الهندسية العامة.",
+    id:"civil",labelEn:"Civil Engineering Library",labelAr:"مكتبة الهندسة المدنية",descriptionEn:"Practical metric formulas for quantities, slopes, structural actions, pressure, and reinforcement calculations.",descriptionAr:"قوانين مترية عملية للكميات والميول والأحمال والضغط وحسابات التسليح.",
     formulas:Object.freeze([
-      pf("stress","Normal Stress","الإجهاد العادي","σ = F / A","الإجهاد = القوة ÷ المساحة","F / A",[v("F","Force","القوة"),v("A","Area","المساحة")]," Pa"),
-      pf("strain","Normal Strain","الانفعال العادي","ε = ΔL / L","الانفعال = التغير في الطول ÷ الطول الأصلي","DeltaL / L",[v("DeltaL","Change in length","التغير في الطول"),v("L","Original length","الطول الأصلي")]),
-      pf("ohm","Ohm's Law","قانون أوم","V = I × R","الجهد = التيار × المقاومة","I * R",[v("I","Current","التيار"),v("R","Resistance","المقاومة")]," V"),
-      pf("electric-power","Electrical Power","القدرة الكهربائية","P = V × I","القدرة = الجهد × التيار","V * I",[v("V","Voltage","الجهد"),v("I","Current","التيار")]," W"),
-      pf("density","Density","الكثافة","ρ = m / V","الكثافة = الكتلة ÷ الحجم","m / V",[v("m","Mass","الكتلة"),v("V","Volume","الحجم")]),
-      pf("velocity","Average Velocity","السرعة المتوسطة","v = Δx / Δt","السرعة المتوسطة = الإزاحة ÷ الزمن","DeltaX / DeltaT",[v("DeltaX","Displacement","الإزاحة"),v("DeltaT","Time interval","الفترة الزمنية")]),
-      pf("acceleration","Average Acceleration","التسارع المتوسط","a = Δv / Δt","التسارع المتوسط = التغير في السرعة ÷ الزمن","DeltaV / DeltaT",[v("DeltaV","Velocity change","التغير في السرعة"),v("DeltaT","Time interval","الفترة الزمنية")]),
-      pf("hydrostatic","Hydrostatic Pressure","الضغط الهيدروستاتيكي","p = ρgh","الضغط = الكثافة × تسارع الجاذبية × العمق","rho * g * h",[v("rho","Fluid density","كثافة المائع"),v("g","Gravity acceleration","تسارع الجاذبية","9.80665"),v("h","Depth","العمق")]," Pa"),
-      pf("flow","Volumetric Flow Rate","معدل التدفق الحجمي","Q = A × v","معدل التدفق = المساحة × السرعة","A * v",[v("A","Flow area","مساحة المقطع"),v("v","Mean velocity","السرعة المتوسطة")])
+      pf("rect-area","Rectangle Area","مساحة المستطيل","A = L × W","المساحة = الطول × العرض","L * W",[v("L","Length (m)","الطول (م)"),v("W","Width (m)","العرض (م)")]," m²"),
+      pf("concrete-volume","Concrete Volume","حجم الخرسانة","V = L × W × T","الحجم = الطول × العرض × السمك","L * W * T",[v("L","Length (m)","الطول (م)"),v("W","Width (m)","العرض (م)"),v("T","Thickness (m)","السمك (م)")]," m³"),
+      pf("footing-volume","Footing Volume","حجم القاعدة","V = L × W × D","حجم القاعدة = الطول × العرض × العمق","L * W * D",[v("L","Length (m)","الطول (م)"),v("W","Width (m)","العرض (م)"),v("D","Depth (m)","العمق (م)")]," m³"),
+      pf("slope-percent","Slope Percent","نسبة الميل","Slope = Rise / Run × 100","نسبة الميل = الارتفاع ÷ الامتداد × 100","Rise / Run * 100",[v("Rise","Rise","الارتفاع"),v("Run","Horizontal run","الامتداد الأفقي")],"%"),
+      pf("bearing-pressure","Average Bearing Pressure","متوسط ضغط التحمل","q = P / A","ضغط التحمل = الحمل ÷ المساحة","P / A",[v("P","Load (kN)","الحمل (كيلونيوتن)"),v("A","Area (m²)","المساحة (م²)")]," kPa"),
+      pf("udl-moment","Simply Supported Beam — UDL Max Moment","أقصى عزم لكمرة بسيطة تحت حمل موزع","Mmax = wL² / 8","أقصى عزم = الحمل الموزع × مربع البحر ÷ 8","w * L^2 / 8",[v("w","UDL (kN/m)","الحمل الموزع (كيلونيوتن/م)"),v("L","Span (m)","البحر (م)")]," kN·m"),
+      pf("center-load-moment","Simply Supported Beam — Center Load Max Moment","أقصى عزم لكمرة بسيطة تحت حمل مركزي","Mmax = PL / 4","أقصى عزم = الحمل المركزي × البحر ÷ 4","P * L / 4",[v("P","Point load (kN)","الحمل المركز (كيلونيوتن)"),v("L","Span (m)","البحر (م)")]," kN·m"),
+      pf("rebar-unit-weight","Rebar Unit Weight","وزن المتر الطولي لحديد التسليح","w = ρπd² / 4","وزن المتر = الكثافة × π × مربع القطر ÷ 4","7850 * pi * (d / 1000)^2 / 4",[v("d","Bar diameter (mm)","قطر السيخ (مم)")]," kg/m"),
+      pf("rebar-total-weight","Total Rebar Weight","الوزن الإجمالي لحديد التسليح","W = UnitWeight × Length × Quantity","الوزن الإجمالي = وزن المتر × الطول × العدد","UnitWeight * Length * Quantity",[v("UnitWeight","Unit weight (kg/m)","وزن المتر (كجم/م)"),v("Length","Bar length (m)","طول السيخ (م)"),v("Quantity","Quantity","العدد")]," kg")
     ])
   }),
   Object.freeze({
