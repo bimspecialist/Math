@@ -1,6 +1,7 @@
 export const UI_STRINGS = Object.freeze({
   en:Object.freeze({
     siteTitle:"Math — Scientific Calculator",
+    skipToContent:"Skip to main content",
     pageTitle:"Scientific Calculator",
     navCalculatorGroup:"Calculator",
     navCategories:"Categories",
@@ -122,6 +123,7 @@ export const UI_STRINGS = Object.freeze({
   }),
   ar:Object.freeze({
     siteTitle:"Math — الحاسبة العلمية",
+    skipToContent:"تخطي إلى المحتوى الرئيسي",
     pageTitle:"الحاسبة العلمية",
     navCalculatorGroup:"الحاسبة",
     navCategories:"التصنيفات",
