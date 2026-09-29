@@ -6,7 +6,7 @@ export function validateAdSlot(value){
 }
 
 function loadScript(client){
-  if(document.querySelector('script[data-math-adsense]'))return;
+  if(document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]'))return;
   const script=document.createElement("script");
   script.async=true;
   script.crossOrigin="anonymous";
