@@ -263,3 +263,8 @@
   direction:ltr;
   unicode-bidi:isolate;
 }
+
+/* Traditional calculator editing cursor. */
+.math-cursor{display:inline-block;width:2px;height:1.15em;min-height:14px;background:currentColor;vertical-align:-.18em;margin:0 1px;animation:math-cursor-blink 1s steps(1,end) infinite}
+@keyframes math-cursor-blink{0%,48%{opacity:1}49%,100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.math-cursor{animation:none}}
