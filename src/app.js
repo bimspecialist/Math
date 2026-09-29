@@ -109,7 +109,17 @@ window.addEventListener("hashchange",()=>{
   const target=decodeURIComponent(window.location.hash.slice(1));
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
-function handleImage(file){if(!file)return;const preview=document.querySelector("#scan-preview");preview.src=URL.createObjectURL(file);preview.hidden=false;document.querySelector("#scan-note").textContent=translate(locale,"scanSelected")}
+let scanPreviewUrl=null;
+function handleImage(file){
+  if(!file||!String(file.type||"").startsWith("image/"))return;
+  const preview=document.querySelector("#scan-preview");if(!preview)return;
+  if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl);
+  scanPreviewUrl=URL.createObjectURL(file);
+  preview.src=scanPreviewUrl;
+  preview.hidden=false;
+  document.querySelector("#scan-note").textContent=translate(locale,"scanSelected");
+}
+window.addEventListener("pagehide",()=>{if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl)},{once:true});
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 document.querySelector("#camera-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 
