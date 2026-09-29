@@ -9,6 +9,11 @@ import { sampleGraphExpressions, graphBounds } from "./graphing/graph-engine.js"
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 import { daysBetween, addDays } from "./date/date-calculator.js";
 import { translate } from "./i18n/ui-strings.js";
+import { SITE_CONFIG } from "./config/site-config.js";
+import { initAdSense } from "./monetization/adsense.js";
+import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
+import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
+import { calculateRamp } from "./construction/ramp-calculator.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -28,6 +33,7 @@ function applyLocale(nextLocale){
   mounted.setLocale(locale);
   renderFormulaCategories();
   renderFormulaLibrary();
+  renderCalculatorCategories();
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
   if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
@@ -37,6 +43,7 @@ const toolSidebar=document.querySelector("#tool-sidebar");
 function activateTool(target){
   document.querySelectorAll("[data-tool-target]").forEach(x=>x.classList.toggle("active",x.dataset.toolTarget===target));
   document.querySelectorAll(".page-section").forEach(section=>section.classList.toggle("active",section.id===target+"-section"));
+  trackVirtualPage("/#"+target,document.title);
   if(window.matchMedia?.("(max-width: 900px)").matches){
     toolSidebar?.classList.remove("open");
     document.querySelector("#sidebar-toggle")?.setAttribute("aria-expanded","false");
@@ -240,3 +247,46 @@ for(const el of [dateStart,dateEnd,dateBase,dateOffset])el?.addEventListener("in
 updateDateCalculator();
 
 applyLocale(locale);
+
+function renderCalculatorCategories(){
+  const root=document.querySelector("#calculator-categories");if(!root)return;
+  root.innerHTML=CALCULATOR_CATEGORIES.map(category=>{
+    const tools=category.tools.length?category.tools.map(tool=>tool.status==="available"
+      ?`<button type="button" class="category-tool" data-category-tool="${tool.id}">${escHtml(locale==="ar"?tool.labelAr:tool.labelEn)}</button>`
+      :`<span class="category-tool planned">${escHtml(locale==="ar"?tool.labelAr:tool.labelEn)}</span>`).join("")
+      :`<span class="category-empty">${escHtml(translate(locale,"comingSoon"))}</span>`;
+    return `<article class="category-card"><h3>${escHtml(locale==="ar"?category.labelAr:category.labelEn)}</h3><div class="category-tools">${tools}</div></article>`;
+  }).join("");
+  root.querySelectorAll("[data-category-tool]").forEach(button=>button.addEventListener("click",()=>activateTool(button.dataset.categoryTool)));
+}
+renderCalculatorCategories();
+
+const rampRise=document.querySelector("#ramp-rise"),rampRun=document.querySelector("#ramp-run"),rampLength=document.querySelector("#ramp-length"),rampUnit=document.querySelector("#ramp-unit"),rampResult=document.querySelector("#ramp-result");
+function updateRampCalculator(){
+  if(!rampResult)return;
+  try{
+    const result=calculateRamp({rise:rampRise?.value,run:rampRun?.value,length:rampLength?.value});
+    const unit=rampUnit?.value??"";
+    rampResult.innerHTML=`<div><strong>${escHtml(translate(locale,"rampAngle"))}</strong><span>${result.angleDeg}°</span></div><div><strong>${escHtml(translate(locale,"rampGrade"))}</strong><span>${result.gradePercent}%</span></div><div><strong>${escHtml(translate(locale,"rampRatio"))}</strong><span>${escHtml(result.ratioText)}</span></div><div><strong>${escHtml(translate(locale,"rampRun"))}</strong><span>${result.run} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampLength"))}</strong><span>${result.length} ${escHtml(unit)}</span></div>`;
+  }catch(error){rampResult.textContent=translate(locale,error.message)||error.message}
+}
+document.querySelector("#ramp-calculate")?.addEventListener("click",updateRampCalculator);
+for(const el of [rampRise,rampRun,rampLength,rampUnit])el?.addEventListener("input",updateRampCalculator);
+updateRampCalculator();
+
+const CONSENT_KEY="math.external-services-consent";
+function enableExternalServices(){
+  initAdSense(SITE_CONFIG.adsense);
+  initGoogleAnalytics(SITE_CONFIG.analytics);
+}
+function setupConsent(){
+  const banner=document.querySelector("#consent-banner");if(!banner)return;
+  let choice=null;try{choice=localStorage.getItem(CONSENT_KEY)}catch{}
+  if(choice==="accepted"){enableExternalServices();return}
+  if(choice==="rejected")return;
+  if(!SITE_CONFIG.adsense.client&&!SITE_CONFIG.analytics.measurementId)return;
+  banner.hidden=false;
+  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableExternalServices()});
+  document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
+}
+setupConsent();
