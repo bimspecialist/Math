@@ -250,3 +250,47 @@ test("Math Lab reports singular linear systems instead of returning unstable val
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"SINGULAR_MATRIX");
 });
+
+test("graphing engine samples multiple functions independently",async()=>{
+  const {sampleGraphExpressions}=await import("../src/graphing/graph-engine.js");
+  const r=sampleGraphExpressions("sin(x)\ncos(x)",{minX:0,maxX:Math.PI/2,points:3});
+  assert.equal(r.ok,true);
+  assert.equal(r.series.length,2);
+  assert.equal(r.series[0].expression,"sin(x)");
+  assert.equal(r.series[1].expression,"cos(x)");
+  assert.ok(Math.abs(r.series[0].samples.at(-1).y-1)<1e-10);
+  assert.ok(Math.abs(r.series[1].samples[0].y-1)<1e-10);
+});
+
+test("graphing engine skips blank lines and limits the number of plotted functions",async()=>{
+  const {sampleGraphExpressions}=await import("../src/graphing/graph-engine.js");
+  const source=["x","","x^2","x^3","sin(x)","cos(x)","tan(x)","x+1"].join("\n");
+  const r=sampleGraphExpressions(source,{minX:-1,maxX:1,points:5});
+  assert.equal(r.ok,true);
+  assert.equal(r.series.length,6);
+});
+
+test("Math Lab computes eigenvalues of a real 2x2 matrix",()=>{
+  const r=runMathLabScript("A = [2,1;1,2]\neig(A)");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.outputs[1].value,[1,3]);
+});
+
+test("Math Lab computes eigenvectors for distinct real 2x2 eigenvalues",()=>{
+  const r=runMathLabScript("A = [2,1;1,2]\neigvec(A)");
+  assert.equal(r.ok,true);
+  const v=r.outputs[1].value;
+  assert.equal(v.length,2);
+  assert.ok(v.every(x=>Array.isArray(x.vector)&&x.vector.length===2));
+  for(const pair of v){
+    const [x,y]=pair.vector,lambda=pair.value;
+    assert.ok(Math.abs(2*x+y-lambda*x)<1e-8);
+    assert.ok(Math.abs(x+2*y-lambda*y)<1e-8);
+  }
+});
+
+test("graphing UI supports multiple expressions",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/id="graph-expression"[^>]*textarea|<textarea[^>]*id="graph-expression"/);
+  assert.match(index,/data-i18n="graphingMultiHint"/);
+});
