@@ -204,3 +204,36 @@ test("Advanced Solver result is reformatted when the language changes",()=>{
   assert.match(app,/lastAdvancedResult/);
   assert.match(app,/formatAdvancedResult\(lastAdvancedResult,locale\)/);
 });
+
+test("Math Lab computes matrix inverse multiplication and trace",()=>{
+  const r=runMathLabScript("A = [1,2;3,4]\nB = inv(A)\nmatmul(A,B)\ntrace(A)");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.B,[[-2,1],[1.5,-0.5]]);
+  const product=r.outputs[2].value;
+  assert.ok(Math.abs(product[0][0]-1)<1e-10);
+  assert.ok(Math.abs(product[0][1])<1e-10);
+  assert.ok(Math.abs(product[1][0])<1e-10);
+  assert.ok(Math.abs(product[1][1]-1)<1e-10);
+  assert.equal(r.outputs[3].value,5);
+});
+
+test("Math Lab creates identity and zero matrices",()=>{
+  const r=runMathLabScript("I = eye(3)\nZ = zeros(2,3)");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.I,[[1,0,0],[0,1,0],[0,0,1]]);
+  assert.deepEqual(r.workspace.Z,[[0,0,0],[0,0,0]]);
+});
+
+test("Math Lab rejects singular inverse and incompatible matrix multiplication",()=>{
+  const singular=runMathLabScript("A = [1,2;2,4]\ninv(A)");
+  assert.equal(singular.ok,false);
+  assert.equal(singular.error.message,"SINGULAR_MATRIX");
+  const mismatch=runMathLabScript("A = [1,2]\nB = [1,2]\nmatmul(A,B)");
+  assert.equal(mismatch.ok,false);
+  assert.equal(mismatch.error.message,"MATRIX_DIMENSION_MISMATCH");
+});
+
+test("Math Lab UI exposes an advanced matrix example",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  assert.match(index,/data-mathlab-example="A = \[1,2;3,4\].*inv\(A\).*matmul\(A,B\)/s);
+});
