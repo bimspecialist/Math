@@ -175,8 +175,8 @@ test("language application updates html direction and rerenders localized dynami
 
 test("site no longer hardcodes workspace content to RTL for English",()=>{
   const css=readFileSync(new URL("../styles/calculator.css",import.meta.url),"utf8");
-  assert.doesNotMatch(css,/\.workspace-content\{[^}]*direction:rtl/);
-  assert.match(css,/html\[dir="rtl"\] \.workspace-content/);
+  assert.match(css,/\.workspace-content\{[^}]*direction:ltr/);
+  assert.match(css,/html\[dir="rtl"\] \.workspace-content\{direction:rtl\}/);
 });
 
 test("every formula has reviewed English and Arabic titles and descriptions",()=>{
