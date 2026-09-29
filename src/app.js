@@ -71,10 +71,21 @@ function filterToolNavigation(){
 }
 toolSearch?.addEventListener("input",filterToolNavigation);
 toolSearch?.addEventListener("keydown",event=>{
-  if(event.key==="Escape"&&toolSearch.value){
+  if(event.key==="Escape"){
     event.preventDefault();
-    toolSearch.value="";
-    filterToolNavigation();
+    if(toolSearch.value){
+      toolSearch.value="";
+      filterToolNavigation();
+    }else{
+      toolSearch.blur();
+    }
+  }
+});
+document.addEventListener("keydown",event=>{
+  if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
+    event.preventDefault();
+    toolSearch?.focus();
+    toolSearch?.select();
   }
 });
 filterToolNavigation();
