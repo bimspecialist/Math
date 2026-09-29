@@ -153,3 +153,18 @@ test("Advanced Solver UI exposes derivative and integral examples",async()=>{
   assert.match(index,/data-i18n="exampleDerivative"/);
   assert.match(index,/data-i18n="exampleIntegral"/);
 });
+
+test("Advanced Solver expands polynomial expressions symbolically",()=>{
+  const r=solveAdvancedInput("expand((x+1)^2)");
+  assert.deepEqual(r,{kind:"symbolic-transform",operation:"expand",variable:"x",expression:"x^2 + 2*x + 1"});
+});
+
+test("Advanced Solver simplifies like terms in polynomial expressions",()=>{
+  const r=solveAdvancedInput("simplify(x+x+2)");
+  assert.deepEqual(r,{kind:"symbolic-transform",operation:"simplify",variable:"x",expression:"2*x + 2"});
+});
+
+test("Advanced Solver reports unsupported symbolic transforms explicitly",()=>{
+  const r=solveAdvancedInput("expand(sin(x))");
+  assert.deepEqual(r,{kind:"error",code:"SYMBOLIC_TRANSFORM_UNSUPPORTED",variables:["x"]});
+});
