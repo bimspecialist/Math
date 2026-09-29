@@ -72,3 +72,42 @@ test("language toggle no longer depends on removed top-tab markup",()=>{
   const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
   assert.doesNotMatch(app,/data-tab-target/);
 });
+
+
+test("graphing engine samples expressions in mathematical RAD mode",async()=>{
+  const {sampleGraphExpression}=await import("../src/graphing/graph-engine.js");
+  const r=sampleGraphExpression("x^2",{minX:-2,maxX:2,points:5});
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.samples.map(p=>p.y),[4,1,0,1,4]);
+  const s=sampleGraphExpression("sin(x)",{minX:0,maxX:Math.PI/2,points:2});
+  assert.ok(Math.abs(s.samples[1].y-1)<1e-10);
+});
+
+test("graphing engine marks domain gaps instead of crashing",async()=>{
+  const {sampleGraphExpression}=await import("../src/graphing/graph-engine.js");
+  const r=sampleGraphExpression("1/x",{minX:-1,maxX:1,points:3});
+  assert.equal(r.ok,true);
+  assert.equal(r.samples[1].y,null);
+});
+
+test("programmer engine converts bases and performs bitwise operations",async()=>{
+  const {parseInteger,formatInteger,bitwise}=await import("../src/programmer/programmer-engine.js");
+  assert.equal(parseInteger("FF",16),255n);
+  assert.equal(formatInteger(255n,2),"11111111");
+  assert.equal(bitwise("and",0b1100n,0b1010n),0b1000n);
+  assert.equal(bitwise("xor",0b1100n,0b1010n),0b0110n);
+  assert.equal(bitwise("shl",3n,2n),12n);
+});
+
+test("application shell exposes Graphing and Programmer tools",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/data-tool-target="graphing"/);
+  assert.match(index,/id="graphing-section"/);
+  assert.match(index,/id="graph-expression"/);
+  assert.match(index,/data-tool-target="programmer"/);
+  assert.match(index,/id="programmer-section"/);
+  assert.match(index,/id="programmer-input"/);
+  assert.match(app,/sampleGraphExpression/);
+  assert.match(app,/parseInteger/);
+});
