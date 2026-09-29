@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>Math — Scientific Calculator</title>
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1040">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1055">
 </head>
 <body>
 <main class="site-shell">
@@ -63,7 +63,7 @@
         <div class="tool-group tool-group-muted" aria-label="Planned tools">
           <div class="tool-group-title">Next</div>
           <div class="tool-item-static"><span class="tool-icon">¤</span><span>Currency</span><small>online</small></div>
-          <div class="tool-item-static"><span class="tool-icon">◫</span><span>Date calculation</span><small>soon</small></div>
+          <button type="button" class="tool-item" data-tool-target="date"><span class="tool-icon">◫</span><span>Date calculation</span></button>
         </div>
       </aside>
 
@@ -160,6 +160,26 @@ b</textarea></label>
           </div>
         </section>
 
+        <section id="date-section" class="page-section">
+          <div class="tool-page date-page">
+            <div class="tool-page-head"><div><small>Date calculation</small><h2>Date Calculator</h2><p>احسب الفرق بين تاريخين أو أضف/اطرح أيامًا من تاريخ محدد.</p></div></div>
+            <div class="date-grid">
+              <section>
+                <h3>Difference</h3>
+                <label><span>Start</span><input id="date-start" type="date" value="2026-01-01"></label>
+                <label><span>End</span><input id="date-end" type="date" value="2026-01-31"></label>
+                <output id="date-difference" aria-live="polite"></output>
+              </section>
+              <section>
+                <h3>Add / subtract days</h3>
+                <label><span>Date</span><input id="date-base" type="date" value="2026-01-31"></label>
+                <label><span>Days</span><input id="date-offset" type="number" value="1" step="1"></label>
+                <output id="date-offset-result" aria-live="polite"></output>
+              </section>
+            </div>
+          </div>
+        </section>
+
         <section id="converter-section" class="page-section">
           <div class="tool-page converter-page">
             <div class="tool-page-head"><div><small>Converter</small><h2 id="converter-title">Unit Converter</h2><p>تحويل وحدات هندسية ورياضية محليًا بدون اتصال.</p></div></div>
@@ -185,5 +205,5 @@ b</textarea></label>
   <aside class="ad-slot ad-bottom-right" aria-label="مساحة إعلان سفلية يمين"><span>Advertisement</span></aside>
 </div>
 </main>
-<script type="module" src="./src/app.js?v=20260929-1040"></script>
+<script type="module" src="./src/app.js?v=20260929-1055"></script>
 </body></html>
