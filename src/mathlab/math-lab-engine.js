@@ -91,6 +91,27 @@ function trace(m){
   return m.reduce((sum,row,i)=>sum+row[i],0);
 }
 
+function solveLinearMatrix(a,b){
+  const [n,cols]=matrixShape(a),[br,bc]=matrixShape(b);
+  if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  if(br!==n)throw new Error("MATRIX_DIMENSION_MISMATCH");
+  const m=a.map((row,i)=>[...row,...b[i]]);
+  for(let col=0;col<n;col++){
+    let pivot=col;
+    for(let r=col+1;r<n;r++)if(Math.abs(m[r][col])>Math.abs(m[pivot][col]))pivot=r;
+    if(Math.abs(m[pivot][col])<1e-12)throw new Error("SINGULAR_MATRIX");
+    [m[col],m[pivot]]=[m[pivot],m[col]];
+    const div=m[col][col];for(let j=col;j<n+bc;j++)m[col][j]/=div;
+    for(let r=0;r<n;r++){
+      if(r===col)continue;
+      const factor=m[r][col];
+      if(Math.abs(factor)<1e-15)continue;
+      for(let j=col;j<n+bc;j++)m[r][j]-=factor*m[col][j];
+    }
+  }
+  return m.map(row=>row.slice(n).map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
 function identity(n){
   n=Number(n);if(!Number.isInteger(n)||n<1||n>100)throw new Error("INVALID_MATRIX_SIZE");
   return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
@@ -120,6 +141,7 @@ function evalCommand(expr,workspace){
     if(fn==="inv"||fn==="inverse"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return inverse(args[0])}
     if(fn==="matmul"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixMultiply(args[0],args[1])}
     if(fn==="trace"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return trace(args[0])}
+    if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
     if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
     if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
     if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).reduce((a,b)=>a+b,0)}
