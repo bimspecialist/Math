@@ -479,3 +479,16 @@ test("Math Lab UI exposes persistent workspace controls statistics and vectors",
   assert.match(app,/runMathLabScript\(mathLabInput\.value,mathLabWorkspaceState\)/);
   assert.match(app,/event\.key==="Enter"/);
 });
+
+
+test("Math Lab UI exposes a localized command reference and error diagnostics",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/class="mathlab-command-reference"/);
+  assert.match(index,/data-i18n="mathLabCommandReference"/);
+  assert.match(index,/data-i18n="mathLabStatsCommands"/);
+  assert.match(index,/data-i18n="mathLabVectorCommands"/);
+  assert.match(app,/function formatMathLabError\(error\)/);
+  assert.match(app,/translate\(locale,"ml_"\+code\)/);
+  assert.doesNotMatch(app,/\\\$\{/);
+});
