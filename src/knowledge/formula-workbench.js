@@ -41,6 +41,17 @@ function validateVariable(variable,numeric){
   return null;
 }
 
+function validateRule(rule,values){
+  if(!rule)return null;
+  const left=Number(values[rule.left]),right=Number(values[rule.right]);
+  if(!Number.isFinite(left)||!Number.isFinite(right))return null;
+  if(rule.kind==="gt"&&!(left>right))return rule.code??"INVALID_VALUE";
+  if(rule.kind==="gte"&&!(left>=right))return rule.code??"INVALID_VALUE";
+  if(rule.kind==="lt"&&!(left<right))return rule.code??"INVALID_VALUE";
+  if(rule.kind==="lte"&&!(left<=right))return rule.code??"INVALID_VALUE";
+  return null;
+}
+
 export function evaluateFormulaDefinition(definition,values={}){
   if(!definition?.calcExpression)return{ok:false,code:"REFERENCE_ONLY"};
   let expression=definition.calcExpression;
@@ -54,6 +65,10 @@ export function evaluateFormulaDefinition(definition,values={}){
     if(validation)return{ok:false,code:validation,variable:variable.id};
     normalized[variable.id]=numeric;
     expression=expression.replace(new RegExp("\\b"+escapeRegExp(variable.id)+"\\b","g"),"("+numeric+")");
+  }
+  for(const rule of definition.rules??[]){
+    const validation=validateRule(rule,normalized);
+    if(validation)return{ok:false,code:validation,rule};
   }
   const result=evaluateExpression(expression,{angleMode:"DEG"});
   if(result.kind!=="value")return{ok:false,code:result.code??"INVALID_EXPRESSION"};
