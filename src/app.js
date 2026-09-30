@@ -454,7 +454,8 @@ function renderFormulaLibrary(){
     const title=locale==="ar"?x.titleAr:x.titleEn;
     const secondary=locale==="ar"?x.titleEn:x.titleAr;
     const description=locale==="ar"?x.descriptionAr:x.descriptionEn;
-    return `<article class="formula-card"><button type="button" class="formula-open" data-general-formula-id="${escHtml(x.id)}"><div class="formula-card-meta">${escHtml(secondary)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p><span class="formula-card-action">${escHtml(translate(locale,"enterValues"))} →</span></button></article>`;
+    const capability=translate(locale,x.calculator?"calculableFormula":"referenceOnlyFormula");
+    return `<article class="formula-card"><button type="button" class="formula-open" data-general-formula-id="${escHtml(x.id)}"><div class="formula-card-meta">${escHtml(secondary)} · ${escHtml(capability)}</div><h3>${escHtml(title)}</h3><div class="formula-expression" dir="ltr">${escHtml(x.formula)}</div><p>${escHtml(description)}</p><span class="formula-card-action">${escHtml(translate(locale,x.calculator?"enterValues":"viewReference"))} →</span></button></article>`;
   }).join(""):`<p class="empty-state" role="status">${escHtml(translate(locale,"formulaNoResults"))}</p>`;
   grid.querySelectorAll("[data-general-formula-id]").forEach(button=>button.addEventListener("click",()=>openReferenceFormula(button.dataset.generalFormulaId)));
   if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
