@@ -286,13 +286,17 @@ b</textarea></label>
                 <h3 data-i18n="differenceBetweenDates">Difference between dates</h3>
                 <label><span data-i18n="start">From</span><input id="date-start" type="date" value="2026-01-01"></label>
                 <label><span data-i18n="end">To</span><input id="date-end" type="date" value="2026-01-31"></label>
+                <button id="date-swap" type="button" class="category-tool date-inline-action" data-i18n="swapDates">Swap dates</button>
                 <output id="date-difference" aria-live="polite"></output>
+                <div id="date-difference-details" class="date-detail-grid" aria-live="polite"></div>
               </section>
               <section>
                 <h3 data-i18n="addSubtractDays">Add or subtract days</h3>
                 <label><span data-i18n="date">Date</span><input id="date-base" type="date" value="2026-01-31"></label>
-                <label><span data-i18n="days">Days</span><input id="date-offset" type="number" value="1" step="1"></label>
+                <label><span data-i18n="amount">Amount</span><input id="date-offset" type="number" value="1" step="1"></label>
+                <label><span data-i18n="unit">Unit</span><select id="date-unit"><option value="days" data-i18n="days">Days</option><option value="weeks" data-i18n="weeks">Weeks</option><option value="months" data-i18n="months">Months</option><option value="years" data-i18n="years">Years</option></select></label>
                 <output id="date-offset-result" aria-live="polite"></output>
+                <p id="date-result-weekday" class="date-weekday"></p>
               </section>
             </div>
           </div>
