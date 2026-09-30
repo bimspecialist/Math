@@ -320,6 +320,7 @@ export const UI_STRINGS = Object.freeze({
     valueAboveMaximum:"القيمة أعلى من الحد المسموح لهذا القانون.",
     outsideFormulaDomain:"القيمة خارج المجال الصحيح لهذا القانون.",
     enterValues:"أدخل القيم",
+    viewReference:"عرض المرجع",
     missingValue:"أدخل جميع القيم المطلوبة.",
     invalidValue:"استخدم قيمًا رقمية صحيحة.",
     navToolsGroup:"الأدوات",
