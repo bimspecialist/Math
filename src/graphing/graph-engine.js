@@ -1,17 +1,48 @@
 import { evaluateExpression } from "../calculator/math-engine.js";
 
 const normalizeExpression=s=>String(s??"").trim().replace(/^y\s*=\s*/i,"");
+
+function evaluateAtX(source,x){
+  const expr=source.replace(/\bx\b/gi,`(${x})`);
+  const r=evaluateExpression(expr,{angleMode:"RAD",ans:"0"});
+  return r.kind==="value"&&Number.isFinite(r.numeric)?r.numeric:null;
+}
+
+function median(values){
+  if(!values.length)return 0;
+  const sorted=[...values].sort((a,b)=>a-b),mid=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+}
+
+function markDiscontinuities(source,samples){
+  const typical=Math.max(1e-9,median(samples.map(p=>Math.abs(p.y)).filter(Number.isFinite)));
+  for(let i=1;i<samples.length;i++){
+    const prev=samples[i-1],current=samples[i];
+    if(!Number.isFinite(prev.y)||!Number.isFinite(current.y)){current.breakBefore=true;continue}
+    const midX=(prev.x+current.x)/2,midY=evaluateAtX(source,midX);
+    if(!Number.isFinite(midY)){current.breakBefore=true;continue}
+    const endpointScale=Math.max(1,Math.abs(prev.y),Math.abs(current.y));
+    const linearMid=(prev.y+current.y)/2;
+    const curvature=Math.abs(midY-linearMid);
+    const signFlip=prev.y*current.y<0;
+    const asymptoteSpike=Math.abs(midY)>endpointScale*8;
+    const extremeSignFlip=signFlip&&Math.max(Math.abs(prev.y),Math.abs(current.y),Math.abs(midY))>Math.max(20,typical*12);
+    const nonlinearJump=curvature>endpointScale*6&&Math.abs(midY)>Math.max(10,typical*8);
+    if(asymptoteSpike||extremeSignFlip||nonlinearJump)current.breakBefore=true;
+  }
+  return samples;
+}
+
 export function sampleGraphExpression(source,{minX=-10,maxX=10,points=401}={}){
   source=normalizeExpression(source);
-  minX=Number(minX);maxX=Number(maxX);points=Math.max(2,Math.min(2000,Number(points)||401));
+  minX=Number(minX);maxX=Number(maxX);points=Math.max(2,Math.min(2000,Math.round(Number(points)||401)));
   if(!source||!Number.isFinite(minX)||!Number.isFinite(maxX)||maxX<=minX)return{ok:false,error:"INVALID_GRAPH_RANGE",samples:[]};
   const samples=[];
   for(let i=0;i<points;i++){
     const x=minX+(maxX-minX)*(i/(points-1));
-    const expr=source.replace(/\bx\b/gi,`(${x})`);
-    const r=evaluateExpression(expr,{angleMode:"RAD",ans:"0"});
-    samples.push({x,y:r.kind==="value"&&Number.isFinite(r.numeric)?r.numeric:null});
+    samples.push({x,y:evaluateAtX(source,x),breakBefore:false});
   }
+  markDiscontinuities(source,samples);
   return{ok:true,expression:source,minX,maxX,samples};
 }
 
@@ -22,6 +53,16 @@ export function graphBounds(samples,{fallbackMinY=-10,fallbackMaxY=10}={}){
   if(minY===maxY){minY-=1;maxY+=1}
   const span=maxY-minY;
   return{minY:minY-span*.08,maxY:maxY+span*.08};
+}
+
+export function resolveGraphYBounds(samples,{minY,maxY}={}){
+  const hasMin=minY!==""&&minY!==null&&minY!==undefined;
+  const hasMax=maxY!==""&&maxY!==null&&maxY!==undefined;
+  if(!hasMin&&!hasMax)return{ok:true,...graphBounds(samples),auto:true};
+  if(!hasMin||!hasMax)return{ok:false,error:"INVALID_GRAPH_Y_RANGE"};
+  const lo=Number(minY),hi=Number(maxY);
+  if(!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo)return{ok:false,error:"INVALID_GRAPH_Y_RANGE"};
+  return{ok:true,minY:lo,maxY:hi,auto:false};
 }
 
 export function sampleGraphExpressions(source,options={}){

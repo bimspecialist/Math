@@ -5,7 +5,7 @@ import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
-import { sampleGraphExpressions, graphBounds } from "./graphing/graph-engine.js";
+import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 import { daysBetween, addDays } from "./date/date-calculator.js";
 import { translate } from "./i18n/ui-strings.js";
@@ -536,29 +536,46 @@ renderConverterUnits();updateConverter();
 const graphExpression=document.querySelector("#graph-expression");
 const graphMinX=document.querySelector("#graph-min-x");
 const graphMaxX=document.querySelector("#graph-max-x");
+const graphMinY=document.querySelector("#graph-min-y");
+const graphMaxY=document.querySelector("#graph-max-y");
 const graphCanvas=document.querySelector("#graph-canvas");
 const graphStatus=document.querySelector("#graph-status");
 let graphInitialized=false;
 function drawGraph(){
   if(!graphCanvas)return;
-  const result=sampleGraphExpressions(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:501});
+  const result=sampleGraphExpressions(graphExpression?.value??"",{minX:Number(graphMinX?.value??-10),maxX:Number(graphMaxX?.value??10),points:601});
   graphCanvas.innerHTML="";
   const legend=document.querySelector("#graph-legend");if(legend)legend.innerHTML="";
-  if(!result.ok){if(graphStatus)graphStatus.textContent=result.error;return}
-  const width=760,height=420,allSamples=result.series.flatMap(s=>s.samples),{minY,maxY}=graphBounds(allSamples);
+  if(!result.ok){if(graphStatus)graphStatus.textContent=translate(locale,result.error);return}
+  const width=760,height=420,allSamples=result.series.flatMap(s=>s.samples);
+  const yBounds=resolveGraphYBounds(allSamples,{minY:graphMinY?.value??"",maxY:graphMaxY?.value??""});
+  if(!yBounds.ok){if(graphStatus)graphStatus.textContent=translate(locale,yBounds.error);return}
+  const {minY,maxY}=yBounds;
   const sx=x=>(x-result.minX)/(result.maxX-result.minX)*width;
   const sy=y=>height-(y-minY)/(maxY-minY)*height;
   const makeLine=(x1,y1,x2,y2,klass)=>{
     const el=document.createElementNS("http://www.w3.org/2000/svg","line");
     el.setAttribute("x1",x1);el.setAttribute("y1",y1);el.setAttribute("x2",x2);el.setAttribute("y2",y2);el.setAttribute("class",klass);graphCanvas.appendChild(el);
   };
+  const makeText=(x,y,value,anchor="middle")=>{
+    const el=document.createElementNS("http://www.w3.org/2000/svg","text");
+    el.setAttribute("x",x);el.setAttribute("y",y);el.setAttribute("text-anchor",anchor);el.setAttribute("class","graph-tick-label");el.textContent=Number(value.toPrecision(4));graphCanvas.appendChild(el);
+  };
+  for(let i=0;i<=4;i++){
+    const x=result.minX+(result.maxX-result.minX)*i/4,px=sx(x);
+    const y=minY+(maxY-minY)*i/4,py=sy(y);
+    makeLine(px,0,px,height,"graph-grid-line");
+    makeLine(0,py,width,py,"graph-grid-line");
+    makeText(px,height-8,x);
+    makeText(6,Math.max(14,Math.min(height-6,py-4)),y,"start");
+  }
   if(result.minX<=0&&result.maxX>=0)makeLine(sx(0),0,sx(0),height,"graph-axis");
   if(minY<=0&&maxY>=0)makeLine(0,sy(0),width,sy(0),"graph-axis");
   result.series.forEach((series,index)=>{
     if(!series.result.ok)return;
     let d="",open=false;
     for(const p of series.samples){
-      if(p.y===null||!Number.isFinite(p.y)){open=false;continue}
+      if(p.y===null||!Number.isFinite(p.y)||p.breakBefore){open=false;if(p.y===null||!Number.isFinite(p.y))continue}
       const x=sx(p.x),y=sy(p.y);
       if(y<-height*4||y>height*5){open=false;continue}
       d+=(open?"L":"M")+x.toFixed(2)+" "+y.toFixed(2)+" ";open=true;
@@ -570,10 +587,16 @@ function drawGraph(){
       item.textContent=series.expression;legend.appendChild(item);
     }
   });
-  if(graphStatus)graphStatus.textContent=`x: [${result.minX}, ${result.maxX}] · y: [${Number(minY.toPrecision(5))}, ${Number(maxY.toPrecision(5))}]`;
+  if(graphStatus)graphStatus.textContent=`${yBounds.auto?translate(locale,"autoScale")+" · ":""}x: [${result.minX}, ${result.maxX}] · y: [${Number(minY.toPrecision(5))}, ${Number(maxY.toPrecision(5))}]`;
   graphInitialized=true;
 }
 document.querySelector("#graph-draw")?.addEventListener("click",drawGraph);
+document.querySelector("#graph-reset")?.addEventListener("click",()=>{
+  if(graphMinX)graphMinX.value="-10";if(graphMaxX)graphMaxX.value="10";
+  if(graphMinY)graphMinY.value="";if(graphMaxY)graphMaxY.value="";
+  drawGraph();
+});
+for(const input of [graphMinX,graphMaxX,graphMinY,graphMaxY])input?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();drawGraph()}});
 graphExpression?.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();drawGraph()}});
 
 const programmerInput=document.querySelector("#programmer-input");

@@ -245,9 +245,14 @@ b</textarea></label>
               <label class="graph-expression-field"><span>y =</span><textarea id="graph-expression" dir="ltr" rows="4" spellcheck="false">sin(x)&#10;cos(x)</textarea><small data-i18n="graphingMultiHint">One function per line, up to six. Press Ctrl+Enter to draw.</small></label>
               <label><span data-i18n="xMin">x min</span><input id="graph-min-x" type="number" value="-10" step="any"></label>
               <label><span data-i18n="xMax">x max</span><input id="graph-max-x" type="number" value="10" step="any"></label>
-              <button id="graph-draw" type="button" class="advanced-solve" data-i18n="draw">Draw</button>
+              <label><span data-i18n="yMin">y min</span><input id="graph-min-y" type="number" step="any" placeholder="Auto"></label>
+              <label><span data-i18n="yMax">y max</span><input id="graph-max-y" type="number" step="any" placeholder="Auto"></label>
+              <div class="graph-actions">
+                <button id="graph-draw" type="button" class="advanced-solve" data-i18n="draw">Draw</button>
+                <button id="graph-reset" type="button" class="category-tool" data-i18n="resetView">Reset view</button>
+              </div>
             </div>
-            <div id="graph-legend" class="graph-legend" aria-label="Graph legend"></div><div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" data-i18n-aria-label="functionGraph" aria-label="Function graph"></svg></div>
+            <div id="graph-legend" class="graph-legend" data-i18n-aria-label="graphLegend" aria-label="Graph legend"></div><div class="graph-canvas-wrap"><svg id="graph-canvas" viewBox="0 0 760 420" role="img" data-i18n-aria-label="functionGraph" aria-label="Function graph"><title data-i18n="functionGraph">Function graph</title></svg></div>
             <div id="graph-status" class="formula-count" aria-live="polite"></div>
           </div>
         </section>
