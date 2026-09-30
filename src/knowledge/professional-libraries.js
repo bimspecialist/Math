@@ -5,29 +5,44 @@ export const PROFESSIONAL_LIBRARIES=Object.freeze([
       pf("gross-profit","Gross Profit","مجمل الربح","GP = Revenue - COGS","مجمل الربح = الإيرادات - تكلفة البضاعة المباعة","Revenue - COGS",[
         v("Revenue","Revenue","الإيرادات"),v("COGS","COGS","تكلفة البضاعة المباعة")
       ]),
+      pf("gross-margin","Gross Profit Margin","هامش مجمل الربح","GPM = (Revenue - COGS) / Revenue × 100","هامش مجمل الربح = (الإيرادات - تكلفة البضاعة المباعة) ÷ الإيرادات × 100","(Revenue - COGS) / Revenue * 100",[
+        v("Revenue","Revenue","الإيرادات","",{exclusiveMin:0}),v("COGS","COGS","تكلفة البضاعة المباعة")
+      ],"%"),
+      pf("operating-margin","Operating Profit Margin","هامش الربح التشغيلي","OPM = OperatingIncome / Revenue × 100","هامش الربح التشغيلي = الربح التشغيلي ÷ الإيرادات × 100","OperatingIncome / Revenue * 100",[
+        v("OperatingIncome","Operating income","الربح التشغيلي"),v("Revenue","Revenue","الإيرادات","",{exclusiveMin:0})
+      ],"%"),
       pf("net-margin","Net Profit Margin","هامش صافي الربح","NPM = NetProfit / Revenue × 100","هامش صافي الربح = صافي الربح ÷ الإيرادات × 100","NetProfit / Revenue * 100",[
-        v("NetProfit","Net profit","صافي الربح"),v("Revenue","Revenue","الإيرادات")
+        v("NetProfit","Net profit","صافي الربح"),v("Revenue","Revenue","الإيرادات","",{exclusiveMin:0})
       ],"%"),
       pf("current-ratio","Current Ratio","نسبة التداول","CR = CurrentAssets / CurrentLiabilities","نسبة التداول = الأصول المتداولة ÷ الخصوم المتداولة","CurrentAssets / CurrentLiabilities",[
+        v("CurrentAssets","Current assets","الأصول المتداولة"),v("CurrentLiabilities","Current liabilities","الخصوم المتداولة","",{exclusiveMin:0})
+      ]),
+      pf("working-capital","Working Capital","رأس المال العامل","WC = CurrentAssets - CurrentLiabilities","رأس المال العامل = الأصول المتداولة - الخصوم المتداولة","CurrentAssets - CurrentLiabilities",[
         v("CurrentAssets","Current assets","الأصول المتداولة"),v("CurrentLiabilities","Current liabilities","الخصوم المتداولة")
       ]),
       pf("quick-ratio","Quick Ratio","النسبة السريعة","QR = (Cash + Receivables + MarketableSecurities) / CurrentLiabilities","النسبة السريعة = (النقد + الذمم المدينة + الأوراق المالية القابلة للتداول) ÷ الخصوم المتداولة","(Cash + Receivables + MarketableSecurities) / CurrentLiabilities",[
-        v("Cash","Cash","النقد"),v("Receivables","Receivables","الذمم المدينة"),v("MarketableSecurities","Marketable securities","أوراق مالية قابلة للتداول"),v("CurrentLiabilities","Current liabilities","الخصوم المتداولة")
+        v("Cash","Cash","النقد"),v("Receivables","Receivables","الذمم المدينة"),v("MarketableSecurities","Marketable securities","أوراق مالية قابلة للتداول"),v("CurrentLiabilities","Current liabilities","الخصوم المتداولة","",{exclusiveMin:0})
       ]),
       pf("debt-equity","Debt-to-Equity Ratio","نسبة الدين إلى حقوق الملكية","D/E = TotalDebt / Equity","نسبة الدين إلى حقوق الملكية = إجمالي الدين ÷ حقوق الملكية","TotalDebt / Equity",[
-        v("TotalDebt","Total debt","إجمالي الدين"),v("Equity","Equity","حقوق الملكية")
+        v("TotalDebt","Total debt","إجمالي الدين"),v("Equity","Equity","حقوق الملكية","",{nonZero:true})
       ]),
       pf("roa","Return on Assets","العائد على الأصول","ROA = NetIncome / AverageAssets × 100","العائد على الأصول = صافي الدخل ÷ متوسط الأصول × 100","NetIncome / AverageAssets * 100",[
-        v("NetIncome","Net income","صافي الدخل"),v("AverageAssets","Average assets","متوسط الأصول")
+        v("NetIncome","Net income","صافي الدخل"),v("AverageAssets","Average assets","متوسط الأصول","",{exclusiveMin:0})
       ],"%"),
+      pf("asset-turnover","Asset Turnover","دوران الأصول","AT = Revenue / AverageAssets","دوران الأصول = الإيرادات ÷ متوسط الأصول","Revenue / AverageAssets",[
+        v("Revenue","Revenue","الإيرادات"),v("AverageAssets","Average assets","متوسط الأصول","",{exclusiveMin:0})
+      ]),
       pf("roe","Return on Equity","العائد على حقوق الملكية","ROE = NetIncome / AverageEquity × 100","العائد على حقوق الملكية = صافي الدخل ÷ متوسط حقوق الملكية × 100","NetIncome / AverageEquity * 100",[
-        v("NetIncome","Net income","صافي الدخل"),v("AverageEquity","Average equity","متوسط حقوق الملكية")
+        v("NetIncome","Net income","صافي الدخل"),v("AverageEquity","Average equity","متوسط حقوق الملكية","",{nonZero:true})
       ],"%"),
+      pf("contribution-margin-unit","Contribution Margin per Unit","هامش المساهمة للوحدة","CM/unit = PricePerUnit - VariableCostPerUnit","هامش المساهمة للوحدة = سعر الوحدة - التكلفة المتغيرة للوحدة","PricePerUnit - VariableCostPerUnit",[
+        v("PricePerUnit","Price per unit","سعر الوحدة"),v("VariableCostPerUnit","Variable cost per unit","التكلفة المتغيرة للوحدة")
+      ]),
       pf("break-even","Break-even Units","نقطة التعادل بالوحدات","BE = FixedCosts / (PricePerUnit - VariableCostPerUnit)","نقطة التعادل = التكاليف الثابتة ÷ (سعر الوحدة - التكلفة المتغيرة للوحدة)","FixedCosts / (PricePerUnit - VariableCostPerUnit)",[
-        v("FixedCosts","Fixed costs","التكاليف الثابتة"),v("PricePerUnit","Price per unit","سعر الوحدة"),v("VariableCostPerUnit","Variable cost per unit","التكلفة المتغيرة للوحدة")
-      ]," units"),
+        v("FixedCosts","Fixed costs","التكاليف الثابتة","",{min:0}),v("PricePerUnit","Price per unit","سعر الوحدة"),v("VariableCostPerUnit","Variable cost per unit","التكلفة المتغيرة للوحدة")
+      ]," units",[{kind:"gt",left:"PricePerUnit",right:"VariableCostPerUnit",code:"NONPOSITIVE_CONTRIBUTION_MARGIN"}]),
       pf("inventory-turnover","Inventory Turnover","دوران المخزون","IT = COGS / AverageInventory","دوران المخزون = تكلفة البضاعة المباعة ÷ متوسط المخزون","COGS / AverageInventory",[
-        v("COGS","COGS","تكلفة البضاعة المباعة"),v("AverageInventory","Average inventory","متوسط المخزون")
+        v("COGS","COGS","تكلفة البضاعة المباعة"),v("AverageInventory","Average inventory","متوسط المخزون","",{exclusiveMin:0})
       ])
     ])
   }),
@@ -61,9 +76,9 @@ export const PROFESSIONAL_LIBRARIES=Object.freeze([
   })
 ]);
 
-function v(id,labelEn,labelAr,defaultValue=""){return Object.freeze({id,labelEn,labelAr,defaultValue})}
-function pf(id,titleEn,titleAr,formulaEn,formulaAr,calcExpression,variables,unit=""){
-  return Object.freeze({id,titleEn,titleAr,formulaEn,formulaAr,calcExpression,variables:Object.freeze(variables),unit});
+function v(id,labelEn,labelAr,defaultValue="",constraints={}){return Object.freeze({id,labelEn,labelAr,defaultValue,...constraints})}
+function pf(id,titleEn,titleAr,formulaEn,formulaAr,calcExpression,variables,unit="",rules=[]){
+  return Object.freeze({id,titleEn,titleAr,formulaEn,formulaAr,calcExpression,variables:Object.freeze(variables),unit,rules:Object.freeze(rules)});
 }
 
 export function getProfessionalLibrary(id){return PROFESSIONAL_LIBRARIES.find(x=>x.id===id)??null}
