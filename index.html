@@ -69,6 +69,7 @@
           <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span data-i18n="navFormulaLibrary">Formula Library</span></button>
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="accounting"><span class="tool-icon">₿</span><span data-i18n="navAccountingLibrary">Accounting Library</span></button>
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="civil"><span class="tool-icon">∠</span><span data-i18n="navEngineeringLibrary">Civil Engineering Library</span></button>
+          <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="hydraulics"><span class="tool-icon">≈</span><span data-i18n="navHydraulicsLibrary">Hydraulics Library</span></button>
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="pmp"><span class="tool-icon">◆</span><span data-i18n="navPmpLibrary">PMP Library</span></button>
         </div>
         <div class="tool-group">
@@ -171,6 +172,7 @@
             </div>
             <div class="formula-controls knowledge-controls">
               <label><span data-i18n="search">Search</span><input id="knowledge-search" type="search" data-i18n-placeholder="knowledgeSearchPlaceholder" placeholder="Search this professional library..." autocomplete="off" aria-controls="knowledge-formulas" aria-describedby="knowledge-count"></label>
+              <label id="knowledge-topic-wrap" hidden><span data-i18n="topic">Topic</span><select id="knowledge-topic" aria-controls="knowledge-formulas"><option value="" data-i18n="allTopics">All topics</option></select></label>
             </div>
             <div id="knowledge-count" class="formula-count" aria-live="polite"></div>
             <div id="knowledge-formulas" class="formula-grid knowledge-grid"></div>

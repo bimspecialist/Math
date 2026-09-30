@@ -340,7 +340,7 @@ test("Math Lab UI exposes a numerical sampling example",()=>{
 });
 
 
-test("Knowledge includes accounting engineering and PMP professional libraries",async()=>{
+test("Knowledge includes accounting civil hydraulics and PMP professional libraries",async()=>{
   const {PROFESSIONAL_LIBRARIES,getProfessionalLibrary}=await import("../src/knowledge/professional-libraries.js");
   for(const id of ["accounting","civil","pmp"]){
     const library=getProfessionalLibrary(id);
@@ -348,7 +348,11 @@ test("Knowledge includes accounting engineering and PMP professional libraries",
     assert.ok(library.formulas.length>=8,id+" formula count");
     assert.ok(library.formulas.every(x=>x.variables.length>0&&x.calcExpression),id+" calculators");
   }
-  assert.equal(PROFESSIONAL_LIBRARIES.length,3);
+  const hydraulics=getProfessionalLibrary("hydraulics");
+  assert.ok(hydraulics);
+  assert.ok(hydraulics.formulas.length>=45,"hydraulics formula count");
+  assert.ok(hydraulics.formulas.some(x=>x.calcExpression===null),"hydraulics reference-only relations");
+  assert.equal(PROFESSIONAL_LIBRARIES.length,4);
 });
 
 test("professional formula workbench substitutes and calculates values safely",async()=>{
