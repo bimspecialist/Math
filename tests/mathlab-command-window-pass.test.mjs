@@ -22,7 +22,8 @@ test("Math Lab supports stepped and descending colon ranges",()=>{
   assert.deepEqual(r.workspace.B,[[10,8,6,4,2]]);
 
   r=runMathLabScript("C = 5:1");
-  assert.equal(r.ok,false);
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.C,[[]]);
 });
 
 test("Math Lab expands colon ranges inside matrix literals",()=>{
