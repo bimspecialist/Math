@@ -61,11 +61,11 @@ export function professionalFormulaExplanation(libraryId,formulaId,locale="en"){
   const formula=getProfessionalFormula(libraryId,formulaId);
   if(!formula)return"";
   if(formula.noteEn&&locale!=="ar")return formula.noteEn;
-  if(libraryId==="hydraulics"){
-    const topic=locale==="ar"?(formula.topicAr??"الهيدروليكا"):(formula.topicEn??"Hydraulics");
+  if(formula.topicEn||formula.topicAr){
+    const topic=locale==="ar"?(formula.topicAr??formula.topicEn):(formula.topicEn??formula.topicAr);
     return locale==="ar"
-      ?`قانون جامعي ضمن موضوع ${topic}. استخدم الوحدات الموضحة في أسماء المتغيرات، وتحقق من الفرضيات وحدود صلاحية العلاقة قبل تطبيقها على مسائل التصميم الواقعية.`
-      :`Undergraduate ${topic} relation. Use the units shown with each variable and verify the relation's assumptions and applicability before using it for real design work.`;
+      ?`قانون جامعي ضمن موضوع ${topic}. استخدم الوحدات الموضحة في أسماء المتغيرات، وتحقق من الفرضيات وحدود صلاحية العلاقة قبل تطبيقها على مسائل التصميم أو التحليل الواقعية.`
+      :`Undergraduate ${topic} relation. Use the units shown with each variable and verify the relation's assumptions and applicability before real design or analysis work.`;
   }
   return"";
 }
