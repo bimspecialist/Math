@@ -131,6 +131,89 @@ function matrixMultiply(a,b){
     let sum=0;for(let k=0;k<ac;k++)sum+=a[i][k]*b[k][j];return Math.abs(sum)<1e-12?0:sum;
   }));
 }
+function sameShape(a,b){
+  const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
+  return ar===br&&ac===bc;
+}
+function mapMatrix(m,fn){return m.map((row,r)=>row.map((value,c)=>fn(value,r,c)))}
+function matrixElementwise(a,b,fn){
+  if(typeof a==="number"&&typeof b==="number")return fn(a,b);
+  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>fn(a,v));
+  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>fn(v,b));
+  if(isMatrix(a)&&isMatrix(b)){
+    if(!sameShape(a,b))throw new Error("MATRIX_DIMENSION_MISMATCH");
+    return a.map((row,r)=>row.map((value,c)=>fn(value,b[r][c])));
+  }
+  throw new Error("INVALID_MATRIX_OPERATION");
+}
+function matrixAdd(a,b){return matrixElementwise(a,b,(x,y)=>x+y)}
+function matrixSubtract(a,b){return matrixElementwise(a,b,(x,y)=>x-y)}
+function matrixScale(m,k){return mapMatrix(m,v=>v*k)}
+function matrixPower(m,power){
+  const [rows,cols]=matrixShape(m);
+  if(rows!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  if(!Number.isInteger(power))throw new Error("INTEGER_MATRIX_POWER_REQUIRED");
+  if(power===0)return identity(rows);
+  if(power<0)return matrixPower(inverse(m),-power);
+  let result=identity(rows),base=clone(m),n=power;
+  while(n>0){
+    if(n%2===1)result=matrixMultiply(result,base);
+    n=Math.floor(n/2);
+    if(n>0)base=matrixMultiply(base,base);
+  }
+  return result;
+}
+function matrixRightDivide(a,b){
+  if(typeof a==="number"&&typeof b==="number")return a/b;
+  if(isMatrix(a)&&typeof b==="number")return matrixScale(a,1/b);
+  if(typeof a==="number"&&isMatrix(b))return matrixScale(inverse(b),a);
+  if(isMatrix(a)&&isMatrix(b))return matrixMultiply(a,inverse(b));
+  throw new Error("INVALID_MATRIX_OPERATION");
+}
+function binaryArrayOperation(op,left,right){
+  if(op==="+")return matrixAdd(left,right);
+  if(op==="-")return matrixSubtract(left,right);
+  if(op===".*")return matrixElementwise(left,right,(x,y)=>x*y);
+  if(op==="./")return matrixElementwise(left,right,(x,y)=>x/y);
+  if(op===".^")return matrixElementwise(left,right,(x,y)=>x**y);
+  if(op==="*"){
+    if(typeof left==="number"&&typeof right==="number")return left*right;
+    if(typeof left==="number"&&isMatrix(right))return matrixScale(right,left);
+    if(isMatrix(left)&&typeof right==="number")return matrixScale(left,right);
+    if(isMatrix(left)&&isMatrix(right))return matrixMultiply(left,right);
+  }
+  if(op==="/")return matrixRightDivide(left,right);
+  if(op==="^"){
+    if(typeof left==="number"&&typeof right==="number")return left**right;
+    if(isMatrix(left)&&typeof right==="number")return matrixPower(left,right);
+    throw new Error("INVALID_MATRIX_POWER");
+  }
+  throw new Error("INVALID_MATRIX_OPERATION");
+}
+function stripTranspose(source){
+  const text=String(source).trim();
+  if(text.endsWith(".'"))return{source:text.slice(0,-2).trim(),transpose:true};
+  if(text.endsWith("'"))return{source:text.slice(0,-1).trim(),transpose:true};
+  return{source:text,transpose:false};
+}
+function findTopLevelOperator(source,operators){
+  let depth=0;
+  for(let i=source.length-1;i>=0;i--){
+    const ch=source[i];
+    if(ch==="]"||ch===")")depth++;
+    else if(ch==="["||ch==="(")depth--;
+    if(depth!==0)continue;
+    for(const op of operators){
+      const start=i-op.length+1;
+      if(start<0)continue;
+      if(source.slice(start,i+1)!==op)continue;
+      if((op==="+"||op==="-")&&start===0)continue;
+      if((op==="+"||op==="-")&&/[eE]$/.test(source.slice(0,start)))continue;
+      return{index:start,op};
+    }
+  }
+  return null;
+}
 
 function inverse(m){
   const [rows,cols]=matrixShape(m);if(rows!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
@@ -318,8 +401,9 @@ function linearColumnMajor(m){
 }
 
 function parseIndexSpec(source,workspace,max){
-  const text=String(source).trim();
+  let text=String(source).trim();
   if(text===":")return Array.from({length:max},(_,i)=>i);
+  text=text.replace(/\bend\b/g,String(max));
   const range=colonValues(text,workspace);
   const values=range??[numericExpression(text,workspace)];
   return values.map(value=>{
@@ -364,7 +448,24 @@ const MATHLAB_FUNCTIONS=new Set([
 ]);
 
 function evalValue(source,workspace){
-  const text=stripOuterParens(source);
+  const stripped=stripOuterParens(source);
+  const transposeInfo=stripTranspose(stripped);
+  if(transposeInfo.transpose){
+    const value=evalValue(transposeInfo.source,workspace);
+    if(typeof value==="number")return value;
+    if(!isMatrix(value))throw new Error("INVALID_MATRIX_OPERATION");
+    return transpose(value);
+  }
+  const text=transposeInfo.source;
+  for(const operators of [["+","-"],[".*","./","*","/"],[".^","^"]]){
+    const match=findTopLevelOperator(text,operators);
+    if(match){
+      const leftText=text.slice(0,match.index).trim();
+      const rightText=text.slice(match.index+match.op.length).trim();
+      if(!leftText||!rightText)continue;
+      return binaryArrayOperation(match.op,evalValue(leftText,workspace),evalValue(rightText,workspace));
+    }
+  }
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
   const range=colonValues(text,workspace);
