@@ -15,7 +15,7 @@ import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analyt
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
-import { inferReferenceVariables, substituteFormula, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
+import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
@@ -298,7 +298,8 @@ function currentFormulaDetail(){
       explanation:professionalFormulaExplanation(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale),
       expression:formula.formulaEn,
       variables:formula.variables,
-      professional:formula
+      professional:formula,
+      calculator:formula
     };
   }
   const formula=FORMULAS.find(x=>x.id===formulaDetailContext.formulaId);
@@ -308,8 +309,9 @@ function currentFormulaDetail(){
     description:locale==="ar"?formula.descriptionAr:formula.descriptionEn,
     explanation:referenceFormulaExplanation(formula,locale),
     expression:formula.formula,
-    variables:inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
-    professional:null
+    variables:formula.calculator?.variables??inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
+    professional:null,
+    calculator:formula.calculator??null
   };
 }
 function captureFormulaDetailValues(){
@@ -341,7 +343,16 @@ function renderFormulaDetail(){
       :"";
   }
   const calculateButton=document.querySelector("#formula-detail-calculate");
-  if(calculateButton)calculateButton.textContent=translate(locale,detail.professional?"substituteAndCalculate":"substituteValues");
+  const capability=document.querySelector("#formula-detail-capability");
+  const canCalculate=Boolean(detail.calculator?.calcExpression);
+  if(calculateButton){
+    calculateButton.textContent=translate(locale,canCalculate?"substituteAndCalculate":"substituteValues");
+    calculateButton.dataset.mode=canCalculate?"calculate":"reference";
+  }
+  if(capability){
+    capability.textContent=translate(locale,canCalculate?"calculableFormula":"referenceOnlyFormula");
+    capability.className="formula-capability "+(canCalculate?"is-calculable":"is-reference");
+  }
   if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
     const label=locale==="ar"?variable.labelAr:variable.labelEn;
     const value=formulaDetailValues[variable.id]??variable.defaultValue??"";
@@ -376,14 +387,20 @@ function calculateFormulaDetail(){
   const substituted=substituteFormula(detail.expression,values);
   if(substitution)substitution.textContent=`${translate(locale,"substitutedFormula")}: ${substituted}`;
   if(!result)return;
-  if(!detail.professional){result.textContent=translate(locale,"referenceSubstitution");return}
-  const evaluated=evaluateProfessionalFormula(detail.professional,values);
+  if(!detail.calculator){result.textContent=translate(locale,"referenceSubstitution");return}
+  const evaluated=detail.professional?evaluateProfessionalFormula(detail.professional,values):evaluateFormulaDefinition(detail.calculator,values);
   if(!evaluated.ok){
-    result.textContent=evaluated.code==="MISSING_VALUE"?translate(locale,"missingValue"):translate(locale,"invalidValue");
+    const codeMap={MISSING_VALUE:"missingValue",INVALID_VALUE:"invalidValue",VALUE_BELOW_MINIMUM:"valueBelowMinimum",VALUE_ABOVE_MAXIMUM:"valueAboveMaximum",OUTSIDE_FORMULA_DOMAIN:"outsideFormulaDomain",DIVISION_BY_ZERO:"DIVISION_BY_ZERO",DOMAIN_ERROR:"DOMAIN_ERROR"};
+    result.textContent=translate(locale,codeMap[evaluated.code]??evaluated.code);
     return;
   }
   const numeric=new Intl.NumberFormat(locale==="ar"?"ar":"en",{maximumSignificantDigits:12}).format(evaluated.value);
-  result.textContent=`${translate(locale,"calculatedResult")}: ${numeric}${detail.professional.unit??""}`;
+  const unit=evaluated.unit??detail.calculator.unit??"";
+  result.textContent=`${translate(locale,"calculatedResult")}: ${numeric}${unit}`;
+  if(!detail.professional&&!unit){
+    const status=document.querySelector("#formula-detail-status");
+    if(status)status.textContent=translate(locale,"formulaConsistentUnits");
+  }
 }
 function clearFormulaDetail(){
   formulaDetailValues={};
