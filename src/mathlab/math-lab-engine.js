@@ -11,7 +11,8 @@ function numericExpression(source,workspace){
     if(typeof value!=="number")continue;
     s=s.replace(new RegExp("\\b"+name+"\\b","g"),`(${value})`);
   }
-  const r=evaluateExpression(s,{angleMode:"RAD",ans:"0"});
+  const ans=typeof workspace.ans==="number"?String(workspace.ans):"0";
+  const r=evaluateExpression(s,{angleMode:"RAD",ans});
   if(r.kind!=="value")throw new Error(r.code||"INVALID_EXPRESSION");
   return r.numeric;
 }
@@ -19,7 +20,10 @@ function numericExpression(source,workspace){
 function parseMatrix(source,workspace){
   const inner=source.trim().slice(1,-1).trim();
   if(!inner)return[];
-  const rows=inner.split(";").map(r=>r.trim()).filter(Boolean).map(row=>row.split(",").map(x=>numericExpression(x,workspace)));
+  const rows=inner.split(";").map(r=>r.trim()).filter(Boolean).map(row=>{
+    const cells=row.includes(",")?row.split(","):row.split(/\s+/);
+    return cells.filter(Boolean).map(x=>numericExpression(x,workspace));
+  });
   const width=rows[0]?.length??0;
   if(!width||rows.some(r=>r.length!==width))throw new Error("INVALID_MATRIX");
   return rows;
@@ -246,10 +250,19 @@ function reshape(value,rows,cols){
   return Array.from({length:rows},(_,r)=>values.slice(r*cols,(r+1)*cols));
 }
 
+const MATHLAB_FUNCTIONS=new Set([
+  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","solve","linsolve",
+  "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
+  "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
+  "numel","rows","cols","size"
+]);
+
 function evalValue(source,workspace){
   const text=source.trim();
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
+  const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\(.*\)$/);
+  if(nestedCall&&MATHLAB_FUNCTIONS.has(nestedCall[1].toLowerCase()))return evalCommand(text,workspace);
   return numericExpression(text,workspace);
 }
 
@@ -289,6 +302,7 @@ function evalCommand(expr,workspace){
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
     if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
+    return numericExpression(text,workspace);
   }
   return evalValue(text,workspace);
 }
@@ -298,19 +312,24 @@ export function runMathLabScript(script,initialWorkspace={}){
   const outputs=[];
   const lines=String(script??"").split(/\r?\n/);
   for(let i=0;i<lines.length;i++){
-    const source=lines[i].trim();
-    if(!source||source.startsWith("%")||source.startsWith("#"))continue;
+    const raw=lines[i].trim();
+    if(!raw||raw.startsWith("%")||raw.startsWith("#"))continue;
+    const suppressed=raw.endsWith(";");
+    const source=suppressed?raw.slice(0,-1).trim():raw;
+    if(!source)continue;
     try{
       const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
       if(assignment){
         const value=evalCommand(assignment[2],workspace);
         workspace[assignment[1]]=clone(value);
-        outputs.push({line:i+1,source,name:assignment[1],value:clone(value)});
+        if(!suppressed)outputs.push({line:i+1,source:raw,name:assignment[1],value:clone(value)});
       }else{
-        outputs.push({line:i+1,source,value:clone(evalCommand(source,workspace))});
+        const value=evalCommand(source,workspace);
+        workspace.ans=clone(value);
+        if(!suppressed)outputs.push({line:i+1,source:raw,name:"ans",value:clone(value)});
       }
     }catch(error){
-      return{ok:false,workspace,outputs,error:{message:error.message||"MATHLAB_ERROR",line:i+1,source}};
+      return{ok:false,workspace,outputs,error:{message:error.message||"MATHLAB_ERROR",line:i+1,source:raw}};
     }
   }
   return{ok:true,workspace,outputs};
