@@ -68,7 +68,7 @@ test("Civil rebar formulas are internally consistent",()=>{
   const length=evaluateProfessionalFormula(getProfessionalFormula("civil","rebar-total-length"),{Length:12,Quantity:10});
   const weight=evaluateProfessionalFormula(getProfessionalFormula("civil","rebar-total-weight"),{UnitWeight:unit.value,Length:12,Quantity:10});
   assert.equal(area.ok,true);assert.ok(Math.abs(area.value-Math.PI*64)<1e-10);
-  assert.equal(unit.ok,true);assert.ok(Math.abs(unit.value-1.5783361497449576)<1e-10);
+  assert.equal(unit.ok,true);assert.ok(Math.abs(unit.value-(7850*Math.PI*(0.016**2)/4))<1e-12);
   assert.equal(length.value,120);
   assert.ok(Math.abs(weight.value-unit.value*120)<1e-10);
 });
