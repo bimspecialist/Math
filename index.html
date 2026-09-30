@@ -89,6 +89,10 @@
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="data"><span class="tool-icon">◈</span><span data-i18n="converterData">Data</span></button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="pressure"><span class="tool-icon">⌁</span><span data-i18n="converterPressure">Pressure</span></button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="angle"><span class="tool-icon">∠</span><span data-i18n="converterAngle">Angle</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="force"><span class="tool-icon">F</span><span data-i18n="converterForce">Force</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="torque"><span class="tool-icon">τ</span><span data-i18n="converterTorque">Torque</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="frequency"><span class="tool-icon">Hz</span><span data-i18n="converterFrequency">Frequency</span></button>
+          <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="density"><span class="tool-icon">ρ</span><span data-i18n="converterDensity">Density</span></button>
         </div>
         <div class="tool-group">
           <div class="tool-group-title" data-i18n="navMoreTools">More tools</div>
@@ -305,13 +309,20 @@ b</textarea></label>
         <section id="converter-section" class="page-section">
           <div class="tool-page converter-page">
             <div class="tool-page-head"><div><small data-i18n="converterKicker">Converter</small><h2 id="converter-title" data-i18n="converterTitle">Unit Converter</h2><p data-i18n="converterDescription">Convert engineering and mathematical units locally without an internet connection.</p></div></div>
+            <div class="converter-toolbar">
+              <label><span data-i18n="converterCategory">Category</span><select id="converter-category">
+                <option value="length" data-i18n="converterLength">Length</option><option value="area" data-i18n="converterArea">Area</option><option value="volume" data-i18n="converterVolume">Volume</option><option value="mass" data-i18n="converterMass">Weight and mass</option><option value="speed" data-i18n="converterSpeed">Speed</option><option value="time" data-i18n="converterTime">Time</option><option value="temperature" data-i18n="converterTemperature">Temperature</option><option value="energy" data-i18n="converterEnergy">Energy</option><option value="power" data-i18n="converterPower">Power</option><option value="pressure" data-i18n="converterPressure">Pressure</option><option value="angle" data-i18n="converterAngle">Angle</option><option value="force" data-i18n="converterForce">Force</option><option value="torque" data-i18n="converterTorque">Torque</option><option value="frequency" data-i18n="converterFrequency">Frequency</option><option value="density" data-i18n="converterDensity">Density</option><option value="data" data-i18n="converterData">Data</option>
+              </select></label>
+              <label><span data-i18n="precision">Precision</span><select id="converter-precision"><option value="6">6</option><option value="10">10</option><option value="12" selected>12</option><option value="15">15</option></select></label>
+            </div>
             <div class="converter-card">
-              <label><span data-i18n="value">Value</span><input id="converter-input" type="number" value="1" step="any"></label>
-              <label><span data-i18n="from">From</span><select id="converter-from"></select></label>
+              <label><span data-i18n="value">Value</span><input id="converter-input" type="number" inputmode="decimal" value="1" step="any"></label>
+              <label><span data-i18n="from">From</span><select id="converter-from" dir="ltr"></select></label>
               <button id="converter-swap" type="button" data-i18n-aria-label="swapUnits" aria-label="Swap units">⇄</button>
-              <label><span data-i18n="to">To</span><select id="converter-to"></select></label>
+              <label><span data-i18n="to">To</span><select id="converter-to" dir="ltr"></select></label>
             </div>
             <output id="converter-result" class="converter-result" aria-live="polite"></output>
+            <p id="converter-factor" class="converter-factor"></p>
           </div>
         </section>
       </div>
