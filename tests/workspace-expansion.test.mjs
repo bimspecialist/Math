@@ -100,6 +100,12 @@ test("graphing engine marks domain gaps instead of crashing",async()=>{
   assert.equal(r.samples[1].y,null);
 });
 
+test("Programmer NOT is unary and operand B changes rerender the result",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(app,/programmerOp\.value==="not"\?0n:parseInteger\(programmerB\?\.value\?\?"0",base\)/);
+  assert.match(app,/programmerB\?\.addEventListener\("input",renderProgrammer\)/);
+});
+
 test("programmer engine converts bases and performs bitwise operations",async()=>{
   const {parseInteger,formatInteger,bitwise}=await import("../src/programmer/programmer-engine.js");
   assert.equal(parseInteger("FF",16),255n);
