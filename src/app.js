@@ -526,7 +526,7 @@ function runMathLab(){
   const script=mathLabInput.value.trim();
   const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState);
   mathLabWorkspaceState={...result.workspace};
-  if(script&&!mathLabHistory.includes(script)){mathLabHistory.push(script);if(mathLabHistory.length>50)mathLabHistory.shift()}
+  if(script){mathLabHistory.push(script);if(mathLabHistory.length>50)mathLabHistory.shift()}
   const clearLine=[...(result.events??[])].filter(x=>x.type==="clear-output").map(x=>x.line??0).at(-1)??0;
   if(clearLine>0)mathLabTranscript=[];
   const visibleOutputs=result.outputs.filter(x=>(x.line??0)>clearLine);
