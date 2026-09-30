@@ -94,7 +94,7 @@ test("Math Lab UI exposes MATLAB-style workspace metadata and command history",(
   assert.match(index,/id="mathlab-workspace-body"/);
   assert.match(index,/id="mathlab-history"/);
   assert.match(index,/data-i18n="classLabel"/);
-  assert.match(index,/A\(:,2\)/);
+  assert.match(index,/A\(:,end\)/);
   assert.match(app,/describeMathLabValue/);
   assert.match(app,/mathLabTranscript/);
   assert.match(app,/mathLabHistory/);
