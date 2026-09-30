@@ -212,6 +212,7 @@
             <div class="mathlab-layout">
               <div class="mathlab-editor-panel">
                 <div class="mathlab-toolbar">
+                  <button type="button" data-mathlab-example="A = (1:5)&#10;A&#10;A(3)&#10;A(2:4)&#10;whos" data-i18n="matlabBasics">MATLAB basics</button>
                   <button type="button" data-mathlab-example="a = 5;&#10;b = a^2 + 3;&#10;b&#10;ans" data-i18n="variables">Variables</button>
                   <button type="button" data-mathlab-example="A = [1 2;3 4]&#10;det(A)&#10;transpose(A)" data-i18n="matrix">Matrix</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;B = inv(A)&#10;matmul(A,B)&#10;trace(A)" data-i18n="advancedMatrix">Advanced matrix</button>
@@ -232,7 +233,8 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabStatsCommands">Statistics</strong><code dir="ltr">sum · mean · median · min · max · var · std · prctile · quantile</code></p>
                     <p><strong data-i18n="mathLabVectorCommands">Vectors</strong><code dir="ltr">norm · dot · cross · linspace</code></p>
                     <p><strong data-i18n="mathLabArrayCommands">Arrays</strong><code dir="ltr">eye · zeros · ones · diag · reshape · size · rows · cols · numel</code></p>
-                    <p><strong data-i18n="mathLabWorkspaceCommands">Workspace</strong><code dir="ltr">ans · ; suppress output · nested calls · [1 2; 3 4]</code></p>
+                    <p><strong data-i18n="mathLabWorkspaceCommands">Workspace</strong><code dir="ltr">ans · who · whos · clear · clc · ; suppress output</code></p>
+                    <p><strong data-i18n="mathLabRangeCommands">Ranges & indexing</strong><code dir="ltr">1:5 · 10:-2:2 · A(3) · A(2:4) · A(:,2)</code></p>
                   </div>
                 </details>
                 <div class="mathlab-actions">
@@ -244,7 +246,19 @@ b</textarea></label>
               </div>
               <div class="mathlab-results">
                 <section><h3 data-i18n="commandWindow">Command Window</h3><pre id="mathlab-output" aria-live="polite">&gt;&gt; Ready</pre></section>
-                <section><h3 data-i18n="workspace">Workspace</h3><div id="mathlab-workspace" class="mathlab-workspace"><span class="muted" data-i18n="noVariables">No variables yet</span></div></section>
+                <section>
+                  <h3 data-i18n="workspace">Workspace</h3>
+                  <div id="mathlab-workspace" class="mathlab-workspace">
+                    <table class="mathlab-workspace-table">
+                      <thead><tr><th data-i18n="name">Name</th><th data-i18n="value">Value</th><th data-i18n="size">Size</th><th data-i18n="classLabel">Class</th></tr></thead>
+                      <tbody id="mathlab-workspace-body"><tr><td colspan="4" class="muted" data-i18n="noVariables">No variables yet</td></tr></tbody>
+                    </table>
+                  </div>
+                </section>
+                <section>
+                  <div class="mathlab-section-heading"><h3 data-i18n="commandHistory">Command History</h3><button id="mathlab-clear-history" type="button" class="mathlab-mini-action" data-i18n="clearHistory">Clear history</button></div>
+                  <div id="mathlab-history" class="mathlab-history"><span class="muted" data-i18n="noCommandHistory">No commands yet</span></div>
+                </section>
               </div>
             </div>
           </div>
