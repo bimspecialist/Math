@@ -207,8 +207,13 @@ function findTopLevelOperator(source,operators){
       const start=i-op.length+1;
       if(start<0)continue;
       if(source.slice(start,i+1)!==op)continue;
-      if((op==="+"||op==="-")&&start===0)continue;
-      if((op==="+"||op==="-")&&/[eE]$/.test(source.slice(0,start)))continue;
+      if(op==="+"||op==="-"){
+        if(start===0)continue;
+        const before=source.slice(0,start).trimEnd();
+        const previous=before.at(-1)??"";
+        if(!previous||"([,:+-*/^".includes(previous))continue;
+        if(/[eE]$/.test(before))continue;
+      }
       return{index:start,op};
     }
   }
@@ -564,6 +569,8 @@ function evalCommand(expr,workspace,functions={}){
   const text=expr.trim();
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
   const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace);
+  if(call&&functions[call[1].toLowerCase()])return evalValue(text,workspace,functions);
   if(call){
     const fn=call[1].toLowerCase(),args=splitArgs(call[2]).map(x=>evalValue(x,workspace,functions));
     if(fn==="det"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return determinant(args[0])}
