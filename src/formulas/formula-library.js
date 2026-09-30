@@ -157,20 +157,20 @@ const REFERENCE_CALCULATORS=Object.freeze({
     {id:"sigma",labelEn:"Standard deviation σ",labelAr:"الانحراف المعياري σ",exclusiveMin:0}
   ]}),
   "arith-n":Object.freeze({calcExpression:"a1+(n-1)*d",variables:[
-    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1},
+    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1,integer:true},
     {id:"d",labelEn:"Common difference d",labelAr:"الفرق المشترك d"}
   ]}),
   "arith-sum":Object.freeze({calcExpression:"n*(a1+an)/2",variables:[
-    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1},{id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},
+    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1,integer:true},{id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},
     {id:"an",labelEn:"Nth term aₙ",labelAr:"الحد النوني aₙ"}
   ]}),
   "geo-n":Object.freeze({calcExpression:"a1*r^(n-1)",variables:[
     {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r"},
-    {id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1}
+    {id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1,integer:true}
   ]}),
   "geo-sum":Object.freeze({calcExpression:"a1*(1-r^n)/(1-r)",variables:[
     {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r",notEqual:1},
-    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1}
+    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1,integer:true}
   ]}),
   "geo-inf":Object.freeze({calcExpression:"a1/(1-r)",variables:[
     {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r",absLessThan:1}
