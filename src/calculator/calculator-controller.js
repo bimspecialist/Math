@@ -59,9 +59,35 @@ export class CalculatorController{
   _solveVariable(variable,initial){
     const source=this.field.getCanonicalExpression(),parts=source.split("=");if(parts.length!==2){this.result="INVALID_EQUATION";return false}
     const fn=x=>{const values={[variable]:x},left=evaluateExpression(this._replaceVariables(parts[0],values),{angleMode:this.state.angleMode,ans:this.ans}),right=evaluateExpression(this._replaceVariables(parts[1],values),{angleMode:this.state.angleMode,ans:this.ans});if(left.kind!=="value"||right.kind!=="value")return NaN;return left.numeric-right.numeric};
-    let x=initial;
-    for(let i=0;i<64;i++){const y=fn(x);if(!Number.isFinite(y)){this.result="SOLVE_ERROR";return false}if(Math.abs(y)<1e-12)break;const h=1e-6*Math.max(1,Math.abs(x)),d=(fn(x+h)-fn(x-h))/(2*h);if(!Number.isFinite(d)||Math.abs(d)<1e-12){x+=1;continue}const next=x-y/d;if(!Number.isFinite(next)){this.result="SOLVE_ERROR";return false}if(Math.abs(next-x)<1e-12){x=next;break}x=next}
-    const numeric=Number(x.toPrecision(14));this.lastResult={kind:"value",numeric,exact:Number.isInteger(numeric)?String(numeric):undefined};this.ans=String(numeric);this.engineeringExponent=null;this._refreshResult();return true
+    let x=initial,converged=false;
+    for(let i=0;i<64;i++){
+      const y=fn(x);if(!Number.isFinite(y)){this.result="SOLVE_ERROR";return false}
+      if(Math.abs(y)<1e-10){converged=true;break}
+      const h=1e-6*Math.max(1,Math.abs(x)),fp=fn(x+h),fm=fn(x-h),d=(fp-fm)/(2*h);
+      if(!Number.isFinite(d)||Math.abs(d)<1e-12)break;
+      const next=x-y/d;if(!Number.isFinite(next)||Math.abs(next)>1e12)break;
+      if(Math.abs(next-x)<1e-12*Math.max(1,Math.abs(next))){x=next;converged=Math.abs(fn(x))<1e-8;break}
+      x=next;
+    }
+    if(!converged){
+      let radius=Math.max(0.5,Math.abs(initial)*0.25),a=null,b=null,fa=null,fb=null;
+      for(let attempt=0;attempt<12;attempt++){
+        const lo=initial-radius,hi=initial+radius,flo=fn(lo),fhi=fn(hi);
+        if(Number.isFinite(flo)&&Number.isFinite(fhi)&&flo*fhi<=0){a=lo;b=hi;fa=flo;fb=fhi;break}
+        radius*=2;
+      }
+      if(a!==null){
+        for(let i=0;i<100;i++){
+          const mid=(a+b)/2,fm=fn(mid);if(!Number.isFinite(fm))break;
+          x=mid;
+          if(Math.abs(fm)<1e-10||Math.abs(b-a)<1e-12*Math.max(1,Math.abs(mid))){converged=true;break}
+          if(fa*fm<=0){b=mid;fb=fm}else{a=mid;fa=fm}
+        }
+        if(!converged)converged=Math.abs(fn(x))<1e-8;
+      }
+    }
+    if(!converged||!Number.isFinite(fn(x))||Math.abs(fn(x))>=1e-8){this.lastResult=null;this.result="SOLVE_NO_CONVERGENCE";return false}
+    const numeric=Number(x.toPrecision(14));this.lastResult={kind:"value",numeric,exact:Number.isSafeInteger(numeric)?String(numeric):undefined};this.ans=String(numeric);this.engineeringExponent=null;this._refreshResult();return true
   }
   _applyEngineering(){
     const n=this.lastResult.numeric;if(!Number.isFinite(n)){return false}if(n===0){this.result="0×10^0";this.engineeringExponent=0;return true}
