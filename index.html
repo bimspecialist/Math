@@ -120,7 +120,11 @@
           <div class="advanced-panel">
             <h2 data-i18n="advancedTitle">Advanced Solver</h2>
             <p class="advanced-note" data-i18n="advancedDescription">Enter an expression or equation. For systems, put each equation on a separate line.</p>
-            <label><span data-i18n="equation">Equation</span><textarea id="advanced-input" dir="ltr" spellcheck="false">x^2-4=0</textarea></label>
+            <div class="advanced-toolbar">
+              <label><span data-i18n="angleMode">Angle mode</span><select id="advanced-angle-mode"><option value="RAD" selected data-i18n="radians">Radians</option><option value="DEG" data-i18n="degrees">Degrees</option></select></label>
+              <p id="advanced-angle-hint" class="advanced-note" data-i18n="advancedAngleHint">The selected angle mode is used consistently for expressions, equations, limits, and numerical roots.</p>
+            </div>
+            <label><span data-i18n="equation">Equation</span><textarea id="advanced-input" dir="ltr" spellcheck="false" aria-describedby="advanced-angle-hint">x^2-4=0</textarea></label>
             <div class="advanced-examples" data-i18n-aria-label="examples" aria-label="Examples">
               <button type="button" data-advanced-example="A*5=5*2^2">A*5=5*2^2</button>
               <button type="button" data-advanced-example="X^2+4">X^2+4</button>
@@ -140,6 +144,7 @@
               <label class="file-action"><span data-i18n="camera">Camera</span><input id="camera-upload" type="file" accept="image/*" capture="environment"></label>
             </div>
             <output id="advanced-result" class="advanced-result" aria-live="polite" data-i18n="readyToSolve">Ready to solve</output>
+            <p id="advanced-result-meta" class="advanced-result-meta" aria-live="polite"></p>
             <img id="scan-preview" data-i18n-alt="equationImagePreview" alt="Equation image preview" hidden style="max-width:100%;max-height:300px;margin-top:12px;border-radius:10px">
             <p id="scan-note" class="advanced-note" data-i18n="scanPrivacy">Images are not sent to any external provider in this version.</p>
           </div>
