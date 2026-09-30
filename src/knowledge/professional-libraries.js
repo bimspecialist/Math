@@ -70,15 +70,36 @@ export const PROFESSIONAL_LIBRARIES=Object.freeze([
   Object.freeze({
     id:"pmp",labelEn:"PMP / Earned Value Library",labelAr:"مكتبة PMP والقيمة المكتسبة",descriptionEn:"Common earned-value and PERT formulas used in project-management practice.",descriptionAr:"قوانين شائعة للقيمة المكتسبة وPERT في إدارة المشاريع.",
     formulas:Object.freeze([
-      pf("cpi","Cost Performance Index (CPI)","مؤشر أداء التكلفة CPI","CPI = EV / AC","مؤشر أداء التكلفة = القيمة المكتسبة ÷ التكلفة الفعلية","EV / AC",[v("EV","Earned value (EV)","القيمة المكتسبة EV"),v("AC","Actual cost (AC)","التكلفة الفعلية AC")]),
-      pf("spi","Schedule Performance Index (SPI)","مؤشر أداء الجدول SPI","SPI = EV / PV","مؤشر أداء الجدول = القيمة المكتسبة ÷ القيمة المخططة","EV / PV",[v("EV","Earned value (EV)","القيمة المكتسبة EV"),v("PV","Planned value (PV)","القيمة المخططة PV")]),
-      pf("cv","Cost Variance (CV)","تباين التكلفة CV","CV = EV - AC","تباين التكلفة = القيمة المكتسبة - التكلفة الفعلية","EV - AC",[v("EV","Earned value (EV)","القيمة المكتسبة EV"),v("AC","Actual cost (AC)","التكلفة الفعلية AC")]),
-      pf("sv","Schedule Variance (SV)","تباين الجدول SV","SV = EV - PV","تباين الجدول = القيمة المكتسبة - القيمة المخططة","EV - PV",[v("EV","Earned value (EV)","القيمة المكتسبة EV"),v("PV","Planned value (PV)","القيمة المخططة PV")]),
-      pf("eac-cpi","Estimate at Completion (CPI trend)","التقدير عند الإكمال باتجاه CPI","EAC = BAC / CPI","التقدير عند الإكمال = الميزانية عند الإكمال ÷ مؤشر أداء التكلفة","BAC / CPI",[v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC"),v("CPI","Cost performance index","مؤشر أداء التكلفة")]),
-      pf("eac-remaining","Estimate at Completion (remaining work)","التقدير عند الإكمال للعمل المتبقي","EAC = AC + (BAC - EV)","التقدير عند الإكمال = التكلفة الفعلية + (الميزانية عند الإكمال - القيمة المكتسبة)","AC + (BAC - EV)",[v("AC","Actual cost (AC)","التكلفة الفعلية AC"),v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC"),v("EV","Earned value (EV)","القيمة المكتسبة EV")]),
-      pf("vac","Variance at Completion (VAC)","التباين عند الإكمال VAC","VAC = BAC - EAC","التباين عند الإكمال = الميزانية عند الإكمال - التقدير عند الإكمال","BAC - EAC",[v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC"),v("EAC","Estimate at completion (EAC)","التقدير عند الإكمال EAC")]),
-      pf("tcpi","To-Complete Performance Index","مؤشر الأداء لإكمال العمل TCPI","TCPI = (BAC - EV) / (BAC - AC)","مؤشر الأداء لإكمال العمل = (BAC - EV) ÷ (BAC - AC)","(BAC - EV) / (BAC - AC)",[v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC"),v("EV","Earned value (EV)","القيمة المكتسبة EV"),v("AC","Actual cost (AC)","التكلفة الفعلية AC")]),
-      pf("pert","PERT Expected Duration","المدة المتوقعة بطريقة PERT","TE = (O + 4M + P) / 6","المدة المتوقعة = (المتفائل + 4×الأرجح + المتشائم) ÷ 6","(O + 4 * M + P) / 6",[v("O","Optimistic duration","المدة المتفائلة"),v("M","Most likely duration","المدة الأرجح"),v("P","Pessimistic duration","المدة المتشائمة")])
+      pf("cpi","Cost Performance Index (CPI)","مؤشر أداء التكلفة CPI","CPI = EV / AC","مؤشر أداء التكلفة = القيمة المكتسبة ÷ التكلفة الفعلية","EV / AC",[v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{exclusiveMin:0})]),
+      pf("spi","Schedule Performance Index (SPI)","مؤشر أداء الجدول SPI","SPI = EV / PV","مؤشر أداء الجدول = القيمة المكتسبة ÷ القيمة المخططة","EV / PV",[v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("PV","Planned value (PV)","القيمة المخططة PV","",{exclusiveMin:0})]),
+      pf("cv","Cost Variance (CV)","تباين التكلفة CV","CV = EV - AC","تباين التكلفة = القيمة المكتسبة - التكلفة الفعلية","EV - AC",[v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0})]),
+      pf("sv","Schedule Variance (SV)","تباين الجدول SV","SV = EV - PV","تباين الجدول = القيمة المكتسبة - القيمة المخططة","EV - PV",[v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("PV","Planned value (PV)","القيمة المخططة PV","",{min:0})]),
+      pf("eac-cpi","Estimate at Completion (CPI trend)","التقدير عند الإكمال باتجاه CPI","EAC = BAC / CPI","التقدير عند الإكمال = الميزانية عند الإكمال ÷ مؤشر أداء التكلفة","BAC / CPI",[v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),v("CPI","Cost performance index","مؤشر أداء التكلفة","",{exclusiveMin:0})]),
+      pf("eac-cpi-spi","Estimate at Completion (CPI × SPI)","التقدير عند الإكمال باستخدام CPI × SPI","EAC = AC + (BAC - EV) / (CPI × SPI)","التقدير عند الإكمال = التكلفة الفعلية + (BAC - EV) ÷ (CPI × SPI)","AC + (BAC - EV) / (CPI * SPI)",[
+        v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0}),v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),
+        v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("CPI","Cost performance index","مؤشر أداء التكلفة","",{exclusiveMin:0}),v("SPI","Schedule performance index","مؤشر أداء الجدول","",{exclusiveMin:0})
+      ]),
+      pf("eac-remaining","Estimate at Completion (remaining work)","التقدير عند الإكمال للعمل المتبقي","EAC = AC + (BAC - EV)","التقدير عند الإكمال = التكلفة الفعلية + (الميزانية عند الإكمال - القيمة المكتسبة)","AC + (BAC - EV)",[v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0}),v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0})]),
+      pf("etc","Estimate to Complete (ETC)","التقدير لإكمال العمل ETC","ETC = EAC - AC","التقدير لإكمال العمل = التقدير عند الإكمال - التكلفة الفعلية","EAC - AC",[v("EAC","Estimate at completion (EAC)","التقدير عند الإكمال EAC","",{min:0}),v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0})],"",[{kind:"gte",left:"EAC",right:"AC",code:"EAC_BELOW_AC"}]),
+      pf("vac","Variance at Completion (VAC)","التباين عند الإكمال VAC","VAC = BAC - EAC","التباين عند الإكمال = الميزانية عند الإكمال - التقدير عند الإكمال","BAC - EAC",[v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),v("EAC","Estimate at completion (EAC)","التقدير عند الإكمال EAC","",{min:0})]),
+      pf("percent-complete","Percent Complete by Earned Value","نسبة الإنجاز بالقيمة المكتسبة","%Complete = EV / BAC × 100","نسبة الإنجاز = القيمة المكتسبة ÷ BAC × 100","EV / BAC * 100",[v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{exclusiveMin:0})],"%"),
+      pf("percent-spent","Percent of Budget Spent","نسبة الميزانية المصروفة","%Spent = AC / BAC × 100","نسبة الميزانية المصروفة = التكلفة الفعلية ÷ BAC × 100","AC / BAC * 100",[v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0}),v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{exclusiveMin:0})],"%"),
+      pf("tcpi","To-Complete Performance Index — BAC Target","مؤشر الأداء لإكمال العمل — هدف BAC","TCPI = (BAC - EV) / (BAC - AC)","مؤشر الأداء لإكمال العمل = (BAC - EV) ÷ (BAC - AC)","(BAC - EV) / (BAC - AC)",[
+        v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0})
+      ],"",[{kind:"gt",left:"BAC",right:"AC",code:"TCPI_TARGET_EXHAUSTED"}]),
+      pf("tcpi-eac","To-Complete Performance Index — EAC Target","مؤشر الأداء لإكمال العمل — هدف EAC","TCPI = (BAC - EV) / (EAC - AC)","مؤشر الأداء لإكمال العمل = (BAC - EV) ÷ (EAC - AC)","(BAC - EV) / (EAC - AC)",[
+        v("BAC","Budget at completion (BAC)","الميزانية عند الإكمال BAC","",{min:0}),v("EV","Earned value (EV)","القيمة المكتسبة EV","",{min:0}),
+        v("EAC","Estimate at completion (EAC)","التقدير عند الإكمال EAC","",{min:0}),v("AC","Actual cost (AC)","التكلفة الفعلية AC","",{min:0})
+      ],"",[{kind:"gt",left:"EAC",right:"AC",code:"TCPI_TARGET_EXHAUSTED"}]),
+      pf("pert","PERT Expected Duration","المدة المتوقعة بطريقة PERT","TE = (O + 4M + P) / 6","المدة المتوقعة = (المتفائل + 4×الأرجح + المتشائم) ÷ 6","(O + 4 * M + P) / 6",[
+        v("O","Optimistic duration","المدة المتفائلة","",{min:0}),v("M","Most likely duration","المدة الأرجح","",{min:0}),v("P","Pessimistic duration","المدة المتشائمة","",{min:0})
+      ],"",[{kind:"lte",left:"O",right:"M",code:"PERT_ESTIMATE_ORDER"},{kind:"lte",left:"M",right:"P",code:"PERT_ESTIMATE_ORDER"}]),
+      pf("pert-stddev","PERT Standard Deviation","الانحراف المعياري لـPERT","σ = (P - O) / 6","الانحراف المعياري = (المتشائم - المتفائل) ÷ 6","(P - O) / 6",[
+        v("O","Optimistic duration","المدة المتفائلة","",{min:0}),v("P","Pessimistic duration","المدة المتشائمة","",{min:0})
+      ],"",[{kind:"lte",left:"O",right:"P",code:"PERT_ESTIMATE_ORDER"}]),
+      pf("pert-variance","PERT Variance","تباين PERT","Variance = ((P - O) / 6)²","التباين = ((المتشائم - المتفائل) ÷ 6)²","((P - O) / 6)^2",[
+        v("O","Optimistic duration","المدة المتفائلة","",{min:0}),v("P","Pessimistic duration","المدة المتشائمة","",{min:0})
+      ],"",[{kind:"lte",left:"O",right:"P",code:"PERT_ESTIMATE_ORDER"}])
     ])
   })
 ]);

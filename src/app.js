@@ -394,7 +394,7 @@ function calculateFormulaDetail(){
   if(!detail.calculator){result.textContent=translate(locale,"referenceSubstitution");return}
   const evaluated=detail.professional?evaluateProfessionalFormula(detail.professional,values):evaluateFormulaDefinition(detail.calculator,values);
   if(!evaluated.ok){
-    const codeMap={MISSING_VALUE:"missingValue",INVALID_VALUE:"invalidValue",VALUE_BELOW_MINIMUM:"valueBelowMinimum",VALUE_ABOVE_MAXIMUM:"valueAboveMaximum",OUTSIDE_FORMULA_DOMAIN:"outsideFormulaDomain",DIVISION_BY_ZERO:"DIVISION_BY_ZERO",DOMAIN_ERROR:"DOMAIN_ERROR",NONPOSITIVE_CONTRIBUTION_MARGIN:"nonpositiveContributionMargin",LOAD_OUTSIDE_SPAN:"loadOutsideSpan",INTEGER_REQUIRED:"INTEGER_REQUIRED"};
+    const codeMap={MISSING_VALUE:"missingValue",INVALID_VALUE:"invalidValue",VALUE_BELOW_MINIMUM:"valueBelowMinimum",VALUE_ABOVE_MAXIMUM:"valueAboveMaximum",OUTSIDE_FORMULA_DOMAIN:"outsideFormulaDomain",DIVISION_BY_ZERO:"DIVISION_BY_ZERO",DOMAIN_ERROR:"DOMAIN_ERROR",NONPOSITIVE_CONTRIBUTION_MARGIN:"nonpositiveContributionMargin",LOAD_OUTSIDE_SPAN:"loadOutsideSpan",INTEGER_REQUIRED:"INTEGER_REQUIRED",PERT_ESTIMATE_ORDER:"pertEstimateOrder",TCPI_TARGET_EXHAUSTED:"tcpiTargetExhausted",EAC_BELOW_AC:"eacBelowActualCost"};
     result.textContent=translate(locale,codeMap[evaluated.code]??evaluated.code);
     return;
   }
