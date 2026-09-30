@@ -44,11 +44,23 @@ function validateVariable(variable,numeric){
 function validateRule(rule,values){
   if(!rule)return null;
   const left=Number(values[rule.left]),right=Number(values[rule.right]);
+  if(rule.kind==="gtSum"){
+    const sum=left+right,target=Number(rule.value??0);
+    return Number.isFinite(sum)&&sum>target?null:(rule.code??"INVALID_VALUE");
+  }
+  if(rule.kind==="gteExpr"){
+    let expression=String(rule.expression??"");
+    for(const [key,value] of Object.entries(values))expression=expression.replace(new RegExp("\\b"+escapeRegExp(key)+"\\b","g"),"("+value+")");
+    const evaluated=evaluateExpression(expression,{angleMode:"DEG"});
+    const target=Number(rule.value??0);
+    return evaluated.kind==="value"&&evaluated.numeric>=target?null:(rule.code??"INVALID_VALUE");
+  }
   if(!Number.isFinite(left)||!Number.isFinite(right))return null;
   if(rule.kind==="gt"&&!(left>right))return rule.code??"INVALID_VALUE";
   if(rule.kind==="gte"&&!(left>=right))return rule.code??"INVALID_VALUE";
   if(rule.kind==="lt"&&!(left<right))return rule.code??"INVALID_VALUE";
   if(rule.kind==="lte"&&!(left<=right))return rule.code??"INVALID_VALUE";
+  if(rule.kind==="neq"&&left===right)return rule.code??"INVALID_VALUE";
   return null;
 }
 
