@@ -433,11 +433,11 @@ export function runMathLabScript(script,initialWorkspace={}){
       const command=source.match(/^(clear|clc|who|whos)(?:\s+(.*))?$/i);
       if(command){
         const cmd=command[1].toLowerCase(),arg=(command[2]??"").trim();
-        if(cmd==="clc"){events.push({type:"clear-output"});continue}
+        if(cmd==="clc"){events.push({type:"clear-output",line:i+1});continue}
         if(cmd==="clear"){
           if(!arg||arg.toLowerCase()==="all"){for(const key of Object.keys(workspace))delete workspace[key]}
           else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
-          events.push({type:"workspace-changed"});
+          events.push({type:"workspace-changed",line:i+1});
           continue;
         }
         const names=Object.keys(workspace).filter(name=>name!=="ans").sort();
