@@ -182,12 +182,24 @@ document.querySelector("#camera-upload")?.addEventListener("change",e=>handleIma
 
 const advancedInput=document.querySelector("#advanced-input");
 const advancedResult=document.querySelector("#advanced-result");
+const advancedAngleMode=document.querySelector("#advanced-angle-mode");
+const advancedResultMeta=document.querySelector("#advanced-result-meta");
 let lastAdvancedResult=null;
-document.querySelector("#advanced-solve")?.addEventListener("click",()=>{
-  const result=solveAdvancedInput(advancedInput?.value??"");
+function runAdvancedSolver(){
+  const angleMode=advancedAngleMode?.value??"RAD";
+  const result=solveAdvancedInput(advancedInput?.value??"",{angleMode});
   lastAdvancedResult=result;
   if(advancedResult){advancedResult.textContent=formatAdvancedResult(result,locale);advancedResult.dataset.kind=result.kind}
-});
+  if(advancedResultMeta){
+    const details=[];
+    details.push(`${translate(locale,"angleMode")}: ${angleMode}`);
+    if(result.kind==="numeric-root"&&Number.isFinite(result.iterations))details.push(`${translate(locale,"iterations")}: ${result.iterations}`);
+    if(result.kind==="numeric-root"&&result.bracket)details.push(`${translate(locale,"fallbackBracket")}: [${result.bracket.join(", ")}]`);
+    advancedResultMeta.textContent=details.join(" · ");
+  }
+}
+document.querySelector("#advanced-solve")?.addEventListener("click",runAdvancedSolver);
+advancedAngleMode?.addEventListener("change",()=>{if(lastAdvancedResult)runAdvancedSolver()});
 advancedInput?.addEventListener("keydown",event=>{
   if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();document.querySelector("#advanced-solve")?.click()}
 });
