@@ -13,7 +13,7 @@ import { SITE_CONFIG } from "./config/site-config.js";
 import { initAdSense } from "./monetization/adsense.js";
 import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
-import { calculateRamp } from "./construction/ramp-calculator.js";
+import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
@@ -704,18 +704,45 @@ function renderCalculatorCategories(){
 }
 renderCalculatorCategories();
 
-const rampRise=document.querySelector("#ramp-rise"),rampRun=document.querySelector("#ramp-run"),rampLength=document.querySelector("#ramp-length"),rampUnit=document.querySelector("#ramp-unit"),rampResult=document.querySelector("#ramp-result");
+const rampRise=document.querySelector("#ramp-rise"),rampRun=document.querySelector("#ramp-run"),rampLength=document.querySelector("#ramp-length"),rampUnit=document.querySelector("#ramp-unit"),rampResult=document.querySelector("#ramp-result"),rampDerivedNote=document.querySelector("#ramp-derived-note");
+const rampDesignRise=document.querySelector("#ramp-design-rise"),rampSlopeType=document.querySelector("#ramp-slope-type"),rampSlopeValue=document.querySelector("#ramp-slope-value"),rampDesignUnit=document.querySelector("#ramp-design-unit"),rampDesignResult=document.querySelector("#ramp-design-result");
+
+function rampResultHtml(result,unit){
+  return `<div><strong>${escHtml(translate(locale,"rampRise"))}</strong><span>${result.rise} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampRun"))}</strong><span>${result.run} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampLength"))}</strong><span>${result.length} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampAngle"))}</strong><span>${result.angleDeg}°</span></div><div><strong>${escHtml(translate(locale,"rampGrade"))}</strong><span>${result.gradePercent}%</span></div><div><strong>${escHtml(translate(locale,"rampRatio"))}</strong><span>${escHtml(result.ratioText)}</span></div>`;
+}
+
 function updateRampCalculator(){
   if(!rampResult)return;
   try{
     const result=calculateRamp({rise:rampRise?.value,run:rampRun?.value,length:rampLength?.value});
     const unit=rampUnit?.value??"";
-    rampResult.innerHTML=`<div><strong>${escHtml(translate(locale,"rampAngle"))}</strong><span>${result.angleDeg}°</span></div><div><strong>${escHtml(translate(locale,"rampGrade"))}</strong><span>${result.gradePercent}%</span></div><div><strong>${escHtml(translate(locale,"rampRatio"))}</strong><span>${escHtml(result.ratioText)}</span></div><div><strong>${escHtml(translate(locale,"rampRun"))}</strong><span>${result.run} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampLength"))}</strong><span>${result.length} ${escHtml(unit)}</span></div>`;
-  }catch(error){rampResult.textContent=translate(locale,error.message)||error.message}
+    rampResult.innerHTML=rampResultHtml(result,unit);
+    if(rampDerivedNote){
+      const key=result.derivedField==="verified"?"rampValuesVerified":result.derivedField==="rise"?"rampDerivedRise":result.derivedField==="run"?"rampDerivedRun":"rampDerivedLength";
+      rampDerivedNote.textContent=translate(locale,key);
+    }
+  }catch(error){
+    rampResult.textContent=translate(locale,error.message)||error.message;
+    if(rampDerivedNote)rampDerivedNote.textContent="";
+  }
 }
+
+function updateRampDesign(){
+  if(!rampDesignResult)return;
+  try{
+    const result=calculateRampFromSlope({rise:rampDesignRise?.value,slopeType:rampSlopeType?.value,slopeValue:rampSlopeValue?.value});
+    rampDesignResult.innerHTML=rampResultHtml(result,rampDesignUnit?.value??"");
+  }catch(error){
+    rampDesignResult.textContent=translate(locale,error.message)||error.message;
+  }
+}
+
 document.querySelector("#ramp-calculate")?.addEventListener("click",updateRampCalculator);
+document.querySelector("#ramp-design-calculate")?.addEventListener("click",updateRampDesign);
 for(const el of [rampRise,rampRun,rampLength,rampUnit])el?.addEventListener("input",updateRampCalculator);
+for(const el of [rampDesignRise,rampSlopeType,rampSlopeValue,rampDesignUnit])el?.addEventListener("input",updateRampDesign);
 updateRampCalculator();
+updateRampDesign();
 
 const CONSENT_KEY="math.analytics-consent";
 function enableAnalytics(){

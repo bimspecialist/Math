@@ -279,7 +279,34 @@ b</textarea></label>
         </section>
 
         <section id="ramp-section" class="page-section">
-          <div class="tool-page ramp-page"><div class="tool-page-head"><div><small data-i18n="constructionKicker">Construction</small><h2 data-i18n="rampTitle">Ramp Calculator</h2><p data-i18n="rampDescription">Enter any two measurements. All lengths must use the same unit.</p></div></div><div class="ramp-grid"><label><span data-i18n="rampRise">Rise</span><input id="ramp-rise" type="number" value="1" min="0" step="any"></label><label><span data-i18n="rampRun">Run</span><input id="ramp-run" type="number" value="12" min="0" step="any"></label><label><span data-i18n="rampLength">Ramp length</span><input id="ramp-length" type="number" min="0" step="any" placeholder="optional"></label><label><span data-i18n="unit">Unit</span><select id="ramp-unit"><option>m</option><option>cm</option><option>mm</option><option>ft</option><option>in</option></select></label><button id="ramp-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button></div><output id="ramp-result" class="ramp-result" aria-live="polite"></output><p class="advanced-note" data-i18n="rampCodeNote">This calculator gives geometry only. Check the building or accessibility code that applies to your project.</p></div>
+          <div class="tool-page ramp-page">
+            <div class="tool-page-head"><div><small data-i18n="constructionKicker">Construction</small><h2 data-i18n="rampTitle">Ramp Calculator</h2><p data-i18n="rampDescription">Enter any two measurements. If you enter all three, they must describe the same ramp.</p></div></div>
+            <section class="ramp-panel" aria-labelledby="ramp-geometry-title">
+              <h3 id="ramp-geometry-title" data-i18n="rampGeometryTitle">Geometry check</h3>
+              <div class="ramp-grid">
+                <label><span data-i18n="rampRise">Rise</span><input id="ramp-rise" type="number" value="1" min="0" step="any" inputmode="decimal"></label>
+                <label><span data-i18n="rampRun">Run</span><input id="ramp-run" type="number" value="12" min="0" step="any" inputmode="decimal"></label>
+                <label><span data-i18n="rampLength">Ramp length</span><input id="ramp-length" type="number" min="0" step="any" inputmode="decimal" data-i18n-placeholder="optional" placeholder="optional"></label>
+                <label><span data-i18n="unit">Unit</span><select id="ramp-unit"><option>m</option><option>cm</option><option>mm</option><option>ft</option><option>in</option></select></label>
+                <button id="ramp-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button>
+              </div>
+              <output id="ramp-result" class="ramp-result" aria-live="polite"></output>
+              <p id="ramp-derived-note" class="ramp-derived-note"></p>
+            </section>
+            <section class="ramp-panel" aria-labelledby="ramp-design-title">
+              <h3 id="ramp-design-title" data-i18n="rampDesignTitle">Design from slope</h3>
+              <p class="advanced-note" data-i18n="rampDesignHint">Enter the rise and one slope definition to calculate the required horizontal run and ramp length.</p>
+              <div class="ramp-design-grid">
+                <label><span data-i18n="rampRise">Rise</span><input id="ramp-design-rise" type="number" value="1" min="0" step="any" inputmode="decimal"></label>
+                <label><span data-i18n="slopeDefinition">Slope definition</span><select id="ramp-slope-type"><option value="ratio" data-i18n="slopeRatio">Run ratio 1:n</option><option value="grade" data-i18n="rampGrade">Grade %</option><option value="angle" data-i18n="rampAngle">Angle</option></select></label>
+                <label><span data-i18n="slopeValue">Slope value</span><input id="ramp-slope-value" type="number" value="12" min="0" step="any" inputmode="decimal"></label>
+                <label><span data-i18n="unit">Unit</span><select id="ramp-design-unit"><option>m</option><option>cm</option><option>mm</option><option>ft</option><option>in</option></select></label>
+                <button id="ramp-design-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button>
+              </div>
+              <output id="ramp-design-result" class="ramp-result" aria-live="polite"></output>
+            </section>
+            <p class="advanced-note" data-i18n="rampCodeNote">This calculator gives geometry only. Check the building or accessibility code that applies to your project.</p>
+          </div>
         </section>
 
         <section id="date-section" class="page-section">
