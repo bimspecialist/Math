@@ -440,7 +440,7 @@ export function runMathLabScript(script,initialWorkspace={}){
           events.push({type:"workspace-changed",line:i+1});
           continue;
         }
-        const names=Object.keys(workspace).filter(name=>name!=="ans").sort();
+        const names=Object.keys(workspace).sort();
         if(cmd==="who")outputs.push({line:i+1,source:raw,name:"",value:names.join("    ")||"(none)",kind:"who"});
         else outputs.push({line:i+1,source:raw,name:"",value:names.map(name=>({name,...describeMathLabValue(workspace[name])})),kind:"whos"});
         continue;
