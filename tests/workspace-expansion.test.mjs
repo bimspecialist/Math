@@ -340,7 +340,7 @@ test("Math Lab UI exposes a numerical sampling example",()=>{
 });
 
 
-test("Knowledge includes accounting civil environmental hydraulics and PMP professional libraries",async()=>{
+test("Knowledge includes accounting civil design construction environmental hydraulics and PMP professional libraries",async()=>{
   const {PROFESSIONAL_LIBRARIES,getProfessionalLibrary}=await import("../src/knowledge/professional-libraries.js");
   for(const id of ["accounting","civil","pmp"]){
     const library=getProfessionalLibrary(id);
@@ -353,7 +353,8 @@ test("Knowledge includes accounting civil environmental hydraulics and PMP profe
   assert.ok(hydraulics.formulas.length>=45,"hydraulics formula count");
   assert.ok(hydraulics.formulas.some(x=>x.calcExpression===null),"hydraulics reference-only relations");
   assert.ok(getProfessionalLibrary("environmental"));
-  assert.equal(PROFESSIONAL_LIBRARIES.length,5);
+  assert.ok(getProfessionalLibrary("design-construction"));
+  assert.equal(PROFESSIONAL_LIBRARIES.length,6);
 });
 
 test("professional formula workbench substitutes and calculates values safely",async()=>{
