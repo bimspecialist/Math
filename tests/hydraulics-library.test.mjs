@@ -117,3 +117,29 @@ test("Every Hydraulics formula has bilingual guidance",()=>{
     assert.ok(professionalFormulaExplanation("hydraulics",f.id,"ar"),f.id+" ar");
   }
 });
+
+
+test("Every calculable Hydraulics formula executes with a valid smoke-test dataset",()=>{
+  const lib=getProfessionalLibrary("hydraulics");
+  for(const formula of lib.formulas){
+    if(!formula.calcExpression)continue;
+    const values={};
+    for(const variable of formula.variables){
+      let value=variable.defaultValue!==""?Number(variable.defaultValue):1;
+      if(variable.exclusiveMin!==undefined&&value<=Number(variable.exclusiveMin))value=Number(variable.exclusiveMin)+1;
+      if(variable.min!==undefined&&value<Number(variable.min))value=Number(variable.min);
+      if(variable.max!==undefined&&value>Number(variable.max))value=Number(variable.max);
+      if(variable.nonZero&&value===0)value=1;
+      values[variable.id]=value;
+    }
+    for(const rule of formula.rules??[]){
+      if(rule.kind==="gt"){values[rule.left]=2;values[rule.right]=1}
+      else if(rule.kind==="gte"){values[rule.left]=2;values[rule.right]=1}
+      else if(rule.kind==="lt"){values[rule.left]=1;values[rule.right]=2}
+      else if(rule.kind==="lte"){values[rule.left]=1;values[rule.right]=2}
+    }
+    const result=evaluateProfessionalFormula(formula,values);
+    assert.equal(result.ok,true,`${formula.id}: ${result.code??"unknown"}`);
+    assert.ok(Number.isFinite(result.value),formula.id+" finite result");
+  }
+});
