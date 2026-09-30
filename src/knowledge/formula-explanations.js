@@ -1,3 +1,5 @@
+import { getProfessionalFormula } from "./professional-libraries.js";
+
 const PROFESSIONAL_EXPLANATIONS=Object.freeze({
   accounting:Object.freeze({
     "gross-profit":{en:"Shows the amount left from sales revenue after subtracting the direct cost of goods or services sold. It is used to evaluate the profitability of the core activity before operating expenses, finance costs, and tax.",ar:"يوضح المبلغ المتبقي من الإيرادات بعد طرح التكلفة المباشرة للبضاعة أو الخدمات المباعة. ويُستخدم لتقييم ربحية النشاط الأساسي قبل المصروفات التشغيلية وتكاليف التمويل والضرائب."},
@@ -55,8 +57,17 @@ const PROFESSIONAL_EXPLANATIONS=Object.freeze({
 
 export function professionalFormulaExplanation(libraryId,formulaId,locale="en"){
   const item=PROFESSIONAL_EXPLANATIONS[libraryId]?.[formulaId];
-  if(!item)return"";
-  return locale==="ar"?item.ar:item.en;
+  if(item)return locale==="ar"?item.ar:item.en;
+  const formula=getProfessionalFormula(libraryId,formulaId);
+  if(!formula)return"";
+  if(formula.noteEn&&locale!=="ar")return formula.noteEn;
+  if(libraryId==="hydraulics"){
+    const topic=locale==="ar"?(formula.topicAr??"الهيدروليكا"):(formula.topicEn??"Hydraulics");
+    return locale==="ar"
+      ?`قانون جامعي ضمن موضوع ${topic}. استخدم الوحدات الموضحة في أسماء المتغيرات، وتحقق من الفرضيات وحدود صلاحية العلاقة قبل تطبيقها على مسائل التصميم الواقعية.`
+      :`Undergraduate ${topic} relation. Use the units shown with each variable and verify the relation's assumptions and applicability before using it for real design work.`;
+  }
+  return"";
 }
 
 export function referenceFormulaExplanation(formula,locale="en"){
