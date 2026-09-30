@@ -136,6 +136,13 @@ test("date calculator computes day differences and date offsets without DST drif
   assert.equal(addDays("2024-02-28",1),"2024-02-29");
 });
 
+test("date calculator rejects fractional and invalid day offsets",async()=>{
+  const {addDays}=await import("../src/date/date-calculator.js");
+  assert.throws(()=>addDays("2026-01-31",0.5),/INVALID_OFFSET/);
+  assert.throws(()=>addDays("2026-01-31",Number.POSITIVE_INFINITY),/INVALID_OFFSET/);
+  assert.equal(addDays("2026-01-31",-1),"2026-01-30");
+});
+
 test("application shell exposes date calculation tool",()=>{
   const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
   const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");

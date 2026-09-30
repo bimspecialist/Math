@@ -11,7 +11,10 @@ export function daysBetween(start,end){
   return Math.round((parseIsoDate(end)-parseIsoDate(start))/86400000);
 }
 export function addDays(date,days){
-  const t=parseIsoDate(date)+Number(days)*86400000;
-  if(!Number.isFinite(t))throw new Error("INVALID_OFFSET");
-  return new Date(t).toISOString().slice(0,10);
+  const offset=Number(days);
+  if(!Number.isFinite(offset)||!Number.isInteger(offset))throw new Error("INVALID_OFFSET");
+  const t=parseIsoDate(date)+offset*86400000;
+  const dt=new Date(t);
+  if(!Number.isFinite(t)||Number.isNaN(dt.getTime()))throw new Error("INVALID_OFFSET");
+  return dt.toISOString().slice(0,10);
 }
