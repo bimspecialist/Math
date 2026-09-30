@@ -50,6 +50,7 @@ export const UI_STRINGS = Object.freeze({
     outsideFormulaDomain:"The value is outside the valid domain of this formula.",
     INTEGER_REQUIRED:"Use a whole number for this variable.",
     enterValues:"Enter the values",
+    viewReference:"View reference",
     missingValue:"Enter all required values.",
     invalidValue:"Use valid numeric values.",
     navToolsGroup:"Tools",
