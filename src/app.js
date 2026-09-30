@@ -7,7 +7,7 @@ import { runMathLabScript } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
-import { daysBetween, addDays } from "./date/date-calculator.js";
+import { daysBetween, addDateUnits, dateDifferenceDetails } from "./date/date-calculator.js";
 import { translate } from "./i18n/ui-strings.js";
 import { SITE_CONFIG } from "./config/site-config.js";
 import { initAdSense } from "./monetization/adsense.js";
@@ -635,12 +635,40 @@ const dateEnd=document.querySelector("#date-end");
 const dateDifference=document.querySelector("#date-difference");
 const dateBase=document.querySelector("#date-base");
 const dateOffset=document.querySelector("#date-offset");
+const dateUnit=document.querySelector("#date-unit");
 const dateOffsetResult=document.querySelector("#date-offset-result");
-function updateDateCalculator(){
-  try{if(dateStart&&dateEnd&&dateDifference){const days=daysBetween(dateStart.value,dateEnd.value);dateDifference.textContent=locale==="ar"?`${days} يومًا`:`${days} day${Math.abs(days)===1?"":"s"}`}}catch(error){if(dateDifference)dateDifference.textContent=error.message}
-  try{if(dateBase&&dateOffset&&dateOffsetResult)dateOffsetResult.textContent=addDays(dateBase.value,Number(dateOffset.value))}catch(error){if(dateOffsetResult)dateOffsetResult.textContent=error.message}
+const dateDifferenceDetailsEl=document.querySelector("#date-difference-details");
+const dateResultWeekday=document.querySelector("#date-result-weekday");
+function formatIsoWeekday(iso){
+  const dt=new Date(`${iso}T00:00:00Z`);
+  return new Intl.DateTimeFormat(locale==="ar"?"ar-SA":"en-US",{weekday:"long",timeZone:"UTC"}).format(dt);
 }
-for(const el of [dateStart,dateEnd,dateBase,dateOffset])el?.addEventListener("input",updateDateCalculator);
+function updateDateCalculator(){
+  try{
+    if(dateStart&&dateEnd&&dateDifference){
+      const details=dateDifferenceDetails(dateStart.value,dateEnd.value);
+      dateDifference.textContent=locale==="ar"?`${details.signedDays} يومًا`:`${details.signedDays} day${Math.abs(details.signedDays)===1?"":"s"}`;
+      if(dateDifferenceDetailsEl){
+        dateDifferenceDetailsEl.innerHTML=`<div><span>${escHtml(translate(locale,"absoluteDays"))}</span><strong>${details.absoluteDays}</strong></div><div><span>${escHtml(translate(locale,"inclusiveDays"))}</span><strong>${details.inclusiveDays}</strong></div><div><span>${escHtml(translate(locale,"weeksAndDays"))}</span><strong>${details.weeks} + ${details.remainingDays}</strong></div><div><span>${escHtml(translate(locale,"direction"))}</span><strong>${escHtml(translate(locale,details.signedDays<0?"backward":"forward"))}</strong></div>`;
+      }
+    }
+  }catch(error){
+    if(dateDifference)dateDifference.textContent=translate(locale,error.message);
+    if(dateDifferenceDetailsEl)dateDifferenceDetailsEl.innerHTML="";
+  }
+  try{
+    if(dateBase&&dateOffset&&dateOffsetResult){
+      const result=addDateUnits(dateBase.value,Number(dateOffset.value),dateUnit?.value??"days");
+      dateOffsetResult.textContent=result;
+      if(dateResultWeekday)dateResultWeekday.textContent=`${translate(locale,"weekday")}: ${formatIsoWeekday(result)}`;
+    }
+  }catch(error){
+    if(dateOffsetResult)dateOffsetResult.textContent=translate(locale,error.message);
+    if(dateResultWeekday)dateResultWeekday.textContent="";
+  }
+}
+for(const el of [dateStart,dateEnd,dateBase,dateOffset,dateUnit])el?.addEventListener("input",updateDateCalculator);
+document.querySelector("#date-swap")?.addEventListener("click",()=>{if(!dateStart||!dateEnd)return;const v=dateStart.value;dateStart.value=dateEnd.value;dateEnd.value=v;updateDateCalculator()});
 updateDateCalculator();
 
 applyLocale(locale);
