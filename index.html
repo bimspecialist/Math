@@ -263,10 +263,13 @@ b</textarea></label>
             <div class="programmer-grid">
               <label><span data-i18n="valueA">Value A</span><input id="programmer-input" dir="ltr" value="FF"></label>
               <label><span data-i18n="base">Base</span><select id="programmer-base"><option value="16">HEX</option><option value="10">DEC</option><option value="8">OCT</option><option value="2">BIN</option></select></label>
-              <label><span data-i18n="valueBShift">Value B / Shift</span><input id="programmer-b" dir="ltr" value="0F"></label>
-              <label><span data-i18n="operation">Operation</span><select id="programmer-op"><option value="convert" data-i18n="convert">Convert</option><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option><option value="shl" data-i18n="shiftLeft">Shift left</option><option value="shr" data-i18n="shiftRight">Shift right</option><option value="not" data-i18n="not64">NOT (64-bit)</option></select></label>
+              <label><span data-i18n="valueBShift">Value B / Shift</span><input id="programmer-b" dir="ltr" value="0F" aria-describedby="programmer-help"></label>
+              <label><span data-i18n="operation">Operation</span><select id="programmer-op"><option value="convert" data-i18n="convert">Convert</option><option value="and">AND</option><option value="or">OR</option><option value="xor">XOR</option><option value="shl" data-i18n="shiftLeft">Shift left</option><option value="shr" data-i18n="shiftRight">Shift right</option><option value="not">NOT</option></select></label>
+              <label><span data-i18n="wordSize">Word size</span><select id="programmer-word-size"><option value="8">8-bit</option><option value="16">16-bit</option><option value="32">32-bit</option><option value="64" selected>64-bit</option></select></label>
+              <label><span data-i18n="shiftMode">Right shift mode</span><select id="programmer-signed"><option value="unsigned" data-i18n="unsigned">Unsigned / logical</option><option value="signed" data-i18n="signed">Signed / arithmetic</option></select></label>
               <button id="programmer-run" type="button" class="advanced-solve" data-i18n="run">Run</button>
             </div>
+            <p id="programmer-help" class="tool-help" data-i18n="programmerHelp">Values are wrapped to the selected word size. Prefixes 0x, 0b, and 0o are accepted when they match the selected base.</p>
             <div id="programmer-result" class="programmer-result" aria-live="polite"></div>
           </div>
         </section>
