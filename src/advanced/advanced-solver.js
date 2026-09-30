@@ -30,9 +30,9 @@ function evalNumeric(source,variables=[],values=[],angleMode="DEG"){
   return evaluateExpression(substitute(source,variables,values),{angleMode,ans:"0"});
 }
 
-function differenceFunction(left,right,variables){
+function differenceFunction(left,right,variables,angleMode="RAD"){
   return values=>{
-    const a=evalNumeric(left,variables,values),b=evalNumeric(right,variables,values);
+    const a=evalNumeric(left,variables,values,angleMode),b=evalNumeric(right,variables,values,angleMode);
     if(a.kind!=="value"||b.kind!=="value")return NaN;
     return a.numeric-b.numeric;
   };
@@ -66,8 +66,8 @@ function quadraticRoots({a,b,c}){
   return{roots:[`${re}-${imag}`,`${re}+${imag}`],degree:2,complex:true};
 }
 
-function solveSingleEquation(left,right,variable){
-  const f=differenceFunction(left,right,[variable]);
+function solveSingleEquation(left,right,variable,angleMode="RAD"){
+  const f=differenceFunction(left,right,[variable],angleMode);
   const poly=inferQuadratic(x=>f([x]));
   if(poly){
     const solved=quadraticRoots(poly);
@@ -78,8 +78,8 @@ function solveSingleEquation(left,right,variable){
   return{kind:"error",code:"NON_POLYNOMIAL_SOLVER_PENDING",variables:[variable]};
 }
 
-function inferLinearEquation(left,right,variables){
-  const f=differenceFunction(left,right,variables);
+function inferLinearEquation(left,right,variables,angleMode="RAD"){
+  const f=differenceFunction(left,right,variables,angleMode);
   const zeros=variables.map(()=>0),c=f(zeros);
   if(!Number.isFinite(c))return null;
   const coeffs=variables.map((_,i)=>{
@@ -151,10 +151,10 @@ function parametricFromRref(rr,variables){
   };
 }
 
-function solveLinearSystem(equations,variables){
+function solveLinearSystem(equations,variables,angleMode="RAD"){
   const rows=[];
   for(const {left,right} of equations){
-    const lin=inferLinearEquation(left,right,variables);
+    const lin=inferLinearEquation(left,right,variables,angleMode);
     if(!lin)return null;
     rows.push([...lin.coeffs,lin.rhs]);
   }
@@ -185,8 +185,8 @@ function solveNumericLinear(a,b){
   return m.map(r=>r[n]);
 }
 
-function nonlinearSystemFunctions(equations,variables){
-  return equations.map(({left,right})=>differenceFunction(left,right,variables));
+function nonlinearSystemFunctions(equations,variables,angleMode="RAD"){
+  return equations.map(({left,right})=>differenceFunction(left,right,variables,angleMode));
 }
 
 function residualNorm(fs,x){
@@ -222,9 +222,9 @@ function nonlinearSeeds(n){
 
 function samePoint(a,b){return a.every((v,i)=>Math.abs(v-b[i])<1e-6)}
 
-function solveNonlinearSystem(equations,variables){
+function solveNonlinearSystem(equations,variables,angleMode="RAD"){
   if(equations.length!==variables.length||variables.length<2||variables.length>2)return null;
-  const fs=nonlinearSystemFunctions(equations,variables),roots=[];
+  const fs=nonlinearSystemFunctions(equations,variables,angleMode),roots=[];
   for(const seed of nonlinearSeeds(variables.length)){
     let x=seed.slice(),ok=false;
     for(let iter=0;iter<60;iter++){
@@ -283,12 +283,12 @@ function elementaryCalculus(operation,source,variable){
   return null;
 }
 
-function estimateTwoSidedLimit(expression,variable,point){
+function estimateTwoSidedLimit(expression,variable,point,angleMode="RAD"){
   const hs=[1e-1,5e-2,1e-2,5e-3,1e-3,5e-4,1e-4,5e-5,1e-5,5e-6,1e-6];
   const left=[],right=[];
   for(const h of hs){
-    const lv=evalNumeric(expression,[variable],[point-h],"RAD");
-    const rv=evalNumeric(expression,[variable],[point+h],"RAD");
+    const lv=evalNumeric(expression,[variable],[point-h],angleMode);
+    const rv=evalNumeric(expression,[variable],[point+h],angleMode);
     if(lv.kind!=="value"||rv.kind!=="value"||!Number.isFinite(lv.numeric)||!Number.isFinite(rv.numeric))continue;
     left.push(lv.numeric);right.push(rv.numeric);
   }
@@ -302,29 +302,29 @@ function estimateTwoSidedLimit(expression,variable,point){
   return clean(last);
 }
 
-function numericRootFunction(equation,variable){
+function numericRootFunction(equation,variable,angleMode="RAD"){
   const parts=String(equation).split("=");
   if(parts.length===1)return values=>{
-    const r=evalNumeric(parts[0],[variable],values,"RAD");
+    const r=evalNumeric(parts[0],[variable],values,angleMode);
     return r.kind==="value"?r.numeric:NaN;
   };
   if(parts.length===2&&parts[0].trim()&&parts[1].trim())return values=>{
-    const a=evalNumeric(parts[0].trim(),[variable],values,"RAD");
-    const b=evalNumeric(parts[1].trim(),[variable],values,"RAD");
+    const a=evalNumeric(parts[0].trim(),[variable],values,angleMode);
+    const b=evalNumeric(parts[1].trim(),[variable],values,angleMode);
     if(a.kind!=="value"||b.kind!=="value")return NaN;
     return a.numeric-b.numeric;
   };
   return null;
 }
 
-function solveNumericRootNewton(equation,variable,guess){
-  const f=numericRootFunction(equation,variable);
+function solveNumericRootNewton(equation,variable,guess,angleMode="RAD"){
+  const f=numericRootFunction(equation,variable,angleMode);
   if(!f||!Number.isFinite(guess))return null;
   let x=guess;
   for(let i=0;i<80;i++){
     const fx=f([x]);
     if(!Number.isFinite(fx))return null;
-    if(Math.abs(fx)<1e-10)return{value:clean(x),residual:clean(fx),method:"newton"};
+    if(Math.abs(fx)<1e-10)return{value:clean(x),residual:clean(fx),method:"newton",iterations:i};
     const h=1e-6*Math.max(1,Math.abs(x));
     const fp=f([x+h]),fm=f([x-h]);
     if(!Number.isFinite(fp)||!Number.isFinite(fm))return null;
@@ -335,30 +335,48 @@ function solveNumericRootNewton(equation,variable,guess){
     if(Math.abs(next-x)<1e-12*Math.max(1,Math.abs(next))){
       x=next;
       const final=f([x]);
-      return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton"}:null;
+      return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton",iterations:i+1}:null;
     }
     x=next;
   }
   const final=f([x]);
-  return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton"}:null;
+  return Number.isFinite(final)&&Math.abs(final)<1e-8?{value:clean(x),residual:clean(final),method:"newton",iterations:80}:null;
 }
 
-function solveNumericRootBracket(equation,variable,min,max){
-  const f=numericRootFunction(equation,variable);
+function solveNumericRootBracket(equation,variable,min,max,angleMode="RAD"){
+  const f=numericRootFunction(equation,variable,angleMode);
   if(!f||!Number.isFinite(min)||!Number.isFinite(max)||!(min<max))return null;
   let a=min,b=max,fa=f([a]),fb=f([b]);
   if(!Number.isFinite(fa)||!Number.isFinite(fb))return null;
-  if(Math.abs(fa)<1e-10)return{value:clean(a),residual:clean(fa),method:"bisection"};
-  if(Math.abs(fb)<1e-10)return{value:clean(b),residual:clean(fb),method:"bisection"};
+  if(Math.abs(fa)<1e-10)return{value:clean(a),residual:clean(fa),method:"bisection",iterations:0};
+  if(Math.abs(fb)<1e-10)return{value:clean(b),residual:clean(fb),method:"bisection",iterations:0};
   if(fa*fb>0)return null;
   for(let i=0;i<120;i++){
     const m=(a+b)/2,fm=f([m]);
     if(!Number.isFinite(fm))return null;
-    if(Math.abs(fm)<1e-10||Math.abs(b-a)<1e-12*Math.max(1,Math.abs(m)))return{value:clean(m),residual:clean(fm),method:"bisection"};
+    if(Math.abs(fm)<1e-10||Math.abs(b-a)<1e-12*Math.max(1,Math.abs(m)))return{value:clean(m),residual:clean(fm),method:"bisection",iterations:i+1};
     if(fa*fm<=0){b=m;fb=fm}else{a=m;fa=fm}
   }
   const m=(a+b)/2,fm=f([m]);
-  return Number.isFinite(fm)?{value:clean(m),residual:clean(fm),method:"bisection"}:null;
+  return Number.isFinite(fm)?{value:clean(m),residual:clean(fm),method:"bisection",iterations:120}:null;
+}
+
+function solveNumericRootFromGuess(equation,variable,guess,angleMode="RAD"){
+  const direct=solveNumericRootNewton(equation,variable,guess,angleMode);
+  if(direct)return direct;
+  const f=numericRootFunction(equation,variable,angleMode);
+  if(!f)return null;
+  let radius=Math.max(0.5,Math.abs(guess)*0.25);
+  for(let attempt=0;attempt<12;attempt++){
+    const min=guess-radius,max=guess+radius;
+    const fa=f([min]),fb=f([max]);
+    if(Number.isFinite(fa)&&Number.isFinite(fb)&&fa*fb<=0){
+      const bracketed=solveNumericRootBracket(equation,variable,min,max,angleMode);
+      if(bracketed)return{...bracketed,method:"hybrid",bracket:[clean(min),clean(max)]};
+    }
+    radius*=2;
+  }
+  return null;
 }
 function parseEquations(source){
   const lines=source.split(/[\n;]/).map(s=>s.trim()).filter(Boolean);
@@ -370,8 +388,10 @@ function parseEquations(source){
   });
 }
 
-export function solveAdvancedInput(source){
+export function solveAdvancedInput(source,{angleMode="RAD"}={}){
   source=normalize(source);
+  angleMode=String(angleMode??"RAD").toUpperCase();
+  if(angleMode!=="RAD"&&angleMode!=="DEG")return{kind:"error",code:"INVALID_ANGLE_MODE"};
   const nsolveCall=source.match(/^nsolve\((.*)\)$/i);
   if(nsolveCall){
     const args=splitTopLevelArgs(nsolveCall[1]);
@@ -381,14 +401,14 @@ export function solveAdvancedInput(source){
     if(args.length===3){
       const guess=Number(args[2]);
       if(!Number.isFinite(guess))return{kind:"error",code:"INVALID_NUMERIC_SOLVE",variables:[variable]};
-      solved=solveNumericRootNewton(args[0],variable,guess);
+      solved=solveNumericRootFromGuess(args[0],variable,guess,angleMode);
     }else{
       const min=Number(args[2]),max=Number(args[3]);
       if(!Number.isFinite(min)||!Number.isFinite(max)||!(min<max))return{kind:"error",code:"INVALID_NUMERIC_SOLVE",variables:[variable]};
-      solved=solveNumericRootBracket(args[0],variable,min,max);
+      solved=solveNumericRootBracket(args[0],variable,min,max,angleMode);
     }
     if(!solved)return{kind:"error",code:"NO_NUMERIC_ROOT",variables:[variable]};
-    return{kind:"numeric-root",variable,value:solved.value,residual:solved.residual,method:solved.method};
+    return{kind:"numeric-root",variable,value:solved.value,residual:solved.residual,method:solved.method,iterations:solved.iterations,angleMode,bracket:solved.bracket};
   }
   const limitCall=source.match(/^limit\((.*)\)$/i);
   if(limitCall){
@@ -396,9 +416,9 @@ export function solveAdvancedInput(source){
     if(args.length!==3||!/^[A-Za-z]$/.test(args[1]))return{kind:"error",code:"INVALID_LIMIT"};
     const variable=args[1],point=Number(args[2]);
     if(!Number.isFinite(point))return{kind:"error",code:"INVALID_LIMIT"};
-    const value=estimateTwoSidedLimit(args[0],variable,point);
+    const value=estimateTwoSidedLimit(args[0],variable,point,angleMode);
     if(value===null)return{kind:"error",code:"LIMIT_DOES_NOT_EXIST",variables:[variable]};
-    return{kind:"limit",variable,point,value};
+    return{kind:"limit",variable,point,value,angleMode};
   }
   const transform=source.match(/^(expand|simplify)\((.*)\)$/i);
   if(transform){
@@ -426,10 +446,10 @@ export function solveAdvancedInput(source){
   const hasEquals=source.includes("=");
 
   if(!hasEquals){
-    if(vars.length===0)return evaluateExpression(source,{angleMode:"DEG",ans:"0"});
+    if(vars.length===0)return evaluateExpression(source,{angleMode,ans:"0"});
     if(vars.length===1){
       const variable=vars[0],poly=inferQuadratic(x=>{
-        const r=evalNumeric(source,[variable],[x]);return r.kind==="value"?r.numeric:NaN;
+        const r=evalNumeric(source,[variable],[x],angleMode);return r.kind==="value"?r.numeric:NaN;
       });
       if(!poly)return{kind:"error",code:"SYMBOLIC_ANALYSIS_PENDING",variables:vars};
       const solved=quadraticRoots(poly);
@@ -446,17 +466,17 @@ export function solveAdvancedInput(source){
 
   if(vars.length===0){
     if(equations.length!==1)return{kind:"error",code:"INVALID_EQUATION"};
-    const a=evaluateExpression(equations[0].left,{angleMode:"DEG",ans:"0"});
-    const b=evaluateExpression(equations[0].right,{angleMode:"DEG",ans:"0"});
+    const a=evaluateExpression(equations[0].left,{angleMode,ans:"0"});
+    const b=evaluateExpression(equations[0].right,{angleMode,ans:"0"});
     if(a.kind!=="value"||b.kind!=="value")return{kind:"error",code:"INVALID_EXPRESSION"};
     return{kind:"equation-check",equal:Math.abs(a.numeric-b.numeric)<EPS,left:a.numeric,right:b.numeric};
   }
 
-  if(equations.length===1&&vars.length===1)return solveSingleEquation(equations[0].left,equations[0].right,vars[0]);
+  if(equations.length===1&&vars.length===1)return solveSingleEquation(equations[0].left,equations[0].right,vars[0],angleMode);
 
-  const linear=solveLinearSystem(equations,vars);
+  const linear=solveLinearSystem(equations,vars,angleMode);
   if(linear)return linear;
-  const nonlinear=solveNonlinearSystem(equations,vars);
+  const nonlinear=solveNonlinearSystem(equations,vars,angleMode);
   if(nonlinear)return nonlinear;
   return{kind:"error",code:"NONLINEAR_SYSTEM_NOT_YET_SUPPORTED",variables:vars};
 }

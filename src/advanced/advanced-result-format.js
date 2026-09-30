@@ -26,6 +26,8 @@ const TEXT={
     numericRoot:"Numerical root",
     method:"Method",
     residual:"Residual",
+    iterations:"Iterations",
+    angleMode:"Angle mode",
     unknown:"Unknown result"
   },
   ar:{
@@ -53,6 +55,8 @@ const TEXT={
     numericRoot:"الجذر العددي",
     method:"الطريقة",
     residual:"الباقي",
+    iterations:"التكرارات",
+    angleMode:"وضع الزوايا",
     unknown:"نتيجة غير معروفة"
   }
 };
@@ -79,8 +83,10 @@ export function formatAdvancedResult(r,locale="en"){
   if(r.kind==="symbolic-transform"){const label=r.operation==="expand"?(locale==="ar"?"التوسيع":"Expanded"):(locale==="ar"?"التبسيط":"Simplified");return `${label}: ${r.expression}`;}
   if(r.kind==="limit")return locale==="ar"?`النهاية عندما ${r.variable} ← ${r.point}: ${r.value}`:`Limit as ${r.variable} → ${r.point}: ${r.value}`;
   if(r.kind==="numeric-root"){
-    const method=r.method==="bisection"?(locale==="ar"?"التنصيف":"Bisection"):(locale==="ar"?"نيوتن":"Newton");
-    return `${t.numericRoot}: ${r.variable} = ${r.value}\n${t.method}: ${method}\n${t.residual}: ${r.residual}`;
+    const method=r.method==="bisection"?(locale==="ar"?"التنصيف":"Bisection"):r.method==="hybrid"?(locale==="ar"?"هجين (نيوتن + تنصيف)":"Hybrid (Newton + bisection)"):(locale==="ar"?"نيوتن":"Newton");
+    const iterationLine=Number.isFinite(r.iterations)?`\n${t.iterations}: ${r.iterations}`:"";
+    const modeLine=r.angleMode?`\n${t.angleMode}: ${r.angleMode}`:"";
+    return `${t.numericRoot}: ${r.variable} = ${r.value}\n${t.method}: ${method}\n${t.residual}: ${r.residual}${iterationLine}${modeLine}`;
   }
   const suffix=r.variables?.length?` (${r.variables.join(", ")})`:"";
   return (t[r.code]??r.code??t.unknown)+suffix;
