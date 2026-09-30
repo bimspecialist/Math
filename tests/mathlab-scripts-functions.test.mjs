@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { runMathLabScript } from "../src/mathlab/math-lab-engine.js";
 
 test("Math Lab supports indexed scalar assignment",()=>{
@@ -89,4 +90,19 @@ test("Math Lab rejects indexed assignment to undefined variables",()=>{
   const r=runMathLabScript("A(1)=2");
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"UNDEFINED_VARIABLE");
+});
+
+
+test("Math Lab workspace editor exposes edit rename save delete controls",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  assert.match(index,/id="mathlab-variable-editor"/);
+  assert.match(index,/id="mathlab-editor-name"/);
+  assert.match(index,/id="mathlab-editor-value"/);
+  assert.match(index,/id="mathlab-editor-save"/);
+  assert.match(index,/id="mathlab-editor-delete"/);
+  assert.match(app,/openMathLabVariableEditor/);
+  assert.match(app,/mathLabLiteral/);
+  assert.match(app,/data-mathlab-edit/);
+  assert.match(app,/workspaceVariableSaved/);
 });
