@@ -1,3 +1,4 @@
+import { translate } from "../i18n/ui-strings.js";
 import { KEY_CONTRACT } from "./key-contract.js";
 import { PHYSICAL_LAYOUT_PROFILE } from "./physical-layout-profile.js";
 
@@ -21,8 +22,9 @@ function scientificKeyMarkup(key,cell){
     '</button>'+
   '</div>';
 }
-function resultMarkup(value){
-  const s=String(value??"");
+function resultMarkup(value,locale="en"){
+  const raw=String(value??"");
+  const s=/^[A-Z][A-Z0-9_]+$/.test(raw)?translate(locale,raw):raw;
   const mixed=s.match(/^(-?\d+)\s+(\d+)\/(\d+)$/);
   if(mixed)return '<span class="result-mixed"><span class="result-whole">'+esc(mixed[1])+'</span><span class="result-fraction"><span class="result-numerator">'+esc(mixed[2])+'</span><span class="result-denominator">'+esc(mixed[3])+'</span></span></span>';
   const frac=s.match(/^(-?\d+)\/(\d+)$/);
@@ -45,11 +47,11 @@ export function renderCalculatorMarkup(view,locale="en"){
   return '<section class="calculator-shell" dir="'+dir+'"><div class="calculator-face" dir="ltr">'+
     '<div class="calculator-brand"><div><strong>Math Scientific</strong><small>Natural Display</small></div><span>CLASSIC</span></div>'+
     '<div class="calculator-display"><div class="display-status" dir="ltr">'+
-      '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.state.mode)+'</span></div>'+
-      '<div class="math-input" dir="ltr" aria-label="Expression">'+(view.mathHtml||'<span class="math-placeholder">0</span>')+'</div>'+
-      '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(view.result)+'">'+resultMarkup(view.result)+'</output></div>'+
+      '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span class="'+(view.memory!==0?"active":"")+'">M</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.displayMode==="EXACT"?"EX":"DEC")+'</span><span>'+esc(view.state.mode)+'</span></div>'+
+      '<div class="math-input" dir="ltr" aria-label="'+esc(translate(locale,"expressionLabel"))+'">'+(view.mathHtml||'<span class="math-placeholder">0</span>')+'</div>'+
+      '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(/^[A-Z][A-Z0-9_]+$/.test(String(view.result??""))?translate(locale,String(view.result)):view.result)+'">'+resultMarkup(view.result,locale)+'</output></div>'+
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
-      '<div class="replay-pad" aria-label="Replay navigation"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
+      '<div class="replay-pad" aria-label="'+esc(translate(locale,"replayNavigation"))+'"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+'</div></div>'+
     '<div class="scientific-grid">'+scientific.map(({key,cell})=>scientificKeyMarkup(key,cell)).join("")+
     '</div><div class="numeric-grid">'+numeric.map(({key,cell})=>keyMarkup(key,cell)).join("")+'</div>'+menuMarkup(view)+promptMarkup(view)+'</div></section>';
