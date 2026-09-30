@@ -587,7 +587,7 @@ function renderProgrammer(){
     const base=Number(programmerBase.value),a=parseInteger(programmerInput.value,base);
     let value=a;
     if(programmerOp.value!=="convert"){
-      const b=parseInteger(programmerB?.value??"0",base);
+      const b=programmerOp.value==="not"?0n:parseInteger(programmerB?.value??"0",base);
       value=bitwise(programmerOp.value,a,b);
     }
     const d=describeInteger(value);
@@ -595,7 +595,7 @@ function renderProgrammer(){
   }catch(error){programmerResult.textContent=error.message}
 }
 document.querySelector("#programmer-run")?.addEventListener("click",renderProgrammer);
-programmerInput?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);
+programmerInput?.addEventListener("input",renderProgrammer);programmerB?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);
 renderProgrammer();
 
 const dateStart=document.querySelector("#date-start");
