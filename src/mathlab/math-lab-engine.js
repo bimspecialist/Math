@@ -250,11 +250,19 @@ function reshape(value,rows,cols){
   return Array.from({length:rows},(_,r)=>values.slice(r*cols,(r+1)*cols));
 }
 
+const MATHLAB_FUNCTIONS=new Set([
+  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","solve","linsolve",
+  "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
+  "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
+  "numel","rows","cols","size"
+]);
+
 function evalValue(source,workspace){
   const text=source.trim();
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
-  if(/^[A-Za-z][A-Za-z0-9_]*\(.*\)$/.test(text))return evalCommand(text,workspace);
+  const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\(.*\)$/);
+  if(nestedCall&&MATHLAB_FUNCTIONS.has(nestedCall[1].toLowerCase()))return evalCommand(text,workspace);
   return numericExpression(text,workspace);
 }
 
@@ -294,7 +302,7 @@ function evalCommand(expr,workspace){
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
     if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
-    throw new Error("UNKNOWN_FUNCTION");
+    return numericExpression(text,workspace);
   }
   return evalValue(text,workspace);
 }
