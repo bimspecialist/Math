@@ -150,8 +150,8 @@ test("application shell exposes date calculation tool",()=>{
   assert.match(index,/id="date-section"/);
   assert.match(index,/id="date-start"/);
   assert.match(index,/id="date-end"/);
-  assert.match(app,/daysBetween/);
-  assert.match(app,/addDays/);
+  assert.match(app,/dateDifferenceDetails/);
+  assert.match(app,/addDateUnits/);
 });
 
 test("English is the default site language and Arabic is the alternate locale",async()=>{
