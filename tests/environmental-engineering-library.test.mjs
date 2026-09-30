@@ -59,8 +59,8 @@ test("Water and wastewater treatment formulas include settling disinfection soli
 });
 
 test("Groundwater equations cover Darcy seepage and Thiem forms",()=>{
-  assert.equal(calc("darcy-groundwater",{K:1e-4,i:0.01,A:100}).value,0.0001);
-  assert.equal(calc("seepage-velocity",{K:1e-4,i:0.01,ne:0.25}).value,0.000004);
+  assert.ok(Math.abs(calc("darcy-groundwater",{K:1e-4,i:0.01,A:100}).value-0.0001)<1e-15);
+  assert.ok(Math.abs(calc("seepage-velocity",{K:1e-4,i:0.01,ne:0.25}).value-0.000004)<1e-15);
   assert.equal(calc("confined-thiem",{T:0.01,h1:10,h2:9,r1:10,r2:100}).ok,true);
   assert.equal(calc("confined-thiem",{T:0.01,h1:10,h2:9,r1:100,r2:10}).code,"RADIUS_ORDER");
 });

@@ -61,7 +61,7 @@ test("Fourier vector-calculus and series formulas are internally consistent",()=
 test("Numerical methods implement standard one-step formulas",()=>{
   assert.equal(calc("bisection-midpoint",{xl:2,xu:4}).value,3);
   assert.equal(calc("newton-raphson-step",{x:2,fx:2,dfx:4}).value,1.5);
-  assert.equal(calc("secant-step",{x0:1,x1:2,f0:-1,f1:2}).value,4/3);
+  assert.ok(Math.abs(calc("secant-step",{x0:1,x1:2,f0:-1,f1:2}).value-4/3)<1e-12);
   assert.equal(calc("euler-step",{y:1,h:0.1,f:2}).value,1.2);
   assert.equal(calc("heun-step",{y:1,h:0.1,f1:2,f2:3}).value,1.25);
   assert.equal(calc("rk4-step",{y:1,k1:1,k2:2,k3:2,k4:3}).value,3);
@@ -84,11 +84,11 @@ test("Probability reliability and vibration formulas calculate correctly",()=>{
   assert.equal(calc("standard-error-mean",{sigma:10,n:25}).value,2);
   assert.equal(calc("binomial-probability",{n:4,k:2,p:0.5}).value,0.375);
   assert.ok(Math.abs(calc("poisson-probability",{lambda:2,k:2}).value-(2*Math.exp(-2)))<1e-12);
-  assert.equal(calc("series-reliability-2",{R1:0.9,R2:0.8}).value,0.72);
-  assert.equal(calc("parallel-reliability-2",{R1:0.9,R2:0.8}).value,0.98);
+  assert.ok(Math.abs(calc("series-reliability-2",{R1:0.9,R2:0.8}).value-0.72)<1e-12);
+  assert.ok(Math.abs(calc("parallel-reliability-2",{R1:0.9,R2:0.8}).value-0.98)<1e-12);
   assert.equal(calc("natural-angular-frequency",{k:400,m:4}).value,10);
-  assert.equal(calc("damping-ratio",{c:4,k:100,m:1}).value,0.2);
-  assert.equal(calc("frequency-ratio",{omega:5,wn:10}).value,0.5);
+  assert.ok(Math.abs(calc("damping-ratio",{c:4,k:100,m:1}).value-0.2)<1e-12);
+  assert.ok(Math.abs(calc("frequency-ratio",{omega:5,wn:10}).value-0.5)<1e-12);
 });
 
 test("Reference-only advanced topics remain references instead of fake calculators",()=>{

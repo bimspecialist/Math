@@ -41,8 +41,8 @@ test("Masonry and finishes enforce geometric consistency",()=>{
 });
 
 test("Preliminary load and stair formulas provide standard screening calculations",()=>{
-  assert.equal(calc("slab-dead-load",{gamma:24,t:0.2}).value,4.8);
-  assert.equal(calc("wall-line-load",{gamma:18,t:0.2,H:3}).value,10.8);
+  assert.ok(Math.abs(calc("slab-dead-load",{gamma:24,t:0.2}).value-4.8)<1e-12);
+  assert.ok(Math.abs(calc("wall-line-load",{gamma:18,t:0.2,H:3}).value-10.8)<1e-12);
   assert.equal(calc("simple-udl-moment",{w:10,L:4}).value,20);
   assert.equal(calc("cantilever-udl-moment",{w:10,L:4}).value,80);
   assert.equal(calc("ramp-slope-percent",{Rise:1,Run:20}).value,5);

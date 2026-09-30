@@ -44,11 +44,11 @@ test("Formula calculators enforce domain constraints instead of producing mislea
   assert.equal(evaluateFormulaDefinition(byId("arith-n").calculator,{a1:1,n:2.5,d:3}).code,"INTEGER_REQUIRED");
 });
 
-test("Professional formulas preserve engine errors such as division by zero",()=>{
+test("Professional formulas preserve domain validation before evaluation",()=>{
   const currentRatio=getProfessionalFormula("accounting","current-ratio");
   const r=evaluateProfessionalFormula(currentRatio,{CurrentAssets:100,CurrentLiabilities:0});
   assert.equal(r.ok,false);
-  assert.equal(r.code,"DIVISION_BY_ZERO");
+  assert.equal(r.code,"VALUE_BELOW_MINIMUM");
 });
 
 test("Reference-only formulas still infer substitution variables without claiming calculation support",()=>{

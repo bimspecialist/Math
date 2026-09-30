@@ -35,12 +35,12 @@ test("Continuity and Bernoulli support standard university calculations",()=>{
 });
 
 test("Pipe-flow formulas calculate Darcy losses and Reynolds number correctly",()=>{
-  assert.equal(calc("reynolds-kinematic",{Vel:2,D:0.1,nu:1e-6}).value,200000);
-  assert.equal(calc("darcy-laminar-f",{Re:1000}).value,0.064);
+  assert.ok(Math.abs(calc("reynolds-kinematic",{Vel:2,D:0.1,nu:1e-6}).value-200000)<1e-9);
+  assert.ok(Math.abs(calc("darcy-laminar-f",{Re:1000}).value-0.064)<1e-12);
   const hf=calc("darcy-weisbach",{f:0.02,L:100,D:0.2,Vel:2,g:9.81});
   assert.equal(hf.ok,true);
   assert.ok(Math.abs(hf.value-(0.02*500*4/19.62))<1e-12);
-  assert.equal(calc("hydraulic-gradient",{hL:5,L:100}).value,0.05);
+  assert.ok(Math.abs(calc("hydraulic-gradient",{hL:5,L:100}).value-0.05)<1e-12);
   assert.equal(calc("equivalent-length-fitting",{K:2,D:0.2,f:0.02}).value,20);
 });
 

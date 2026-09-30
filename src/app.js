@@ -494,6 +494,11 @@ const mathLabWorkspace=document.querySelector("#mathlab-workspace");
 const mathLabWorkspaceBody=document.querySelector("#mathlab-workspace-body");
 const mathLabHistoryEl=document.querySelector("#mathlab-history");
 const mathLabStatus=document.querySelector("#mathlab-status");
+const mathLabVariableEditor=document.querySelector("#mathlab-variable-editor");
+const mathLabEditorName=document.querySelector("#mathlab-editor-name");
+const mathLabEditorValue=document.querySelector("#mathlab-editor-value");
+const mathLabEditorStatus=document.querySelector("#mathlab-editor-status");
+let mathLabEditingOriginalName="";
 let mathLabWorkspaceState={};
 let mathLabTranscript=[];
 let mathLabHistory=[];
@@ -529,13 +534,33 @@ function formatMathLabError(error){
   const line=error?.line?`${translate(locale,"mathLabErrorLine")} ${error.line}: `:"";
   return line+message;
 }
+function mathLabLiteral(value){
+  if(typeof value==="number")return String(value);
+  if(Array.isArray(value)&&value.every(Array.isArray))return "["+value.map(row=>row.join(" ")).join("; ")+"]";
+  if(Array.isArray(value))return "["+value.join(" ")+"]";
+  return String(value);
+}
+function closeMathLabVariableEditor(){
+  mathLabEditingOriginalName="";
+  if(mathLabVariableEditor)mathLabVariableEditor.hidden=true;
+  if(mathLabEditorStatus)mathLabEditorStatus.textContent="";
+}
+function openMathLabVariableEditor(name){
+  if(!Object.prototype.hasOwnProperty.call(mathLabWorkspaceState,name))return;
+  mathLabEditingOriginalName=name;
+  if(mathLabEditorName)mathLabEditorName.value=name;
+  if(mathLabEditorValue)mathLabEditorValue.value=mathLabLiteral(mathLabWorkspaceState[name]);
+  if(mathLabVariableEditor)mathLabVariableEditor.hidden=false;
+  if(mathLabEditorStatus)mathLabEditorStatus.textContent=translate(locale,"workspaceEditorHint");
+  mathLabEditorValue?.focus();
+}
 function renderMathLabWorkspace(){
   if(!mathLabWorkspaceBody)return;
   const entries=Object.entries(mathLabWorkspaceState).sort(([a],[b])=>a.localeCompare(b));
   mathLabWorkspaceBody.innerHTML=entries.length?entries.map(([name,value])=>{
     const meta=describeMathLabValue(value);
-    return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td></tr>`;
-  }).join(""):`<tr><td colspan="4" class="muted">${escHtml(translate(locale,"noVariables"))}</td></tr>`;
+    return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td><td><button type="button" class="mathlab-row-action" data-mathlab-edit="${escHtml(name)}">${escHtml(translate(locale,"edit"))}</button></td></tr>`;
+  }).join(""):`<tr><td colspan="5" class="muted">${escHtml(translate(locale,"noVariables"))}</td></tr>`;
 }
 function runMathLab(){
   if(!mathLabInput)return;
@@ -561,6 +586,7 @@ function runMathLab(){
 document.querySelector("#mathlab-run")?.addEventListener("click",runMathLab);
 document.querySelector("#mathlab-clear-workspace")?.addEventListener("click",()=>{
   mathLabWorkspaceState={};
+  closeMathLabVariableEditor();
   renderMathLabWorkspace();
   if(mathLabStatus)mathLabStatus.textContent=translate(locale,"workspaceCleared");
 });
@@ -573,6 +599,41 @@ document.querySelector("#mathlab-clear-history")?.addEventListener("click",()=>{
   mathLabHistory=[];
   renderMathLabHistory();
   if(mathLabStatus)mathLabStatus.textContent=translate(locale,"historyCleared");
+});
+mathLabWorkspaceBody?.addEventListener("click",event=>{
+  const button=event.target.closest("[data-mathlab-edit]");
+  if(button)openMathLabVariableEditor(button.dataset.mathlabEdit);
+});
+document.querySelector("#mathlab-editor-cancel")?.addEventListener("click",closeMathLabVariableEditor);
+document.querySelector("#mathlab-editor-save")?.addEventListener("click",()=>{
+  if(!mathLabEditingOriginalName)return;
+  const newName=(mathLabEditorName?.value??"").trim();
+  if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(newName)){
+    if(mathLabEditorStatus)mathLabEditorStatus.textContent=translate(locale,"invalidVariableName");
+    return;
+  }
+  if(newName!==mathLabEditingOriginalName&&Object.prototype.hasOwnProperty.call(mathLabWorkspaceState,newName)){
+    if(mathLabEditorStatus)mathLabEditorStatus.textContent=translate(locale,"variableNameExists");
+    return;
+  }
+  const parsed=runMathLabScript("__workspaceEdit = "+(mathLabEditorValue?.value??""),{});
+  if(!parsed.ok){
+    if(mathLabEditorStatus)mathLabEditorStatus.textContent=formatMathLabError(parsed.error);
+    return;
+  }
+  const nextValue=parsed.workspace.__workspaceEdit;
+  if(newName!==mathLabEditingOriginalName)delete mathLabWorkspaceState[mathLabEditingOriginalName];
+  mathLabWorkspaceState[newName]=nextValue;
+  renderMathLabWorkspace();
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"workspaceVariableSaved");
+  closeMathLabVariableEditor();
+});
+document.querySelector("#mathlab-editor-delete")?.addEventListener("click",()=>{
+  if(!mathLabEditingOriginalName)return;
+  delete mathLabWorkspaceState[mathLabEditingOriginalName];
+  renderMathLabWorkspace();
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"workspaceVariableDeleted");
+  closeMathLabVariableEditor();
 });
 mathLabHistoryEl?.addEventListener("click",event=>{
   const button=event.target.closest("[data-mathlab-history-index]");
