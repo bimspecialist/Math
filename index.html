@@ -219,7 +219,7 @@
                 <div class="mathlab-toolbar">
                   <button type="button" data-mathlab-example="A = (1:5)&#10;A&#10;A(3)&#10;A(2:4)&#10;whos" data-i18n="matlabBasics">MATLAB basics</button>
                   <button type="button" data-mathlab-example="a = 5;&#10;b = a^2 + 3;&#10;b&#10;ans" data-i18n="variables">Variables</button>
-                  <button type="button" data-mathlab-example="A = [1 2;3 4]&#10;det(A)&#10;transpose(A)" data-i18n="matrix">Matrix</button>
+                  <button type="button" data-mathlab-example="A = [1 2;3 4]&#10;B = [5 6;7 8]&#10;A*B&#10;A.*B&#10;A.^2&#10;A(1:end,2)" data-i18n="matrixOperators">Matrix operators</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;B = inv(A)&#10;matmul(A,B)&#10;trace(A)" data-i18n="advancedMatrix">Advanced matrix</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,2]&#10;eig(A)&#10;eigvec(A)" data-i18n="eigenAnalysis">Eigen analysis</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,-1]&#10;b = [5;1]&#10;x = solve(A,b)&#10;x" data-i18n="linearSystems">Linear systems</button>
@@ -239,7 +239,8 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabVectorCommands">Vectors</strong><code dir="ltr">norm · dot · cross · linspace</code></p>
                     <p><strong data-i18n="mathLabArrayCommands">Arrays</strong><code dir="ltr">eye · zeros · ones · diag · reshape · size · rows · cols · numel</code></p>
                     <p><strong data-i18n="mathLabWorkspaceCommands">Workspace</strong><code dir="ltr">ans · who · whos · clear · clc · ; suppress output</code></p>
-                    <p><strong data-i18n="mathLabRangeCommands">Ranges & indexing</strong><code dir="ltr">1:5 · 10:-2:2 · A(3) · A(2:4) · A(:,2)</code></p>
+                    <p><strong data-i18n="mathLabRangeCommands">Ranges & indexing</strong><code dir="ltr">1:5 · 10:-2:2 · A(3) · A(2:end) · A(:,end) · A(2:end,1:2)</code></p>
+                    <p><strong data-i18n="mathLabOperatorCommands">Matrix operators</strong><code dir="ltr">A+2 · A*B · A/B · A^2 · A' · A.*B · A./B · A.^2</code></p>
                   </div>
                 </details>
                 <div class="mathlab-actions">
