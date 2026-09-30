@@ -4,7 +4,7 @@ import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { runMathLabScript } from "./mathlab/math-lab-engine.js";
-import { CONVERTER_CATEGORIES, convertUnit, unitsFor } from "./converters/unit-converter.js";
+import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
 import { daysBetween, addDateUnits, dateDifferenceDetails } from "./date/date-calculator.js";
@@ -503,35 +503,53 @@ document.querySelectorAll("[data-mathlab-example]").forEach(button=>button.addEv
 renderMathLabWorkspace();
 
 let activeConverterCategory="length";
+const converterCategory=document.querySelector("#converter-category");
+const converterPrecision=document.querySelector("#converter-precision");
 const converterInput=document.querySelector("#converter-input");
 const converterFrom=document.querySelector("#converter-from");
 const converterTo=document.querySelector("#converter-to");
 const converterResult=document.querySelector("#converter-result");
+const converterFactor=document.querySelector("#converter-factor");
 function renderConverterUnits(){
   if(!converterFrom||!converterTo)return;
+  const previousFrom=converterFrom.value,previousTo=converterTo.value;
   const units=unitsFor(activeConverterCategory);
-  const options=units.map(u=>`<option value="${u}">${u}</option>`).join("");
+  const options=units.map(u=>`<option value="${escHtml(u)}">${escHtml(u)}</option>`).join("");
   converterFrom.innerHTML=options;converterTo.innerHTML=options;
-  if(units.length>1)converterTo.selectedIndex=1;
+  if(units.includes(previousFrom))converterFrom.value=previousFrom;
+  if(units.includes(previousTo))converterTo.value=previousTo;
+  if(converterFrom.value===converterTo.value&&units.length>1)converterTo.selectedIndex=1;
 }
 function updateConverter(){
   if(!converterInput||!converterFrom||!converterTo||!converterResult)return;
   try{
+    const digits=Number(converterPrecision?.value??12);
     const value=convertUnit(activeConverterCategory,converterInput.value,converterFrom.value,converterTo.value);
-    converterResult.textContent=`${converterInput.value} ${converterFrom.value} = ${Number(value.toPrecision(12))} ${converterTo.value}`;
-  }catch(error){converterResult.textContent=error.message}
+    const formatted=formatConversionValue(value,digits);
+    converterResult.textContent=`${converterInput.value} ${converterFrom.value} = ${formatted} ${converterTo.value}`;
+    if(converterFactor){
+      const factor=conversionFactor(activeConverterCategory,converterFrom.value,converterTo.value);
+      converterFactor.textContent=factor===null?translate(locale,"affineTemperatureConversion"):`${translate(locale,"conversionFactor")}: 1 ${converterFrom.value} = ${formatConversionValue(factor,digits)} ${converterTo.value}`;
+    }
+  }catch(error){
+    converterResult.textContent=translate(locale,error.message);
+    if(converterFactor)converterFactor.textContent="";
+  }
 }
 function selectConverterCategory(category){
   if(!CONVERTER_CATEGORIES[category])return;
   activeConverterCategory=category;
+  if(converterCategory)converterCategory.value=category;
   const title=document.querySelector("#converter-title");
-  const titleKey={length:"converterLength",volume:"converterVolume",mass:"converterMass",temperature:"converterTemperature",energy:"converterEnergy",area:"converterArea",speed:"converterSpeed",time:"converterTime",power:"converterPower",data:"converterData",pressure:"converterPressure",angle:"converterAngle"}[category];
+  const titleKey={length:"converterLength",volume:"converterVolume",mass:"converterMass",temperature:"converterTemperature",energy:"converterEnergy",area:"converterArea",speed:"converterSpeed",time:"converterTime",power:"converterPower",data:"converterData",pressure:"converterPressure",angle:"converterAngle",force:"converterForce",torque:"converterTorque",frequency:"converterFrequency",density:"converterDensity"}[category];
   if(title)title.textContent=(titleKey?translate(locale,titleKey)+" · ":"")+translate(locale,"converterTitle");
   renderConverterUnits();updateConverter();
 }
+converterCategory?.addEventListener("change",()=>selectConverterCategory(converterCategory.value));
+converterPrecision?.addEventListener("change",updateConverter);
 converterInput?.addEventListener("input",updateConverter);converterFrom?.addEventListener("change",updateConverter);converterTo?.addEventListener("change",updateConverter);
 document.querySelector("#converter-swap")?.addEventListener("click",()=>{if(!converterFrom||!converterTo)return;const a=converterFrom.value;converterFrom.value=converterTo.value;converterTo.value=a;updateConverter()});
-renderConverterUnits();updateConverter();
+selectConverterCategory(activeConverterCategory);
 
 const graphExpression=document.querySelector("#graph-expression");
 const graphMinX=document.querySelector("#graph-min-x");
