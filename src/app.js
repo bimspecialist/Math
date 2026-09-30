@@ -356,7 +356,11 @@ function renderFormulaDetail(){
   if(form)form.innerHTML=detail.variables.length?detail.variables.map(variable=>{
     const label=locale==="ar"?variable.labelAr:variable.labelEn;
     const value=formulaDetailValues[variable.id]??variable.defaultValue??"";
-    return `<label><span>${escHtml(label)}</span><input type="number" step="any" inputmode="decimal" required data-formula-variable="${escHtml(variable.id)}" value="${escHtml(value)}" aria-invalid="false"></label>`;
+    const min=variable.exclusiveMin!==undefined?Number(variable.exclusiveMin)+Number.EPSILON:variable.min;
+    const max=variable.max;
+    const step=variable.integer?"1":"any";
+    const attrs=[min!==undefined?`min="${escHtml(min)}"`:"",max!==undefined?`max="${escHtml(max)}"`:""].filter(Boolean).join(" ");
+    return `<label><span>${escHtml(label)}</span><input type="number" step="${step}" inputmode="decimal" required ${attrs} data-formula-variable="${escHtml(variable.id)}" value="${escHtml(value)}" aria-invalid="false"></label>`;
   }).join(""):`<p class="empty-state">${escHtml(translate(locale,"referenceSubstitution"))}</p>`;
   if(substitution)substitution.textContent="";
   if(result)result.textContent="";
@@ -390,7 +394,7 @@ function calculateFormulaDetail(){
   if(!detail.calculator){result.textContent=translate(locale,"referenceSubstitution");return}
   const evaluated=detail.professional?evaluateProfessionalFormula(detail.professional,values):evaluateFormulaDefinition(detail.calculator,values);
   if(!evaluated.ok){
-    const codeMap={MISSING_VALUE:"missingValue",INVALID_VALUE:"invalidValue",VALUE_BELOW_MINIMUM:"valueBelowMinimum",VALUE_ABOVE_MAXIMUM:"valueAboveMaximum",OUTSIDE_FORMULA_DOMAIN:"outsideFormulaDomain",DIVISION_BY_ZERO:"DIVISION_BY_ZERO",DOMAIN_ERROR:"DOMAIN_ERROR"};
+    const codeMap={MISSING_VALUE:"missingValue",INVALID_VALUE:"invalidValue",VALUE_BELOW_MINIMUM:"valueBelowMinimum",VALUE_ABOVE_MAXIMUM:"valueAboveMaximum",OUTSIDE_FORMULA_DOMAIN:"outsideFormulaDomain",DIVISION_BY_ZERO:"DIVISION_BY_ZERO",DOMAIN_ERROR:"DOMAIN_ERROR",NONPOSITIVE_CONTRIBUTION_MARGIN:"nonpositiveContributionMargin"};
     result.textContent=translate(locale,codeMap[evaluated.code]??evaluated.code);
     return;
   }
