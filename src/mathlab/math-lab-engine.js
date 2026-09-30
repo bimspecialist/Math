@@ -199,6 +199,29 @@ function variance(value){
   return values.reduce((sum,v)=>sum+(v-mean)**2,0)/(values.length-1);
 }
 
+function percentileMidpoint(value,pct){
+  const values=numericValues(value).slice().sort((a,b)=>a-b);
+  const p=Number(pct);
+  if(!Number.isFinite(p)||p<0||p>100)throw new Error("INVALID_PERCENTILE");
+  if(values.length===1)return values[0];
+  const first=50/values.length;
+  const last=100-first;
+  if(p<=first)return values[0];
+  if(p>=last)return values.at(-1);
+  const position=(p/100)*values.length+0.5;
+  const lower=Math.floor(position),upper=Math.ceil(position);
+  if(lower===upper)return values[lower-1];
+  const fraction=position-lower;
+  const result=values[lower-1]+(values[upper-1]-values[lower-1])*fraction;
+  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+}
+
+function quantileMidpoint(value,q){
+  const quantile=Number(q);
+  if(!Number.isFinite(quantile)||quantile<0||quantile>1)throw new Error("INVALID_QUANTILE");
+  return percentileMidpoint(value,quantile*100);
+}
+
 function dot(a,b){
   const av=numericValues(a),bv=numericValues(b);
   if(av.length!==bv.length)throw new Error("VECTOR_DIMENSION_MISMATCH");
@@ -257,6 +280,8 @@ function evalCommand(expr,workspace){
     if(fn==="max"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.max(...numericValues(args[0]))}
     if(fn==="var"||fn==="variance"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return variance(args[0])}
     if(fn==="std"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.sqrt(variance(args[0]))}
+    if(fn==="prctile"||fn==="percentile"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return percentileMidpoint(args[0],args[1])}
+    if(fn==="quantile"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return quantileMidpoint(args[0],args[1])}
     if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
     if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
