@@ -31,6 +31,7 @@ export function substituteFormula(formulaText,values={}){
 }
 
 function validateVariable(variable,numeric){
+  if(variable?.integer&&!Number.isInteger(numeric))return"INTEGER_REQUIRED";
   if(variable?.nonZero&&numeric===0)return"DIVISION_BY_ZERO";
   if(variable?.min!==undefined&&numeric<Number(variable.min))return"VALUE_BELOW_MINIMUM";
   if(variable?.exclusiveMin!==undefined&&numeric<=Number(variable.exclusiveMin))return"VALUE_BELOW_MINIMUM";
