@@ -220,6 +220,7 @@
                   <button type="button" data-mathlab-example="A = (1:5)&#10;A&#10;A(3)&#10;A(2:4)&#10;whos" data-i18n="matlabBasics">MATLAB basics</button>
                   <button type="button" data-mathlab-example="a = 5;&#10;b = a^2 + 3;&#10;b&#10;ans" data-i18n="variables">Variables</button>
                   <button type="button" data-mathlab-example="A = [1 2;3 4]&#10;B = [5 6;7 8]&#10;A*B&#10;A.*B&#10;A.^2&#10;A(1:end,2)" data-i18n="matrixOperators">Matrix operators</button>
+                  <button type="button" data-mathlab-example="function y = squarePlusOne(x)&#10;y = x.^2 + 1;&#10;end&#10;A = [1 2 3]&#10;B = squarePlusOne(A)" data-i18n="userFunctions">User functions</button>
                   <button type="button" data-mathlab-example="A = [1,2;3,4]&#10;B = inv(A)&#10;matmul(A,B)&#10;trace(A)" data-i18n="advancedMatrix">Advanced matrix</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,2]&#10;eig(A)&#10;eigvec(A)" data-i18n="eigenAnalysis">Eigen analysis</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,-1]&#10;b = [5;1]&#10;x = solve(A,b)&#10;x" data-i18n="linearSystems">Linear systems</button>
@@ -256,9 +257,19 @@ b</textarea></label>
                   <h3 data-i18n="workspace">Workspace</h3>
                   <div id="mathlab-workspace" class="mathlab-workspace">
                     <table class="mathlab-workspace-table">
-                      <thead><tr><th data-i18n="name">Name</th><th data-i18n="value">Value</th><th data-i18n="size">Size</th><th data-i18n="classLabel">Class</th></tr></thead>
-                      <tbody id="mathlab-workspace-body"><tr><td colspan="4" class="muted" data-i18n="noVariables">No variables yet</td></tr></tbody>
+                      <thead><tr><th data-i18n="name">Name</th><th data-i18n="value">Value</th><th data-i18n="size">Size</th><th data-i18n="classLabel">Class</th><th data-i18n="actions">Actions</th></tr></thead>
+                      <tbody id="mathlab-workspace-body"><tr><td colspan="5" class="muted" data-i18n="noVariables">No variables yet</td></tr></tbody>
                     </table>
+                  </div>
+                  <div id="mathlab-variable-editor" class="mathlab-variable-editor" hidden>
+                    <div class="mathlab-section-heading"><h4 data-i18n="workspaceEditor">Workspace Editor</h4><button id="mathlab-editor-cancel" type="button" class="mathlab-mini-action" data-i18n="cancel">Cancel</button></div>
+                    <label><span data-i18n="variableName">Variable name</span><input id="mathlab-editor-name" dir="ltr" autocomplete="off"></label>
+                    <label><span data-i18n="variableValue">Value / matrix</span><textarea id="mathlab-editor-value" dir="ltr" rows="4" spellcheck="false"></textarea></label>
+                    <div class="mathlab-editor-actions">
+                      <button id="mathlab-editor-save" type="button" class="advanced-solve" data-i18n="save">Save</button>
+                      <button id="mathlab-editor-delete" type="button" class="category-tool" data-i18n="delete">Delete</button>
+                    </div>
+                    <div id="mathlab-editor-status" class="tool-status" aria-live="polite"></div>
                   </div>
                 </section>
                 <section>
