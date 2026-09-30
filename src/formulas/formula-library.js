@@ -125,7 +125,59 @@ const EN_DESCRIPTIONS = Object.freeze({
   matmul:"Element rule for matrix multiplication."
 });
 
-export const FORMULAS = Object.freeze(RAW_FORMULAS.map(x=>Object.freeze({...x,descriptionEn:EN_DESCRIPTIONS[x.id]??x.titleEn})));
+const REFERENCE_CALCULATORS=Object.freeze({
+  slope:Object.freeze({calcExpression:"(y2-y1)/(x2-x1)",variables:[
+    {id:"x1",labelEn:"x₁",labelAr:"x₁"},{id:"y1",labelEn:"y₁",labelAr:"y₁"},
+    {id:"x2",labelEn:"x₂",labelAr:"x₂"},{id:"y2",labelEn:"y₂",labelAr:"y₂"}
+  ]}),
+  percent:Object.freeze({calcExpression:"part/whole*100",variables:[
+    {id:"part",labelEn:"Part",labelAr:"الجزء"},{id:"whole",labelEn:"Whole",labelAr:"الكل",nonZero:true}
+  ],unit:"%"}),
+  pyth:Object.freeze({calcExpression:"sqrt(a^2+b^2)",variables:[
+    {id:"a",labelEn:"Leg a",labelAr:"الضلع a",min:0},{id:"b",labelEn:"Leg b",labelAr:"الضلع b",min:0}
+  ]}),
+  "tri-area":Object.freeze({calcExpression:"b*h/2",variables:[
+    {id:"b",labelEn:"Base",labelAr:"القاعدة",min:0},{id:"h",labelEn:"Perpendicular height",labelAr:"الارتفاع العمودي",min:0}
+  ],unit:"²"}),
+  "rect-area":Object.freeze({calcExpression:"l*w",variables:[
+    {id:"l",labelEn:"Length",labelAr:"الطول",min:0},{id:"w",labelEn:"Width",labelAr:"العرض",min:0}
+  ],unit:"²"}),
+  "circle-area":Object.freeze({calcExpression:"pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"²"}),
+  "circle-circ":Object.freeze({calcExpression:"2*pi*r",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}]}),
+  "sphere-vol":Object.freeze({calcExpression:"4*pi*r^3/3",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"³"}),
+  "sphere-area":Object.freeze({calcExpression:"4*pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"²"}),
+  "cyl-vol":Object.freeze({calcExpression:"pi*r^2*h",variables:[
+    {id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0},{id:"h",labelEn:"Height",labelAr:"الارتفاع",min:0}
+  ],unit:"³"}),
+  "cone-vol":Object.freeze({calcExpression:"pi*r^2*h/3",variables:[
+    {id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0},{id:"h",labelEn:"Height",labelAr:"الارتفاع",min:0}
+  ],unit:"³"}),
+  zscore:Object.freeze({calcExpression:"(x-mu)/sigma",variables:[
+    {id:"x",labelEn:"Value x",labelAr:"القيمة x"},{id:"mu",labelEn:"Mean μ",labelAr:"المتوسط μ"},
+    {id:"sigma",labelEn:"Standard deviation σ",labelAr:"الانحراف المعياري σ",exclusiveMin:0}
+  ]}),
+  "arith-n":Object.freeze({calcExpression:"a1+(n-1)*d",variables:[
+    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1},
+    {id:"d",labelEn:"Common difference d",labelAr:"الفرق المشترك d"}
+  ]}),
+  "arith-sum":Object.freeze({calcExpression:"n*(a1+an)/2",variables:[
+    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1},{id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},
+    {id:"an",labelEn:"Nth term aₙ",labelAr:"الحد النوني aₙ"}
+  ]}),
+  "geo-n":Object.freeze({calcExpression:"a1*r^(n-1)",variables:[
+    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r"},
+    {id:"n",labelEn:"Term number n",labelAr:"رقم الحد n",min:1}
+  ]}),
+  "geo-sum":Object.freeze({calcExpression:"a1*(1-r^n)/(1-r)",variables:[
+    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r",notEqual:1},
+    {id:"n",labelEn:"Number of terms n",labelAr:"عدد الحدود n",min:1}
+  ]}),
+  "geo-inf":Object.freeze({calcExpression:"a1/(1-r)",variables:[
+    {id:"a1",labelEn:"First term a₁",labelAr:"الحد الأول a₁"},{id:"r",labelEn:"Common ratio r",labelAr:"النسبة المشتركة r",absLessThan:1}
+  ]})
+});
+
+export const FORMULAS = Object.freeze(RAW_FORMULAS.map(x=>Object.freeze({...x,descriptionEn:EN_DESCRIPTIONS[x.id]??x.titleEn,calculator:REFERENCE_CALCULATORS[x.id]??null})));
 
 export function filterFormulas({category="all",query=""}={}){
   const q=String(query).trim().toLowerCase();
