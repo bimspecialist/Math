@@ -603,22 +603,31 @@ const programmerInput=document.querySelector("#programmer-input");
 const programmerBase=document.querySelector("#programmer-base");
 const programmerB=document.querySelector("#programmer-b");
 const programmerOp=document.querySelector("#programmer-op");
+const programmerWordSize=document.querySelector("#programmer-word-size");
+const programmerSigned=document.querySelector("#programmer-signed");
 const programmerResult=document.querySelector("#programmer-result");
+function updateProgrammerOperandState(){
+  if(!programmerB||!programmerOp)return;
+  programmerB.disabled=programmerOp.value==="convert"||programmerOp.value==="not";
+  programmerB.setAttribute("aria-disabled",programmerB.disabled?"true":"false");
+}
 function renderProgrammer(){
   if(!programmerInput||!programmerBase||!programmerOp||!programmerResult)return;
+  updateProgrammerOperandState();
   try{
-    const base=Number(programmerBase.value),a=parseInteger(programmerInput.value,base);
+    const base=Number(programmerBase.value),wordSize=Number(programmerWordSize?.value??64),signed=programmerSigned?.value==="signed";
+    const a=parseInteger(programmerInput.value,base);
     let value=a;
     if(programmerOp.value!=="convert"){
       const b=programmerOp.value==="not"?0n:parseInteger(programmerB?.value??"0",base);
-      value=bitwise(programmerOp.value,a,b);
+      value=bitwise(programmerOp.value,a,b,{wordSize,signed});
     }
-    const d=describeInteger(value);
-    programmerResult.innerHTML=`<div><span>BIN</span><code>${escHtml(d.bin)}</code></div><div><span>OCT</span><code>${escHtml(d.oct)}</code></div><div><span>DEC</span><code>${escHtml(d.dec)}</code></div><div><span>HEX</span><code>${escHtml(d.hex)}</code></div>`;
-  }catch(error){programmerResult.textContent=error.message}
+    const d=describeInteger(value,{wordSize});
+    programmerResult.innerHTML=`<div><span>BIN</span><code>${escHtml(d.bin)}</code></div><div><span>OCT</span><code>${escHtml(d.oct)}</code></div><div><span>${escHtml(translate(locale,"signedDecLabel"))}</span><code>${escHtml(d.signedDec)}</code></div><div><span>${escHtml(translate(locale,"unsignedDecLabel"))}</span><code>${escHtml(d.unsignedDec)}</code></div><div><span>HEX</span><code>${escHtml(d.hex)}</code></div>`;
+  }catch(error){programmerResult.textContent=translate(locale,error.message)}
 }
 document.querySelector("#programmer-run")?.addEventListener("click",renderProgrammer);
-programmerInput?.addEventListener("input",renderProgrammer);programmerB?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);
+programmerInput?.addEventListener("input",renderProgrammer);programmerB?.addEventListener("input",renderProgrammer);programmerBase?.addEventListener("change",renderProgrammer);programmerOp?.addEventListener("change",renderProgrammer);programmerWordSize?.addEventListener("change",renderProgrammer);programmerSigned?.addEventListener("change",renderProgrammer);
 renderProgrammer();
 
 const dateStart=document.querySelector("#date-start");
