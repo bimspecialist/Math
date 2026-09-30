@@ -104,7 +104,7 @@ const transpose=m=>{
   return m[0].map((_,c)=>m.map(r=>r[c]));
 };
 
-const flatten=m=>isMatrix(m)?m.flat():[m];
+const flatten=value=>Array.isArray(value)?(isMatrix(value)?value.flat():value.slice()):[value];
 
 function splitArgs(source){
   const out=[];let current="",depth=0;
