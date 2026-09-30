@@ -138,20 +138,20 @@ const REFERENCE_CALCULATORS=Object.freeze({
   ]}),
   "tri-area":Object.freeze({calcExpression:"b*h/2",variables:[
     {id:"b",labelEn:"Base",labelAr:"القاعدة",min:0},{id:"h",labelEn:"Perpendicular height",labelAr:"الارتفاع العمودي",min:0}
-  ],unit:"²"}),
+  ]}),
   "rect-area":Object.freeze({calcExpression:"l*w",variables:[
     {id:"l",labelEn:"Length",labelAr:"الطول",min:0},{id:"w",labelEn:"Width",labelAr:"العرض",min:0}
-  ],unit:"²"}),
-  "circle-area":Object.freeze({calcExpression:"pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"²"}),
+  ]}),
+  "circle-area":Object.freeze({calcExpression:"pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}]}),
   "circle-circ":Object.freeze({calcExpression:"2*pi*r",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}]}),
-  "sphere-vol":Object.freeze({calcExpression:"4*pi*r^3/3",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"³"}),
-  "sphere-area":Object.freeze({calcExpression:"4*pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}],unit:"²"}),
+  "sphere-vol":Object.freeze({calcExpression:"4*pi*r^3/3",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}]}),
+  "sphere-area":Object.freeze({calcExpression:"4*pi*r^2",variables:[{id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0}]}),
   "cyl-vol":Object.freeze({calcExpression:"pi*r^2*h",variables:[
     {id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0},{id:"h",labelEn:"Height",labelAr:"الارتفاع",min:0}
-  ],unit:"³"}),
+  ]}),
   "cone-vol":Object.freeze({calcExpression:"pi*r^2*h/3",variables:[
     {id:"r",labelEn:"Radius",labelAr:"نصف القطر",min:0},{id:"h",labelEn:"Height",labelAr:"الارتفاع",min:0}
-  ],unit:"³"}),
+  ]}),
   zscore:Object.freeze({calcExpression:"(x-mu)/sigma",variables:[
     {id:"x",labelEn:"Value x",labelAr:"القيمة x"},{id:"mu",labelEn:"Mean μ",labelAr:"المتوسط μ"},
     {id:"sigma",labelEn:"Standard deviation σ",labelAr:"الانحراف المعياري σ",exclusiveMin:0}
