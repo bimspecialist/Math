@@ -246,7 +246,9 @@ function renderProfessionalLibrary(){
   grid.innerHTML=rows.length?rows.map(formula=>{
     const titleText=locale==="ar"?formula.titleAr:formula.titleEn;
     const expression=locale==="ar"?formula.formulaAr:formula.formulaEn;
-    return `<article class="formula-card"><button type="button" class="formula-open" data-professional-library="${escHtml(library.id)}" data-professional-formula="${escHtml(formula.id)}"><h3>${escHtml(titleText)}</h3><div class="formula-expression" dir="ltr">${escHtml(expression)}</div><span class="formula-card-action">${escHtml(translate(locale,"enterValues"))} →</span></button></article>`;
+    const topic=locale==="ar"?formula.topicAr:formula.topicEn;
+    const action=formula.calcExpression?translate(locale,"enterValues"):translate(locale,"viewReference");
+    return `<article class="formula-card"><button type="button" class="formula-open" data-professional-library="${escHtml(library.id)}" data-professional-formula="${escHtml(formula.id)}">${topic?`<div class="formula-card-meta">${escHtml(topic)}</div>`:""}<h3>${escHtml(titleText)}</h3><div class="formula-expression" dir="ltr">${escHtml(expression)}</div><span class="formula-card-action">${escHtml(action)} →</span></button></article>`;
   }).join(""):`<p class="empty-state" role="status">${escHtml(translate(locale,"knowledgeNoResults"))}</p>`;
   if(count)count.textContent=locale==="ar"?`عدد القوانين: ${rows.length}`:`${rows.length} formulas`;
   grid.querySelectorAll("[data-professional-formula]").forEach(button=>button.addEventListener("click",()=>{
