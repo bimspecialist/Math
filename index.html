@@ -34,7 +34,7 @@
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1600">
-  <link rel="stylesheet" href="./styles/ui-quality.css?v=20261001-1">
+  <link rel="stylesheet" href="./styles/ui-quality.css?v=20261001-2">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -60,13 +60,13 @@
           <div id="tool-search-status" class="sr-only" aria-live="polite"></div>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title" data-i18n="navCalculatorGroup">Calculator</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navCalculatorGroup">Calculator</button>
           <button type="button" class="tool-item" data-tool-target="categories"><span class="tool-icon">▦</span><span data-i18n="navCategories">Categories</span></button>
           <button type="button" class="tool-item active" data-tool-target="calculator"><span class="tool-icon">▦</span><span data-i18n="navScientific">Scientific</span></button>
           <button type="button" class="tool-item" data-tool-target="advanced"><span class="tool-icon">∑</span><span data-i18n="navAdvancedSolver">Advanced Solver</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title" data-i18n="navKnowledgeGroup">Knowledge</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navKnowledgeGroup">Knowledge</button>
           <button type="button" class="tool-item" data-tool-target="formulas"><span class="tool-icon">ƒ</span><span data-i18n="navFormulaLibrary">Formula Library</span></button>
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="accounting"><span class="tool-icon">₿</span><span data-i18n="navAccountingLibrary">Accounting Library</span></button>
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="civil"><span class="tool-icon">∠</span><span data-i18n="navEngineeringLibrary">Civil Engineering Library</span></button>
@@ -77,11 +77,11 @@
           <button type="button" class="tool-item" data-tool-target="knowledge" data-knowledge-library="pmp"><span class="tool-icon">◆</span><span data-i18n="navPmpLibrary">PMP Library</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title" data-i18n="navToolsGroup">Tools</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navToolsGroup">Tools</button>
           <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span data-i18n="navMathLab">Math Lab</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title" data-i18n="navConverterGroup">Converter</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navConverterGroup">Converter</button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="length"><span class="tool-icon">↔</span><span data-i18n="converterLength">Length</span></button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="volume"><span class="tool-icon">◫</span><span data-i18n="converterVolume">Volume</span></button>
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="mass"><span class="tool-icon">⚖</span><span data-i18n="converterMass">Weight & mass</span></button>
@@ -100,13 +100,13 @@
           <button type="button" class="tool-item" data-tool-target="converter" data-converter-category="density"><span class="tool-icon">ρ</span><span data-i18n="converterDensity">Density</span></button>
         </div>
         <div class="tool-group">
-          <div class="tool-group-title" data-i18n="navMoreTools">More tools</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navMoreTools">More tools</button>
           <button type="button" class="tool-item" data-tool-target="graphing"><span class="tool-icon">⌁</span><span data-i18n="navGraphing">Graphing</span></button>
           <button type="button" class="tool-item" data-tool-target="ramp"><span class="tool-icon">∠</span><span data-i18n="navRamp">Ramp Calculator</span></button>
           <button type="button" class="tool-item" data-tool-target="programmer"><span class="tool-icon">&lt;/&gt;</span><span data-i18n="navProgrammer">Programmer</span></button>
         </div>
         <div class="tool-group tool-group-muted" data-i18n-aria-label="plannedTools" aria-label="Planned tools">
-          <div class="tool-group-title" data-i18n="navNext">Next</div>
+          <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navNext">Next</button>
           <div class="tool-item-static"><span class="tool-icon">¤</span><span data-i18n="navCurrency">Currency</span><small data-i18n="online">online</small></div>
           <button type="button" class="tool-item" data-tool-target="date"><span class="tool-icon">◫</span><span data-i18n="navDateCalculation">Date calculation</span></button>
         </div>
@@ -418,6 +418,7 @@ b</textarea></label>
                 <button id="ramp-design-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button>
               </div>
               <output id="ramp-design-result" class="ramp-result" aria-live="polite"></output>
+              <p id="ramp-design-match-note" class="ramp-derived-note ramp-match-note" aria-live="polite" hidden></p>
             </section>
             <p class="advanced-note" data-i18n="rampCodeNote">This calculator gives geometry only. Check the building or accessibility code that applies to your project.</p>
           </div>
