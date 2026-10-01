@@ -369,3 +369,115 @@ html[dir="rtl"] .mathlab-example-browser-head{
     animation-iteration-count:1!important;
   }
 }
+
+
+/* 2026-10-01 workflow refinement */
+.tool-search{
+  position:sticky;
+  inset-block-start:0;
+  z-index:3;
+  padding-block-end:8px;
+  background:color-mix(in srgb,var(--panel) 94%,transparent);
+}
+.tool-group{
+  border-block-start:1px solid color-mix(in srgb,var(--line) 70%,transparent);
+  padding-block-start:6px;
+}
+.tool-group:first-of-type{border-block-start:0}
+.tool-group-title.tool-group-toggle{
+  width:100%;
+  min-block-size:36px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:5px 9px;
+  font-size:.78rem;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+  text-align:start;
+  cursor:pointer;
+}
+.tool-group-title.tool-group-toggle::after{
+  content:"▾";
+  font-size:.8rem;
+  transition:transform .16s ease;
+}
+.tool-group.is-collapsed .tool-group-title.tool-group-toggle::after{transform:rotate(-90deg)}
+html[dir="rtl"] .tool-group.is-collapsed .tool-group-title.tool-group-toggle::after{transform:rotate(90deg)}
+.tool-group.is-collapsed > :not(.tool-group-title){display:none}
+.tool-group:has(.tool-item.active) .tool-group-title.tool-group-toggle{color:var(--text)}
+
+.mathlab-layout{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:14px;
+}
+.mathlab-editor-panel{
+  display:grid;
+  gap:12px;
+}
+.mathlab-example-browser{
+  max-block-size:340px;
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding-inline-end:2px;
+}
+.mathlab-example-browser-head{
+  position:sticky;
+  inset-block-start:0;
+  z-index:2;
+  padding-block:2px 8px;
+  background:color-mix(in srgb,var(--panel) 97%,var(--page));
+}
+.mathlab-example-groups{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+.mathlab-editor-panel textarea{
+  min-height:360px;
+}
+.mathlab-command-reference{
+  order:5;
+}
+.mathlab-actions{
+  order:3;
+}
+#mathlab-status{
+  order:4;
+}
+.mathlab-results{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.mathlab-results > section:first-child{
+  grid-column:1/-1;
+}
+.mathlab-results pre{
+  min-height:220px;
+  max-height:420px;
+}
+.ramp-match-note{
+  margin-block-start:10px;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:var(--page);
+}
+.ramp-match-note[hidden]{display:none}
+
+@media(max-width:760px){
+  .mathlab-example-groups{grid-template-columns:1fr}
+  .mathlab-example-browser{max-block-size:300px}
+  .mathlab-results{grid-template-columns:1fr}
+  .mathlab-results > section:first-child{grid-column:auto}
+  .mathlab-editor-panel textarea{min-height:280px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .tool-group-title.tool-group-toggle::after{transition:none}
+}
