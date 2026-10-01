@@ -3,6 +3,7 @@ import { evaluateExpression } from "../calculator/math-engine.js";
 const clone=v=>Array.isArray(v)?v.map(clone):v;
 const isMatrix=v=>Array.isArray(v)&&v.every(Array.isArray);
 const MAX_RANGE_ITEMS=10000;
+const MAX_LOOP_ITERATIONS=10000;
 
 function stripOuterParens(source){
   let text=String(source??"").trim();
@@ -169,6 +170,22 @@ function matrixRightDivide(a,b){
   if(typeof a==="number"&&isMatrix(b))return matrixScale(inverse(b),a);
   if(isMatrix(a)&&isMatrix(b))return matrixMultiply(a,inverse(b));
   throw new Error("INVALID_MATRIX_OPERATION");
+}
+function scalarTruth(value){
+  if(typeof value!=="number"||!Number.isFinite(value))throw new Error("SCALAR_LOGICAL_REQUIRED");
+  return value!==0;
+}
+function binaryLogicalOperation(op,left,right){
+  if(op==="&&")return scalarTruth(left)&&scalarTruth(right)?1:0;
+  if(op==="||")return scalarTruth(left)||scalarTruth(right)?1:0;
+  if(typeof left!=="number"||typeof right!=="number")throw new Error("SCALAR_COMPARISON_REQUIRED");
+  if(op==="==")return left===right?1:0;
+  if(op==="~=")return left!==right?1:0;
+  if(op==="<")return left<right?1:0;
+  if(op==="<=")return left<=right?1:0;
+  if(op===">")return left>right?1:0;
+  if(op===">=")return left>=right?1:0;
+  throw new Error("INVALID_LOGICAL_OPERATION");
 }
 function binaryArrayOperation(op,left,right){
   if(op==="+")return matrixAdd(left,right);
@@ -485,6 +502,10 @@ function splitStatements(line){
   if(current.trim())out.push({source:current.trim(),suppressed:false});
   return out;
 }
+function blockOpener(line){
+  const text=stripInlineComment(line).trim().toLowerCase();
+  return /^(if\b|for\b|while\b)/.test(text);
+}
 function parseUserFunctions(script){
   const lines=String(script??"").split(/\r?\n/);
   const functions={},body=[];
@@ -493,15 +514,51 @@ function parseUserFunctions(script){
     const header=raw.match(/^function\s+([A-Za-z][A-Za-z0-9_]*)\s*=\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
     if(!header){body.push(lines[i]);continue}
     const output=header[1],name=header[2],params=header[3].split(",").map(x=>x.trim()).filter(Boolean);
-    const fnLines=[];let foundEnd=false;
+    const fnLines=[];let foundEnd=false,depth=0;
     for(i=i+1;i<lines.length;i++){
-      if(lines[i].trim().toLowerCase()==="end"){foundEnd=true;break}
+      const trimmed=stripInlineComment(lines[i]).trim().toLowerCase();
+      if(trimmed==="end"){
+        if(depth===0){foundEnd=true;break}
+        depth--;fnLines.push(lines[i]);continue;
+      }
+      if(blockOpener(lines[i]))depth++;
       fnLines.push(lines[i]);
     }
     if(!foundEnd)throw new Error("FUNCTION_END_REQUIRED");
     functions[name.toLowerCase()]={name,output,params,body:fnLines.join("\n")};
   }
   return{functions,script:body.join("\n")};
+}
+function findBlockEnd(lines,start){
+  let depth=0;
+  for(let i=start+1;i<lines.length;i++){
+    const text=stripInlineComment(lines[i]).trim().toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(text==="end"){
+      if(depth===0)return i;
+      depth--;
+    }
+  }
+  throw new Error("BLOCK_END_REQUIRED");
+}
+function splitIfBranches(lines,start,end){
+  const head=stripInlineComment(lines[start]).trim();
+  const branches=[];let branchStart=start+1,currentCondition=head.replace(/^if\s+/i,"").trim(),depth=0;
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim();
+    const lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^elseif\b/i.test(raw)){
+      branches.push({condition:currentCondition,lines:lines.slice(branchStart,i),offset:branchStart});
+      currentCondition=raw.replace(/^elseif\s+/i,"").trim();branchStart=i+1;
+    }else if(depth===0&&lower==="else"){
+      branches.push({condition:currentCondition,lines:lines.slice(branchStart,i),offset:branchStart});
+      currentCondition=null;branchStart=i+1;
+    }
+  }
+  branches.push({condition:currentCondition,lines:lines.slice(branchStart,end),offset:branchStart});
+  return branches;
 }
 
 export function describeMathLabValue(value){
@@ -533,6 +590,16 @@ function evalValue(source,workspace,functions={}){
     return transpose(value);
   }
   const text=transposeInfo.source;
+  for(const operators of [["||"],["&&"],["==","~=",">=","<=",">","<"]]){
+    const match=findTopLevelOperator(text,operators);
+    if(match){
+      const leftText=text.slice(0,match.index).trim();
+      const rightText=text.slice(match.index+match.op.length).trim();
+      if(!leftText||!rightText)continue;
+      return binaryLogicalOperation(match.op,evalValue(leftText,workspace,functions),evalValue(rightText,workspace,functions));
+    }
+  }
+  if(text.startsWith("~")&&!text.startsWith("~="))return scalarTruth(evalValue(text.slice(1),workspace,functions))?0:1;
   for(const operators of [["+","-"],[".*","./","*","/"],[".^","^"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
@@ -609,59 +676,125 @@ function evalCommand(expr,workspace,functions={}){
   return evalValue(text,workspace,functions);
 }
 
-export function runMathLabScript(script,initialWorkspace={},options={}){
-  let parsed;
-  try{parsed=parseUserFunctions(script)}catch(error){return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}}}
-  const functions={...(options.functions??{}),...parsed.functions};
-  const workspace={...initialWorkspace};
-  const outputs=[],events=[];
-  const lines=String(parsed.script??"").split(/\r?\n/);
+function executeSimpleStatement(source,suppressed,context,lineNumber){
+  const {workspace,functions,outputs,events,options}=context;
+  const raw=source+(suppressed?";":"");
+  const command=source.match(/^(clear|clc|who|whos)(?:\s+(.*))?$/i);
+  if(command){
+    const cmd=command[1].toLowerCase(),arg=(command[2]??"").trim();
+    if(cmd==="clc"){events.push({type:"clear-output",line:lineNumber});return}
+    if(cmd==="clear"){
+      if(!arg||arg.toLowerCase()==="all"){for(const key of Object.keys(workspace))delete workspace[key]}
+      else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
+      events.push({type:"workspace-changed",line:lineNumber});return;
+    }
+    const names=Object.keys(workspace).sort();
+    if(cmd==="who")outputs.push({line:lineNumber,source:raw,name:"",value:names.join("    ")||"(none)",kind:"who"});
+    else outputs.push({line:lineNumber,source:raw,name:"",value:names.map(name=>({name,...describeMathLabValue(workspace[name])})),kind:"whos"});
+    return;
+  }
+  const indexedAssignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*\((.*)\)\s*=\s*(.+)$/);
+  if(indexedAssignment){
+    const name=indexedAssignment[1];
+    if(!Object.prototype.hasOwnProperty.call(workspace,name))throw new Error("UNDEFINED_VARIABLE");
+    const rhs=evalCommand(indexedAssignment[3],workspace,functions);
+    workspace[name]=assignWorkspaceIndex(workspace[name],indexedAssignment[2],rhs,workspace);
+    if(!suppressed)outputs.push({line:lineNumber,source:raw,name,value:clone(workspace[name])});
+    return;
+  }
+  const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+  if(assignment){
+    const value=evalCommand(assignment[2],workspace,functions);
+    workspace[assignment[1]]=clone(value);
+    if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:assignment[1],value:clone(value)});
+    return;
+  }
+  const value=evalCommand(source,workspace,functions);
+  workspace.ans=clone(value);
+  if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:"ans",value:clone(value)});
+}
+
+function executeLines(lines,context,baseLine=0,loopDepth=0){
   for(let i=0;i<lines.length;i++){
     const clean=stripInlineComment(lines[i]).trim();
     if(!clean||clean.startsWith("#"))continue;
-    const statements=splitStatements(clean);
-    for(const statement of statements){
-      const source=statement.source,suppressed=statement.suppressed,raw=source+(suppressed?";":"");
-      if(!source)continue;
-      try{
-        const command=source.match(/^(clear|clc|who|whos)(?:\s+(.*))?$/i);
-        if(command){
-          const cmd=command[1].toLowerCase(),arg=(command[2]??"").trim();
-          if(cmd==="clc"){events.push({type:"clear-output",line:i+1});continue}
-          if(cmd==="clear"){
-            if(!arg||arg.toLowerCase()==="all"){for(const key of Object.keys(workspace))delete workspace[key]}
-            else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
-            events.push({type:"workspace-changed",line:i+1});
-            continue;
+    const lower=clean.toLowerCase();
+    const lineNumber=baseLine+i+1;
+    try{
+      if(/^if\b/i.test(clean)){
+        const end=findBlockEnd(lines,i);
+        const branches=splitIfBranches(lines,i,end);
+        for(const branch of branches){
+          if(branch.condition===null||scalarTruth(evalValue(branch.condition,context.workspace,context.functions))){
+            const result=executeLines(branch.lines,context,baseLine+branch.offset,loopDepth);
+            if(!result.ok||result.signal)return result;
+            break;
           }
-          const names=Object.keys(workspace).sort();
-          if(cmd==="who")outputs.push({line:i+1,source:raw,name:"",value:names.join("    ")||"(none)",kind:"who"});
-          else outputs.push({line:i+1,source:raw,name:"",value:names.map(name=>({name,...describeMathLabValue(workspace[name])})),kind:"whos"});
-          continue;
         }
-        const indexedAssignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*\((.*)\)\s*=\s*(.+)$/);
-        if(indexedAssignment){
-          const name=indexedAssignment[1];
-          if(!Object.prototype.hasOwnProperty.call(workspace,name))throw new Error("UNDEFINED_VARIABLE");
-          const rhs=evalCommand(indexedAssignment[3],workspace,functions);
-          workspace[name]=assignWorkspaceIndex(workspace[name],indexedAssignment[2],rhs,workspace);
-          if(!suppressed)outputs.push({line:i+1,source:raw,name,value:clone(workspace[name])});
-          continue;
-        }
-        const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
-        if(assignment){
-          const value=evalCommand(assignment[2],workspace,functions);
-          workspace[assignment[1]]=clone(value);
-          if(!suppressed)outputs.push({line:i+1,source:raw,name:assignment[1],value:clone(value)});
-        }else{
-          const value=evalCommand(source,workspace,functions);
-          workspace.ans=clone(value);
-          if(!suppressed&&!options.isFunction)outputs.push({line:i+1,source:raw,name:"ans",value:clone(value)});
-        }
-      }catch(error){
-        return{ok:false,workspace,outputs,events,error:{message:error.message||"MATHLAB_ERROR",line:i+1,source:raw}};
+        i=end;continue;
       }
+      const forMatch=clean.match(/^for\s+([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/i);
+      if(forMatch){
+        const end=findBlockEnd(lines,i);
+        const body=lines.slice(i+1,end);
+        const sequence=numericValues(evalValue(forMatch[2],context.workspace,context.functions));
+        if(sequence.length>MAX_LOOP_ITERATIONS)throw new Error("LOOP_ITERATION_LIMIT");
+        for(const value of sequence){
+          context.workspace[forMatch[1]]=value;
+          const result=executeLines(body,context,baseLine+i+1,loopDepth+1);
+          if(!result.ok)return result;
+          if(result.signal==="return")return result;
+          if(result.signal==="break")break;
+          if(result.signal==="continue")continue;
+        }
+        i=end;continue;
+      }
+      const whileMatch=clean.match(/^while\s+(.+)$/i);
+      if(whileMatch){
+        const end=findBlockEnd(lines,i);
+        const body=lines.slice(i+1,end);
+        let iterations=0;
+        while(scalarTruth(evalValue(whileMatch[1],context.workspace,context.functions))){
+          iterations++;
+          if(iterations>MAX_LOOP_ITERATIONS)throw new Error("LOOP_ITERATION_LIMIT");
+          const result=executeLines(body,context,baseLine+i+1,loopDepth+1);
+          if(!result.ok)return result;
+          if(result.signal==="return")return result;
+          if(result.signal==="break")break;
+          if(result.signal==="continue")continue;
+        }
+        i=end;continue;
+      }
+      if(lower==="break"){
+        if(loopDepth<1)throw new Error("BREAK_OUTSIDE_LOOP");
+        return{ok:true,signal:"break"};
+      }
+      if(lower==="continue"){
+        if(loopDepth<1)throw new Error("CONTINUE_OUTSIDE_LOOP");
+        return{ok:true,signal:"continue"};
+      }
+      if(lower==="return")return{ok:true,signal:"return"};
+      if(lower==="else"||/^elseif\b/.test(lower)||lower==="end")throw new Error("UNEXPECTED_BLOCK_TOKEN");
+      const statements=splitStatements(clean);
+      for(const statement of statements){
+        if(statement.source)executeSimpleStatement(statement.source,statement.suppressed,context,lineNumber);
+      }
+    }catch(error){
+      return{ok:false,error:{message:error.message||"MATHLAB_ERROR",line:lineNumber,source:clean}};
     }
   }
+  return{ok:true};
+}
+
+export function runMathLabScript(script,initialWorkspace={},options={}){
+  let parsed;
+  try{parsed=parseUserFunctions(script)}catch(error){
+    return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}};
+  }
+  const functions={...(options.functions??{}),...parsed.functions};
+  const workspace={...initialWorkspace},outputs=[],events=[];
+  const context={workspace,functions,outputs,events,options};
+  const result=executeLines(String(parsed.script??"").split(/\r?\n/),context,0,0);
+  if(!result.ok)return{ok:false,workspace,outputs,events,error:result.error};
   return{ok:true,workspace,outputs,events};
 }
