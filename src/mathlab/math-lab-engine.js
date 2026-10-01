@@ -3,6 +3,7 @@ import { evaluateExpression } from "../calculator/math-engine.js";
 const clone=v=>Array.isArray(v)?v.map(clone):v;
 const isMatrix=v=>Array.isArray(v)&&v.every(Array.isArray);
 const MAX_RANGE_ITEMS=10000;
+const MAX_LOOP_ITERATIONS=10000;
 
 function stripOuterParens(source){
   let text=String(source??"").trim();
@@ -169,6 +170,22 @@ function matrixRightDivide(a,b){
   if(typeof a==="number"&&isMatrix(b))return matrixScale(inverse(b),a);
   if(isMatrix(a)&&isMatrix(b))return matrixMultiply(a,inverse(b));
   throw new Error("INVALID_MATRIX_OPERATION");
+}
+function scalarTruth(value){
+  if(typeof value!=="number"||!Number.isFinite(value))throw new Error("SCALAR_LOGICAL_REQUIRED");
+  return value!==0;
+}
+function binaryLogicalOperation(op,left,right){
+  if(op==="&&")return scalarTruth(left)&&scalarTruth(right)?1:0;
+  if(op==="||")return scalarTruth(left)||scalarTruth(right)?1:0;
+  if(typeof left!=="number"||typeof right!=="number")throw new Error("SCALAR_COMPARISON_REQUIRED");
+  if(op==="==")return left===right?1:0;
+  if(op==="~=")return left!==right?1:0;
+  if(op==="<")return left<right?1:0;
+  if(op==="<=")return left<=right?1:0;
+  if(op===">")return left>right?1:0;
+  if(op===">=")return left>=right?1:0;
+  throw new Error("INVALID_LOGICAL_OPERATION");
 }
 function binaryArrayOperation(op,left,right){
   if(op==="+")return matrixAdd(left,right);
@@ -533,6 +550,16 @@ function evalValue(source,workspace,functions={}){
     return transpose(value);
   }
   const text=transposeInfo.source;
+  for(const operators of [["||"],["&&"],["==","~=",">=","<=",">","<"]]){
+    const match=findTopLevelOperator(text,operators);
+    if(match){
+      const leftText=text.slice(0,match.index).trim();
+      const rightText=text.slice(match.index+match.op.length).trim();
+      if(!leftText||!rightText)continue;
+      return binaryLogicalOperation(match.op,evalValue(leftText,workspace,functions),evalValue(rightText,workspace,functions));
+    }
+  }
+  if(text.startsWith("~")&&!text.startsWith("~="))return scalarTruth(evalValue(text.slice(1),workspace,functions))?0:1;
   for(const operators of [["+","-"],[".*","./","*","/"],[".^","^"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
