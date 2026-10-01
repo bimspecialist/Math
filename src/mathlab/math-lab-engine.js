@@ -366,18 +366,19 @@ function solveLinearMatrix(a,b){
   return m.map(row=>row.slice(n).map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
 }
 
-function identity(n){
-  n=Number(n);if(!Number.isInteger(n)||n<1||n>100)throw new Error("INVALID_MATRIX_SIZE");
-  return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+function identity(rows,cols=rows){
+  rows=Number(rows);cols=Number(cols);
+  if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:rows},(_,i)=>Array.from({length:cols},(_,j)=>i===j?1:0));
 }
 
-function zeros(rows,cols){
+function zeros(rows,cols=rows){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
   return Array.from({length:rows},()=>Array(cols).fill(0));
 }
 
-function ones(rows,cols){
+function ones(rows,cols=rows){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
   return Array.from({length:rows},()=>Array(cols).fill(1));
@@ -390,9 +391,15 @@ function linspace(start,end,count){
   return Array.from({length:count},(_,i)=>i===count-1?end:Number((start+i*step).toPrecision(14)));
 }
 
-function diagonal(m){
-  const [rows,cols]=matrixShape(m),n=Math.min(rows,cols);
-  return Array.from({length:n},(_,i)=>m[i][i]);
+function diagonal(value){
+  if(!isMatrix(value))throw new Error("INVALID_MATRIX");
+  const [rows,cols]=matrixShape(value);
+  if(rows===1||cols===1){
+    const values=linearColumnMajor(value);
+    return Array.from({length:values.length},(_,r)=>Array.from({length:values.length},(_,c)=>r===c?values[r]:0));
+  }
+  const n=Math.min(rows,cols);
+  return Array.from({length:n},(_,i)=>[value[i][i]]);
 }
 
 function euclideanNorm(value){
@@ -500,9 +507,9 @@ function cross(a,b){
 function reshape(value,rows,cols){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
-  const values=numericValues(value);
-  if(values.length!==rows*cols)throw new Error("RESHAPE_SIZE_MISMATCH");
-  return Array.from({length:rows},(_,r)=>values.slice(r*cols,(r+1)*cols));
+  const values=linearColumnMajor(value).map(Number);
+  if(values.length!==rows*cols||values.some(v=>!Number.isFinite(v)))throw new Error("RESHAPE_SIZE_MISMATCH");
+  return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>values[c*rows+r]));
 }
 
 function linearColumnMajor(m){
@@ -763,7 +770,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
-  "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty"
+  "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
 ]);
 function isFunctionHandle(value){return Boolean(value&&typeof value==="object"&&value.__mathlabFunctionHandle===true)}
 function createFunctionHandle(source,workspace){
@@ -780,6 +787,13 @@ function invokeFunctionHandle(handle,argSources,callerWorkspace,functions){
   const local={};
   for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
   handle.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
+  return evalValue(handle.expression,local,functions);
+}
+function invokeFunctionHandleValues(handle,args,functions){
+  if(args.length!==handle.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const local={};
+  for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
+  handle.params.forEach((param,i)=>{local[param]=clone(args[i])});
   return evalValue(handle.expression,local,functions);
 }
 function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOutputs=1){
@@ -870,9 +884,9 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues2(args[0])}
     if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors2(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
-    if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
-    if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
-    if(fn==="ones"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1])}
+    if(fn==="eye"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0],args[1]??args[0])}
+    if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
+    if(fn==="ones"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1]??args[0])}
     if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
     if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
     if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
@@ -925,6 +939,14 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="isfinite"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isFinite(x)?1:0)}
     if(fn==="isnan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isNaN(x)?1:0)}
     if(fn==="isempty"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Array.isArray(args[0])&&flatten(args[0]).length===0?1:0}
+    if(fn==="feval"){
+      if(args.length<1||!isFunctionHandle(args[0]))throw new Error("FUNCTION_HANDLE_REQUIRED");
+      return invokeFunctionHandleValues(args[0],args.slice(1),functions);
+    }
+    if(fn==="arrayfun"){
+      if(args.length!==2||!isFunctionHandle(args[0]))throw new Error("FUNCTION_HANDLE_REQUIRED");
+      return mapNumericLike(args[1],value=>invokeFunctionHandleValues(args[0],[value],functions));
+    }
     return numericExpression(text,workspace);
   }
   return evalValue(text,workspace,functions);
