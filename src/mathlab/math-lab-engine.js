@@ -384,6 +384,30 @@ function numericValues(value){
   if(!values.length||values.some(v=>!Number.isFinite(v)))throw new Error("INVALID_VALUE");
   return values;
 }
+function numericValuesAllowNaN(value){
+  const values=flatten(value).map(Number);
+  if(!values.length)throw new Error("INVALID_VALUE");
+  return values;
+}
+function rowVector(values){return[values]}
+function cumulative(values,fn,seed){
+  const out=[];let acc=seed;
+  for(const value of values){acc=fn(acc,value);out.push(acc)}
+  return rowVector(out);
+}
+function difference(values){
+  if(values.length<2)return[[]];
+  return rowVector(values.slice(1).map((value,i)=>value-values[i]));
+}
+function uniqueSorted(values){return rowVector([...new Set(values)].sort((a,b)=>a-b))}
+function logicalSelectorIndices(source,workspace,functions,max){
+  const text=String(source).trim();
+  if(!/[<>=~&|]/.test(text))return null;
+  const mask=evalValue(text,workspace,functions);
+  const values=linearColumnMajor(mask);
+  if(values.length!==max)throw new Error("LOGICAL_INDEX_SIZE_MISMATCH");
+  return values.map((value,i)=>Number(value)!==0?i:null).filter(i=>i!==null);
+}
 function mapNumericLike(value,fn){
   if(typeof value==="number")return fn(value);
   if(isMatrix(value))return value.map(row=>row.map(fn));
@@ -517,13 +541,14 @@ function deleteIndexedValues(value,args,workspace){
   return out[0]?.length?out:[];
 }
 
-function indexWorkspaceValue(value,argSource,workspace){
+function indexWorkspaceValue(value,argSource,workspace,functions={}){
   if(!Array.isArray(value))throw new Error("INDEXING_REQUIRES_ARRAY");
   const args=splitArgs(argSource);
   if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
   if(args.length===1){
     const linear=linearColumnMajor(value);
-    const indices=parseIndexSpec(args[0],workspace,linear.length);
+    const logical=logicalSelectorIndices(args[0],workspace,functions,linear.length);
+    const indices=logical??parseIndexSpec(args[0],workspace,linear.length);
     const picked=indices.map(i=>linear[i]);
     return picked.length===1?picked[0]:[picked];
   }
@@ -539,14 +564,15 @@ function valueForAssignment(rhs,rows,cols){
   if(rr!==rows||rc!==cols)throw new Error("INDEX_ASSIGNMENT_SHAPE_MISMATCH");
   return rhs;
 }
-function assignWorkspaceIndex(value,argSource,rhs,workspace){
+function assignWorkspaceIndex(value,argSource,rhs,workspace,functions={}){
   if(!isMatrix(value)||!value.length)throw new Error("INDEXING_REQUIRES_ARRAY");
   const args=splitArgs(argSource);
   if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
   if(Array.isArray(rhs)&&rhs.length===0)return deleteIndexedValues(value,args,workspace);
   if(args.length===1){
     const [rows,cols]=matrixShape(value),max=rows*cols;
-    const indices=parseAssignmentIndexSpec(args[0],workspace,max);
+    const logical=logicalSelectorIndices(args[0],workspace,functions,max);
+    const indices=logical??parseAssignmentIndexSpec(args[0],workspace,max);
     const replacement=typeof rhs==="number"?Array(indices.length).fill(rhs):linearColumnMajor(rhs);
     if(replacement.length!==indices.length)throw new Error("INDEX_ASSIGNMENT_SHAPE_MISMATCH");
     const needed=Math.max(max,...indices.map(i=>i+1));
@@ -673,7 +699,8 @@ const MATHLAB_FUNCTIONS=new Set([
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
-  "any","all","find","mod"
+  "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
+  "round","floor","ceil","fix","sign","rem","isfinite","isnan"
 ]);
 
 function evalValue(source,workspace,functions={}){
@@ -715,7 +742,7 @@ function evalValue(source,workspace,functions={}){
   if(range)return[range];
   const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
   if(nestedCall&&Object.prototype.hasOwnProperty.call(workspace,nestedCall[1])){
-    return indexWorkspaceValue(workspace[nestedCall[1]],nestedCall[2],workspace);
+    return indexWorkspaceValue(workspace[nestedCall[1]],nestedCall[2],workspace,functions);
   }
   if(nestedCall&&functions[nestedCall[1].toLowerCase()]){
     const fn=functions[nestedCall[1].toLowerCase()];
@@ -739,7 +766,7 @@ function evalCommand(expr,workspace,functions={}){
   const text=expr.trim();
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace,functions);
   const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
-  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace);
+  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace,functions);
   if(call&&functions[call[1].toLowerCase()])return evalValue(text,workspace,functions);
   if(call){
     const fn=call[1].toLowerCase(),args=splitArgs(call[2]).map(x=>evalValue(x,workspace,functions));
@@ -772,7 +799,13 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).length}
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
-    if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
+    if(fn==="size"){
+      if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
+      const arg=args[0],shape=isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,Array.isArray(arg)?arg.length:1];
+      if(args.length===1)return shape;
+      const dim=Number(args[1]);if(!Number.isInteger(dim)||dim<1)throw new Error("INVALID_DIMENSION");
+      return shape[dim-1]??1;
+    }
     if(fn==="length"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];if(isMatrix(arg))return Math.max(arg.length,arg[0]?.length??0);return Array.isArray(arg)?arg.length:1}
     if(fn==="abs"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.abs)}
     if(fn==="sqrt"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>{if(x<0)throw new Error("DOMAIN_ERROR");return Math.sqrt(x)})}
@@ -785,6 +818,20 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="all"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).every(x=>x!==0)?1:0}
     if(fn==="find"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return findLinearIndices(args[0])}
     if(fn==="mod"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return ((a%b)+b)%b})}
+    if(fn==="rem"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return a%b})}
+    if(fn==="prod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).reduce((a,b)=>a*b,1)}
+    if(fn==="cumsum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a+b,0)}
+    if(fn==="cumprod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a*b,1)}
+    if(fn==="diff"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return difference(numericValues(args[0]))}
+    if(fn==="sort"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return rowVector(numericValues(args[0]).slice().sort((a,b)=>a-b))}
+    if(fn==="unique"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return uniqueSorted(numericValues(args[0]))}
+    if(fn==="round"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.round)}
+    if(fn==="floor"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.floor)}
+    if(fn==="ceil"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.ceil)}
+    if(fn==="fix"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.trunc)}
+    if(fn==="sign"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.sign)}
+    if(fn==="isfinite"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isFinite(x)?1:0)}
+    if(fn==="isnan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isNaN(x)?1:0)}
     return numericExpression(text,workspace);
   }
   return evalValue(text,workspace,functions);
@@ -834,7 +881,7 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
       if((Array.isArray(rhs)&&rhs.length===0)||indexSource.includes(":"))throw new Error("UNDEFINED_VARIABLE");
       workspace[name]=[[0]];
     }
-    workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace);
+    workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace,functions);
     if(!suppressed)outputs.push({line:lineNumber,source:raw,name,value:clone(workspace[name])});
     return;
   }
