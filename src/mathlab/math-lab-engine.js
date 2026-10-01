@@ -633,9 +633,9 @@ function parseUserFunctions(script){
   const functions={},body=[];
   for(let i=0;i<lines.length;i++){
     const raw=lines[i].trim();
-    const header=raw.match(/^function\s+(\[[^\]]+\]|[A-Za-z][A-Za-z0-9_]*)\s*=\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
+    const header=raw.match(/^function\s+(?:(\[[^\]]+\]|[A-Za-z][A-Za-z0-9_]*)\s*=\s*)?([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
     if(!header){body.push(lines[i]);continue}
-    const outputs=header[1].startsWith("[")?header[1].slice(1,-1).split(",").map(x=>x.trim()).filter(Boolean):[header[1]];
+    const outputs=!header[1]?[]:(header[1].startsWith("[")?header[1].slice(1,-1).split(",").map(x=>x.trim()).filter(Boolean):[header[1]]);
     const name=header[2],params=header[3].split(",").map(x=>x.trim()).filter(Boolean);
     const fnLines=[];let foundEnd=false,depth=0;
     for(i=i+1;i<lines.length;i++){
@@ -685,6 +685,7 @@ function splitIfBranches(lines,start,end){
 }
 
 export function describeMathLabValue(value){
+  if(isFunctionHandle(value))return{size:"1×1",className:"function_handle",preview:"@("+value.params.join(",")+") "+value.expression};
   if(typeof value==="number")return{size:"1×1",className:"double",preview:String(value)};
   if(isMatrix(value)){
     const rows=value.length,cols=value[0]?.length??0;
@@ -704,6 +705,35 @@ const MATHLAB_FUNCTIONS=new Set([
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan"
 ]);
+function isFunctionHandle(value){return Boolean(value&&typeof value==="object"&&value.__mathlabFunctionHandle===true)}
+function createFunctionHandle(source,workspace){
+  const match=String(source).trim().match(/^@\(([^)]*)\)\s*(.+)$/);
+  if(!match)return null;
+  const params=match[1].split(",").map(x=>x.trim()).filter(Boolean);
+  if(params.some(p=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(p)))throw new Error("INVALID_FUNCTION_HANDLE");
+  const closure={};
+  for(const [key,value] of Object.entries(workspace))closure[key]=clone(value);
+  return{__mathlabFunctionHandle:true,params,expression:match[2].trim(),closure};
+}
+function invokeFunctionHandle(handle,argSources,callerWorkspace,functions){
+  if(argSources.length!==handle.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const local={};
+  for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
+  handle.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
+  return evalValue(handle.expression,local,functions);
+}
+function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOutputs=1){
+  if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const local={nargin:argSources.length,nargout:requestedOutputs};
+  fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
+  const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
+  if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
+  const values=fn.outputs.map(output=>{
+    if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
+    return clone(result.workspace[output]);
+  });
+  return{values,workspace:result.workspace};
+}
 
 function evalValue(source,workspace,functions={}){
   const stripped=stripOuterParens(source);
@@ -715,6 +745,8 @@ function evalValue(source,workspace,functions={}){
     return transpose(value);
   }
   const text=transposeInfo.source;
+  const anonymous=createFunctionHandle(text,workspace);
+  if(anonymous)return anonymous;
   for(const operators of [["||"],["&&"],["|"],["&"],["==","~=",">=","<=",">","<"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
@@ -744,21 +776,14 @@ function evalValue(source,workspace,functions={}){
   if(range)return[range];
   const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
   if(nestedCall&&Object.prototype.hasOwnProperty.call(workspace,nestedCall[1])){
-    return indexWorkspaceValue(workspace[nestedCall[1]],nestedCall[2],workspace,functions);
+    const target=workspace[nestedCall[1]];
+    if(isFunctionHandle(target))return invokeFunctionHandle(target,splitArgs(nestedCall[2]),workspace,functions);
+    return indexWorkspaceValue(target,nestedCall[2],workspace,functions);
   }
   if(nestedCall&&functions[nestedCall[1].toLowerCase()]){
     const fn=functions[nestedCall[1].toLowerCase()];
-    const argSources=splitArgs(nestedCall[2]);
-    if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-    const local={};
-    fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],workspace,functions))});
-    const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
-    if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
-    const values=fn.outputs.map(output=>{
-      if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
-      return clone(result.workspace[output]);
-    });
-    return values[0];
+    if(!fn.outputs.length)throw new Error("FUNCTION_HAS_NO_OUTPUT");
+    return invokeUserFunction(fn,splitArgs(nestedCall[2]),workspace,functions,1).values[0];
   }
   if(nestedCall&&MATHLAB_FUNCTIONS.has(nestedCall[1].toLowerCase()))return evalCommand(text,workspace,functions);
   return numericExpression(text,workspace);
@@ -768,7 +793,11 @@ function evalCommand(expr,workspace,functions={}){
   const text=expr.trim();
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace,functions);
   const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
-  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace,functions);
+  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1])){
+    const target=workspace[call[1]];
+    if(isFunctionHandle(target))return invokeFunctionHandle(target,splitArgs(call[2]),workspace,functions);
+    return indexWorkspaceValue(target,call[2],workspace,functions);
+  }
   if(call&&functions[call[1].toLowerCase()])return evalValue(text,workspace,functions);
   if(call){
     const fn=call[1].toLowerCase(),args=splitArgs(call[2]).map(x=>evalValue(x,workspace,functions));
@@ -861,18 +890,15 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     const targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     const fn=functions[multiAssignment[2].toLowerCase()];
     if(targets.length>fn.outputs.length)throw new Error("TOO_MANY_OUTPUTS");
-    const argSources=splitArgs(multiAssignment[3]);
-    if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-    const local={};
-    fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],workspace,functions))});
-    const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
-    if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
-    const values=fn.outputs.map(output=>{
-      if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
-      return clone(result.workspace[output]);
-    });
+    const invoked=invokeUserFunction(fn,splitArgs(multiAssignment[3]),workspace,functions,targets.length);
+    const values=invoked.values;
     targets.forEach((target,i)=>{workspace[target]=values[i]});
     if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
+    return;
+  }
+  const standaloneCall=source.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(standaloneCall&&functions[standaloneCall[1].toLowerCase()]&&!functions[standaloneCall[1].toLowerCase()].outputs.length){
+    invokeUserFunction(functions[standaloneCall[1].toLowerCase()],splitArgs(standaloneCall[2]),workspace,functions,0);
     return;
   }
   const indexedAssignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*\((.*)\)\s*=\s*(.+)$/);
