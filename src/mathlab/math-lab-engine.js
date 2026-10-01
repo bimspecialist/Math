@@ -475,6 +475,47 @@ function parseIndexSpec(source,workspace,max){
     return value-1;
   });
 }
+function parseAssignmentIndexSpec(source,workspace,max){
+  let text=String(source).trim();
+  if(text===":")return Array.from({length:max},(_,i)=>i);
+  text=text.replace(/\bend\b/g,String(max));
+  const range=colonValues(text,workspace);
+  const values=range??[numericExpression(text,workspace)];
+  return values.map(value=>{
+    if(!Number.isInteger(value)||value<1)throw new Error("INDEX_OUT_OF_RANGE");
+    if(value>10000)throw new Error("ARRAY_GROWTH_LIMIT");
+    return value-1;
+  });
+}
+function ensureMatrixSize(matrix,rows,cols){
+  const result=clone(matrix);
+  const currentCols=result[0]?.length??0;
+  while(result.length<rows)result.push(Array(currentCols).fill(0));
+  const targetCols=Math.max(cols,currentCols);
+  for(const row of result)while(row.length<targetCols)row.push(0);
+  return result;
+}
+function deleteIndexedValues(value,args,workspace){
+  const [rows,cols]=matrixShape(value);
+  if(args.length===1){
+    if(rows!==1&&cols!==1)throw new Error("LINEAR_DELETE_REQUIRES_VECTOR");
+    const max=rows*cols,indices=parseIndexSpec(args[0],workspace,max).sort((a,b)=>b-a);
+    const values=linearColumnMajor(value);
+    for(const index of indices)values.splice(index,1);
+    if(!values.length)return[];
+    return rows===1?[values]:values.map(v=>[v]);
+  }
+  const rowAll=args[0].trim()===":",colAll=args[1].trim()===":";
+  if(rowAll===colAll)throw new Error("DELETE_REQUIRES_FULL_ROW_OR_COLUMN");
+  if(colAll){
+    const remove=new Set(parseIndexSpec(args[0],workspace,rows));
+    const out=value.filter((_,r)=>!remove.has(r)).map(row=>row.slice());
+    return out.length?out:[];
+  }
+  const remove=new Set(parseIndexSpec(args[1],workspace,cols));
+  const out=value.map(row=>row.filter((_,c)=>!remove.has(c)));
+  return out[0]?.length?out:[];
+}
 
 function indexWorkspaceValue(value,argSource,workspace){
   if(!Array.isArray(value))throw new Error("INDEXING_REQUIRES_ARRAY");
@@ -499,22 +540,33 @@ function valueForAssignment(rhs,rows,cols){
   return rhs;
 }
 function assignWorkspaceIndex(value,argSource,rhs,workspace){
-  if(!isMatrix(value))throw new Error("INDEXING_REQUIRES_ARRAY");
-  const result=clone(value),args=splitArgs(argSource);
+  if(!isMatrix(value)||!value.length)throw new Error("INDEXING_REQUIRES_ARRAY");
+  const args=splitArgs(argSource);
   if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
+  if(Array.isArray(rhs)&&rhs.length===0)return deleteIndexedValues(value,args,workspace);
   if(args.length===1){
-    const linear=linearColumnMajor(result),indices=parseIndexSpec(args[0],workspace,linear.length);
+    const [rows,cols]=matrixShape(value),max=rows*cols;
+    const indices=parseAssignmentIndexSpec(args[0],workspace,max);
     const replacement=typeof rhs==="number"?Array(indices.length).fill(rhs):linearColumnMajor(rhs);
     if(replacement.length!==indices.length)throw new Error("INDEX_ASSIGNMENT_SHAPE_MISMATCH");
+    const needed=Math.max(max,...indices.map(i=>i+1));
+    let result=clone(value);
+    if(needed>max){
+      if(rows===1)result=ensureMatrixSize(result,1,needed);
+      else if(cols===1)result=ensureMatrixSize(result,needed,1);
+      else result=ensureMatrixSize(result,rows,Math.ceil(needed/rows));
+    }
     indices.forEach((linearIndex,k)=>{
-      const rows=result.length;
-      const row=linearIndex%rows,col=Math.floor(linearIndex/rows);
+      const currentRows=result.length;
+      const row=linearIndex%currentRows,col=Math.floor(linearIndex/currentRows);
       result[row][col]=replacement[k];
     });
     return result;
   }
-  const [rows,cols]=matrixShape(result);
-  const ri=parseIndexSpec(args[0],workspace,rows),ci=parseIndexSpec(args[1],workspace,cols);
+  const [rows,cols]=matrixShape(value);
+  const ri=parseAssignmentIndexSpec(args[0],workspace,rows),ci=parseAssignmentIndexSpec(args[1],workspace,cols);
+  const maxRow=Math.max(...ri)+1,maxCol=Math.max(...ci)+1;
+  const result=ensureMatrixSize(value,Math.max(rows,maxRow),Math.max(cols,maxCol));
   const replacement=valueForAssignment(rhs,ri.length,ci.length);
   ri.forEach((r,rr)=>ci.forEach((c,cc)=>{result[r][c]=replacement[rr][cc]}));
   return result;
