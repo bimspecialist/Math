@@ -238,6 +238,8 @@
                   <button type="button" data-mathlab-example="f = @(t,y) y&#10;S = rk4(f,[0 1],1,20)&#10;S(end,:)" data-i18n="odeSolvers">ODE solvers</button>
                   <button type="button" data-mathlab-example="z = complex(3,4)&#10;abs(z)&#10;angle(z)&#10;conj(z)&#10;sqrt(-1)" data-i18n="complexNumbers">Complex numbers</button>
                   <button type="button" data-mathlab-example="x = [1 2 3 4]&#10;X = fft(x)&#10;real(X)&#10;imag(X)&#10;ifft(X)" data-i18n="fourierTools">FFT / IFFT</button>
+                  <button type="button" data-mathlab-example="r = roots([1 -6 11 -6])&#10;q = roots([1 0 0 0 1])" data-i18n="polynomialRoots">Polynomial roots</button>
+                  <button type="button" data-mathlab-example="x = [1 2 3 4]&#10;conv(x,[1 1])&#10;movmean(x,3)&#10;xcorr(x)&#10;fftshift(fft(x))" data-i18n="signalProcessing">Signal processing</button>
                   <button type="button" data-mathlab-example="A = [2,1;1,-1]&#10;b = [5;1]&#10;x = solve(A,b)&#10;x" data-i18n="linearSystems">Linear systems</button>
                   <button type="button" data-mathlab-example="v = [2,4,4,4,5,5,7,9]&#10;mean(v)&#10;median(v)&#10;std(v)&#10;min(v)&#10;max(v)" data-i18n="statistics">Statistics</button>
                   <button type="button" data-mathlab-example="u = [1,2,3]&#10;v = [4,5,6]&#10;dot(u,v)&#10;cross(u,v)&#10;norm(u)" data-i18n="vectors">Vectors</button>
@@ -269,6 +271,7 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabUtilityCommands">Array utilities</strong><code dir="ltr">prod · cumsum · cumprod · diff · sort · unique · round · floor · ceil · fix · sign · rem</code></p>
                     <p><strong data-i18n="mathLabNumericalCommands">Numerical methods</strong><code dir="ltr">trapz · cumtrapz · gradient · interp1 · derivative · integral · fzero · rk4 / ode4 · roots</code></p>
                     <p><strong data-i18n="mathLabComplexCommands">Complex & Fourier</strong><code dir="ltr">complex · real · imag · conj · angle · fft · ifft · sqrt(-1) · roots([1 0 1])</code></p>
+                    <p><strong data-i18n="mathLabSignalCommands">Polynomial & signal</strong><code dir="ltr">roots (degree ≤ 20) · conv · xcorr · movmean · fftshift · ifftshift</code></p>
                   </div>
                 </details>
                 <div class="mathlab-actions">
