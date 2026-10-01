@@ -51,6 +51,8 @@ renderMathLabHistory();
   const activeSection=document.querySelector(".page-section.active");
   const activeTarget=activeSection?.id?.replace(/-section$/,"")||document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
   updateToolHeading(activeTarget);
+  syncToolGroupsForContext();
+  syncRampDuplicateState();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -98,6 +100,9 @@ function setToolGroupCollapsed(group,collapsed){
   group.classList.toggle("is-collapsed",collapsed);
   group.querySelector(":scope > .tool-group-toggle")?.setAttribute("aria-expanded",String(!collapsed));
 }
+document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+  setToolGroupCollapsed(group,!group.querySelector(".tool-item.active"));
+});
 for(const toggle of toolGroupToggles){
   toggle.addEventListener("click",()=>{
     const group=toggle.closest(".tool-group");
