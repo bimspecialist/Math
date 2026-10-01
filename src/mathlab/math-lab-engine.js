@@ -151,7 +151,7 @@ function splitMatrixRowTokens(source){
   return out;
 }
 function asConcatMatrix(value){
-  if(typeof value==="number")return[[value]];
+  if(typeof value==="number"||isComplex(value))return[[clone(value)]];
   if(isMatrix(value))return clone(value);
   if(Array.isArray(value))return[value.slice()];
   throw new Error("INVALID_MATRIX");
