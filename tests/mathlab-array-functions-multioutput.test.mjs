@@ -65,3 +65,21 @@ test("Math Lab UI exposes array math and multi-output function examples",()=>{
   assert.match(index,/mathLabFunctionCommands/);
   assert.match(strings,/ml_TOO_MANY_OUTPUTS/);
 });
+
+
+test("Math Lab supports element-wise logical comparisons",()=>{
+  const r=runMathLabScript("A=[0 2;3 0]\nB=A>1\nC=A~=0\nD=B&C\nE=B|[1 0;0 0]\nF=~B\nidx=find(A>0)");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.B,[[0,1],[1,0]]);
+  assert.deepEqual(r.workspace.C,[[0,1],[1,0]]);
+  assert.deepEqual(r.workspace.D,[[0,1],[1,0]]);
+  assert.deepEqual(r.workspace.E,[[1,1],[1,0]]);
+  assert.deepEqual(r.workspace.F,[[1,0],[0,1]]);
+  assert.deepEqual(r.workspace.idx,[[2,3]]);
+});
+
+test("Scalar short-circuit operators still require scalar conditions",()=>{
+  const r=runMathLabScript("A=[1 0]\nx=A&&1");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"SCALAR_LOGICAL_REQUIRED");
+});
