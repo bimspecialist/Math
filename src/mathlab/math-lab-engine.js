@@ -4,6 +4,28 @@ const clone=v=>Array.isArray(v)?v.map(clone):v;
 const isMatrix=v=>Array.isArray(v)&&v.every(Array.isArray);
 const MAX_RANGE_ITEMS=10000;
 const MAX_LOOP_ITERATIONS=10000;
+const scopeMetadata=new WeakMap();
+function cloneRecord(record={}){
+  const out={};for(const [key,value] of Object.entries(record))out[key]=clone(value);return out;
+}
+function normalizeRuntimeState(state={}){
+  const persistents={};
+  for(const [fn,values] of Object.entries(state.persistents??{}))persistents[fn]=cloneRecord(values);
+  return{globals:cloneRecord(state.globals??{}),persistents};
+}
+function scopeFor(workspace){return scopeMetadata.get(workspace)}
+function syncGlobalsIntoWorkspace(workspace){
+  const meta=scopeFor(workspace);if(!meta)return;
+  for(const name of meta.globalNames)if(Object.prototype.hasOwnProperty.call(meta.runtimeState.globals,name))workspace[name]=clone(meta.runtimeState.globals[name]);
+}
+function syncScopeState(workspace){
+  const meta=scopeFor(workspace);if(!meta)return;
+  for(const name of meta.globalNames)if(Object.prototype.hasOwnProperty.call(workspace,name))meta.runtimeState.globals[name]=clone(workspace[name]);
+  if(meta.currentFunction){
+    const bucket=meta.runtimeState.persistents[meta.currentFunction]??={};
+    for(const name of meta.persistentNames)if(Object.prototype.hasOwnProperty.call(workspace,name))bucket[name]=clone(workspace[name]);
+  }
+}
 
 function stripOuterParens(source){
   let text=String(source??"").trim();
@@ -703,7 +725,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
-  "round","floor","ceil","fix","sign","rem","isfinite","isnan"
+  "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty"
 ]);
 function isFunctionHandle(value){return Boolean(value&&typeof value==="object"&&value.__mathlabFunctionHandle===true)}
 function createFunctionHandle(source,workspace){
@@ -726,7 +748,8 @@ function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOut
   if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
   const local={nargin:argSources.length,nargout:requestedOutputs};
   fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
-  const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
+  const callerMeta=scopeFor(callerWorkspace);
+  const result=runMathLabScript(fn.body,local,{functions,isFunction:true,runtimeState:callerMeta?.runtimeState,currentFunction:fn.name});
   if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
   const values=fn.outputs.map(output=>{
     if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
@@ -827,7 +850,7 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
     if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
-    if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).length}
+    if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).length}
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
     if(fn==="size"){
@@ -863,6 +886,7 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="sign"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.sign)}
     if(fn==="isfinite"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isFinite(x)?1:0)}
     if(fn==="isnan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isNaN(x)?1:0)}
+    if(fn==="isempty"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Array.isArray(args[0])&&flatten(args[0]).length===0?1:0}
     return numericExpression(text,workspace);
   }
   return evalValue(text,workspace,functions);
@@ -870,14 +894,48 @@ function evalCommand(expr,workspace,functions={}){
 
 function executeSimpleStatement(source,suppressed,context,lineNumber){
   const {workspace,functions,outputs,events,options}=context;
+  syncGlobalsIntoWorkspace(workspace);
   const raw=source+(suppressed?";":"");
+  const globalDecl=source.match(/^global\s+(.+)$/i);
+  if(globalDecl){
+    const meta=scopeFor(workspace),names=globalDecl[1].split(/\s+/).filter(Boolean);
+    for(const name of names){
+      if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))throw new Error("INVALID_VARIABLE_NAME");
+      meta.globalNames.add(name);
+      if(Object.prototype.hasOwnProperty.call(meta.runtimeState.globals,name))workspace[name]=clone(meta.runtimeState.globals[name]);
+      else meta.runtimeState.globals[name]=clone(Object.prototype.hasOwnProperty.call(workspace,name)?workspace[name]:[]);
+    }
+    syncGlobalsIntoWorkspace(workspace);return;
+  }
+  const persistentDecl=source.match(/^persistent\s+(.+)$/i);
+  if(persistentDecl){
+    const meta=scopeFor(workspace);
+    if(!meta?.currentFunction)throw new Error("PERSISTENT_OUTSIDE_FUNCTION");
+    const bucket=meta.runtimeState.persistents[meta.currentFunction]??={};
+    for(const name of persistentDecl[1].split(/\s+/).filter(Boolean)){
+      if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))throw new Error("INVALID_VARIABLE_NAME");
+      meta.persistentNames.add(name);
+      workspace[name]=Object.prototype.hasOwnProperty.call(bucket,name)?clone(bucket[name]):[];
+    }
+    return;
+  }
   const command=source.match(/^(clear|clc|who|whos)(?:\s+(.*))?$/i);
   if(command){
     const cmd=command[1].toLowerCase(),arg=(command[2]??"").trim();
     if(cmd==="clc"){events.push({type:"clear-output",line:lineNumber});return}
     if(cmd==="clear"){
-      if(!arg||arg.toLowerCase()==="all"){for(const key of Object.keys(workspace))delete workspace[key]}
-      else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
+      const meta=scopeFor(workspace),lowerArg=arg.toLowerCase();
+      if(!arg){for(const key of Object.keys(workspace))delete workspace[key]}
+      else if(lowerArg==="all"){
+        for(const key of Object.keys(workspace))delete workspace[key];
+        meta.runtimeState.globals={};meta.runtimeState.persistents={};
+        meta.globalNames.clear();meta.persistentNames.clear();
+      }else if(lowerArg==="functions")meta.runtimeState.persistents={};
+      else if(lowerArg==="global"||lowerArg.startsWith("global ")){
+        const names=arg.split(/\s+/).slice(1);
+        if(!names.length){meta.runtimeState.globals={};meta.globalNames.clear()}
+        else for(const name of names){delete meta.runtimeState.globals[name];meta.globalNames.delete(name);delete workspace[name]}
+      }else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
       events.push({type:"workspace-changed",line:lineNumber});return;
     }
     const names=Object.keys(workspace).sort();
@@ -911,6 +969,7 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     }
     workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace,functions);
     if(!suppressed)outputs.push({line:lineNumber,source:raw,name,value:clone(workspace[name])});
+    syncScopeState(workspace);
     return;
   }
   const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
@@ -918,10 +977,12 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     const value=evalCommand(assignment[2],workspace,functions);
     workspace[assignment[1]]=clone(value);
     if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:assignment[1],value:clone(value)});
+    syncScopeState(workspace);
     return;
   }
   const value=evalCommand(source,workspace,functions);
   workspace.ans=clone(value);
+  syncScopeState(workspace);
   if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:"ans",value:clone(value)});
 }
 
@@ -932,6 +993,7 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
     const lower=clean.toLowerCase();
     const lineNumber=baseLine+i+1;
     try{
+      syncGlobalsIntoWorkspace(context.workspace);
       if(/^if\b/i.test(clean)){
         const end=findBlockEnd(lines,i);
         const branches=splitIfBranches(lines,i,end);
@@ -1000,12 +1062,17 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
 export function runMathLabScript(script,initialWorkspace={},options={}){
   let parsed;
   try{parsed=parseUserFunctions(script)}catch(error){
-    return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}};
+    return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],runtimeState:normalizeRuntimeState(options.runtimeState),error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}};
   }
   const functions={...(options.functions??{}),...parsed.functions};
   const workspace={...initialWorkspace},outputs=[],events=[];
-  const context={workspace,functions,outputs,events,options};
+  const runtimeState=options.runtimeState??normalizeRuntimeState();
+  if(!runtimeState.globals)runtimeState.globals={};
+  if(!runtimeState.persistents)runtimeState.persistents={};
+  const context={workspace,functions,outputs,events,options:{...options,runtimeState}};
+  scopeMetadata.set(workspace,{runtimeState,currentFunction:options.currentFunction??null,globalNames:new Set(),persistentNames:new Set()});
   const result=executeLines(String(parsed.script??"").split(/\r?\n/),context,0,0);
-  if(!result.ok)return{ok:false,workspace,outputs,events,error:result.error};
-  return{ok:true,workspace,outputs,events};
+  syncScopeState(workspace);
+  if(!result.ok)return{ok:false,workspace,outputs,events,runtimeState,error:result.error};
+  return{ok:true,workspace,outputs,events,runtimeState};
 }
