@@ -36,3 +36,12 @@ test("Ramp duplicate geometry result is hidden instead of repeated",()=>{
   assert.ok(UI_STRINGS.en.rampResultsMatch);
   assert.ok(UI_STRINGS.ar.rampResultsMatch);
 });
+
+
+test("Math Lab Quick examples starts collapsed and can be expanded natively",()=>{
+  assert.match(index,/<details class="mathlab-example-browser" aria-labelledby="mathlab-examples-title">/);
+  assert.doesNotMatch(index,/<details class="mathlab-example-browser"[^>]*\sopen(?:\s|>)/);
+  assert.match(index,/<summary class="mathlab-example-browser-head">/);
+  assert.match(css,/\.mathlab-example-browser\[open\]\{[\s\S]*max-block-size:340px;[\s\S]*overflow:auto/);
+  assert.match(css,/\.mathlab-example-browser:not\(\[open\]\)\{[\s\S]*max-block-size:none;[\s\S]*overflow:visible/);
+});
