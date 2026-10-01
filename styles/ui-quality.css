@@ -1,0 +1,372 @@
+/* UI quality layer
+   Loaded after calculator.css to normalize responsive behavior, bilingual text expansion,
+   and dense control groups without rewriting the calculator-specific visual language. */
+
+:root{
+  --ui-control-min-height:44px;
+  --ui-control-radius:10px;
+  --ui-gap-1:8px;
+  --ui-gap-2:12px;
+  --ui-gap-3:16px;
+  --ui-focus-ring:0 0 0 3px color-mix(in srgb,var(--focus) 28%,transparent);
+}
+
+button,
+input,
+select,
+textarea{
+  font:inherit;
+}
+
+button,
+.tool-item,
+.category-tool,
+.consent-actions button,
+.formula-detail-actions button,
+.mathlab-actions button{
+  max-inline-size:100%;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+a:focus-visible{
+  outline:2px solid var(--focus);
+  outline-offset:2px;
+  box-shadow:var(--ui-focus-ring);
+}
+
+.site-header{
+  gap:var(--ui-gap-2);
+  min-width:0;
+}
+
+.site-brand{
+  min-width:0;
+}
+
+.site-brand>div{
+  min-width:0;
+}
+
+.site-brand h1,
+.site-brand small{
+  overflow-wrap:anywhere;
+}
+
+.site-actions{
+  flex:0 0 auto;
+}
+
+#lang-toggle,
+.sidebar-toggle{
+  min-inline-size:44px;
+  min-block-size:44px;
+}
+
+.workspace-shell,
+.center-column,
+.tool-page,
+.page-section,
+.mathlab-layout,
+.mathlab-editor-panel,
+.mathlab-results{
+  min-width:0;
+}
+
+.tool-sidebar{
+  min-width:0;
+}
+
+.tool-item,
+.tool-item-static{
+  min-block-size:44px;
+  line-height:1.3;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+.tool-item .tool-icon,
+.tool-item-static .tool-icon{
+  flex:0 0 1.5rem;
+  text-align:center;
+}
+
+.tool-group-title{
+  overflow-wrap:anywhere;
+}
+
+.category-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+}
+
+.category-card,
+.formula-card,
+.date-grid section,
+.ramp-panel,
+.mathlab-editor-panel,
+.mathlab-results section{
+  min-width:0;
+}
+
+.category-tool,
+.formula-detail-actions button,
+.mathlab-actions button,
+.consent-actions button{
+  min-block-size:var(--ui-control-min-height);
+  line-height:1.3;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+
+/* Math Lab example browser */
+.mathlab-example-browser{
+  display:grid;
+  gap:var(--ui-gap-2);
+  margin-block-end:var(--ui-gap-2);
+}
+
+.mathlab-example-browser-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:var(--ui-gap-2);
+  flex-wrap:wrap;
+}
+
+.mathlab-example-browser-head strong{
+  font-size:.95rem;
+}
+
+.mathlab-example-browser-head span{
+  color:var(--muted);
+  font-size:.8rem;
+  line-height:1.4;
+}
+
+.mathlab-example-groups{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:var(--ui-gap-1);
+}
+
+.mathlab-example-group{
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:var(--ui-control-radius);
+  background:var(--panel);
+  overflow:clip;
+}
+
+.mathlab-example-group summary{
+  min-block-size:44px;
+  display:flex;
+  align-items:center;
+  cursor:pointer;
+  padding:9px 12px;
+  font-weight:700;
+  line-height:1.3;
+  overflow-wrap:anywhere;
+}
+
+.mathlab-example-group[open] summary{
+  border-block-end:1px solid var(--line);
+}
+
+.mathlab-example-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));
+  gap:7px;
+  padding:9px;
+}
+
+.mathlab-example-grid button{
+  min-width:0;
+  min-block-size:44px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  color:var(--text);
+  padding:8px 10px;
+  line-height:1.25;
+  text-align:start;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+
+.mathlab-example-grid button:hover{
+  background:color-mix(in srgb,var(--panel) 88%,var(--focus));
+}
+
+.mathlab-command-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));
+}
+
+.mathlab-command-grid p,
+.mathlab-command-grid code{
+  min-width:0;
+}
+
+.mathlab-command-grid code{
+  direction:ltr;
+  text-align:left;
+  unicode-bidi:isolate;
+}
+
+/* Form and action layouts */
+.formula-detail-actions,
+.mathlab-actions,
+.consent-actions,
+.graph-actions{
+  flex-wrap:wrap;
+}
+
+.formula-detail-actions>*,
+.mathlab-actions>*,
+.consent-actions>*{
+  flex:0 1 auto;
+}
+
+.converter-card,
+.ramp-design-grid,
+.ramp-grid,
+.graph-controls,
+.programmer-grid,
+.date-grid,
+.formula-controls{
+  min-width:0;
+}
+
+.converter-card>*,
+.ramp-design-grid>*,
+.ramp-grid>*,
+.graph-controls>*,
+.programmer-grid>*,
+.date-grid>*,
+.formula-controls>*{
+  min-width:0;
+}
+
+input,
+select,
+textarea{
+  max-inline-size:100%;
+}
+
+.graph-actions button{
+  white-space:normal;
+}
+
+/* Bidirectional safety */
+html[dir="rtl"] .tool-item,
+html[dir="rtl"] .category-tool,
+html[dir="rtl"] .mathlab-example-grid button{
+  text-align:start;
+}
+
+html[dir="rtl"] code,
+html[dir="rtl"] pre,
+html[dir="rtl"] textarea[dir="ltr"],
+html[dir="rtl"] .converter-result,
+html[dir="rtl"] .programmer-result,
+html[dir="rtl"] .advanced-result-meta{
+  direction:ltr;
+  text-align:left;
+  unicode-bidi:isolate;
+}
+
+html[dir="rtl"] .mathlab-example-browser-head{
+  text-align:start;
+}
+
+/* Responsive density */
+@media(max-width:1100px){
+  .mathlab-example-groups{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:900px){
+  .site-header{
+    align-items:flex-start;
+  }
+
+  .tool-sidebar{
+    inset-inline:10px;
+    left:auto;
+    right:auto;
+    width:auto;
+  }
+
+  .mathlab-layout{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:700px){
+  .formula-detail-actions,
+  .mathlab-actions,
+  .consent-actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  .formula-detail-actions>*,
+  .mathlab-actions>*,
+  .consent-actions>*{
+    width:100%;
+  }
+
+  .converter-card,
+  .graph-controls,
+  .programmer-grid,
+  .date-grid,
+  .formula-controls,
+  .ramp-grid,
+  .ramp-design-grid{
+    grid-template-columns:1fr;
+  }
+
+  .graph-controls .graph-expression-field,
+  .graph-actions,
+  .ramp-grid .advanced-solve,
+  .ramp-design-grid .advanced-solve{
+    grid-column:auto;
+  }
+}
+
+@media(max-width:520px){
+  .site-header{
+    padding-inline:10px;
+  }
+
+  .tool-page{
+    padding:10px;
+  }
+
+  .mathlab-example-grid{
+    grid-template-columns:1fr;
+  }
+
+  .mathlab-example-browser-head{
+    display:grid;
+  }
+
+  .mathlab-editor-panel textarea{
+    min-height:220px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    scroll-behavior:auto!important;
+    transition-duration:.01ms!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+  }
+}
