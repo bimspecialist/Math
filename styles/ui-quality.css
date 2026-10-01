@@ -481,3 +481,35 @@ html[dir="rtl"] .tool-group.is-collapsed .tool-group-title.tool-group-toggle::af
 @media(prefers-reduced-motion:reduce){
   .tool-group-title.tool-group-toggle::after{transition:none}
 }
+
+
+/* Math Lab quick examples stay collapsed on first load. */
+.mathlab-example-browser > summary.mathlab-example-browser-head{
+  cursor:pointer;
+  list-style:none;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+}
+.mathlab-example-browser > summary.mathlab-example-browser-head::-webkit-details-marker{display:none}
+.mathlab-example-browser > summary.mathlab-example-browser-head::after{
+  content:"▾";
+  font-size:.82rem;
+  color:var(--muted);
+  transition:transform .16s ease;
+}
+.mathlab-example-browser:not([open]) > summary.mathlab-example-browser-head::after{transform:rotate(-90deg)}
+html[dir="rtl"] .mathlab-example-browser:not([open]) > summary.mathlab-example-browser-head::after{transform:rotate(90deg)}
+.mathlab-example-browser:not([open]){
+  max-block-size:none;
+  overflow:visible;
+}
+.mathlab-example-browser[open]{
+  max-block-size:340px;
+  overflow:auto;
+}
+@media(max-width:760px){
+  .mathlab-example-browser[open]{max-block-size:300px}
+}
+@media(prefers-reduced-motion:reduce){
+  .mathlab-example-browser > summary.mathlab-example-browser-head::after{transition:none}
+}
