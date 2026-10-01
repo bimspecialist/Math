@@ -10,6 +10,6 @@ test("Math Lab UI exposes dimension-aware reductions bilingually",()=>{
   assert.match(index,/sum\(A,1\)/);
   assert.match(index,/std\(A,2\)/);
   assert.match(strings,/dimensionReductions:"Dimension reductions"/);
-  assert.match(strings,/dimensionReductions:"اختزالات حسب البعد"/);
-  assert.match(strings,/mathLabReductionCommands:"اختزالات المصفوفات"/);
+  assert.match(strings,/dimensionReductions:"اختزالات بحسب البعد"/);
+  assert.match(strings,/mathLabReductionCommands:"اختزالات المصفوفات بحسب البعد"/);
 });

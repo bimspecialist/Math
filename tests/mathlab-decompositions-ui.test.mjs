@@ -12,6 +12,6 @@ test("Math Lab UI exposes matrix decomposition workflows bilingually",()=>{
   assert.match(index,/\[Q,R\] = qr/);
   assert.match(index,/rref\(/);
   assert.match(strings,/matrixDecompositions:"Matrix decompositions"/);
-  assert.match(strings,/matrixDecompositions:"تحليلات المصفوفات"/);
+  assert.match(strings,/matrixDecompositions:"تفكيكات المصفوفات"/);
   assert.match(strings,/matrixReduction:"اختزال المصفوفات"/);
 });

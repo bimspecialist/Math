@@ -12,6 +12,6 @@ test("Math Lab UI exposes dimension-aware transforms bilingually",()=>{
   assert.match(index,/diff\(A,1,2\)/);
   assert.match(index,/sort\(A,2\)/);
   assert.match(strings,/dimensionTransforms:"Dimension transforms"/);
-  assert.match(strings,/dimensionTransforms:"تحويلات حسب البعد"/);
-  assert.match(strings,/mathLabDimensionTransformCommands:"تحويلات حسب البعد"/);
+  assert.match(strings,/dimensionTransforms:"تحويلات بحسب البعد"/);
+  assert.match(strings,/mathLabDimensionTransformCommands:"تحويلات بحسب البعد"/);
 });
