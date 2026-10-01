@@ -648,17 +648,88 @@ function rk4Solve(handle,tspan,y0,steps,functions){
   return out;
 }
 
+function evaluatePolynomialComplex(coefficients,z){
+  let value=complex(0,0);
+  for(const coefficient of coefficients)value=toComplex(scalarAdd(scalarMul(value,z),coefficient));
+  return normalizeScalar(value);
+}
+
 function polynomialRoots(coefficients){
   const c=numericValues(coefficients);
   while(c.length>1&&Math.abs(c[0])<1e-15)c.shift();
-  if(c.length===2)return[[-c[1]/c[0]]];
-  if(c.length!==3)throw new Error("ROOTS_QUADRATIC_ONLY");
-  const [a,b,d]=c,disc=b*b-4*a*d;
-  const s=scalarSqrt(disc);
-  const twoA=2*a;
-  const r1=scalarDiv(scalarSub(-b,s),twoA),r2=scalarDiv(scalarAdd(-b,s),twoA);
-  if(!isComplex(r1)&&!isComplex(r2)&&Math.abs(r1-r2)<1e-12)return[[r1]];
-  return[[normalizeScalar(r1),normalizeScalar(r2)]];
+  if(c.length<2)return[[]];
+  const degree=c.length-1;
+  if(degree>20)throw new Error("POLYNOMIAL_DEGREE_TOO_LARGE");
+  if(degree===1)return[[-c[1]/c[0]]];
+  const lead=c[0],monic=c.map(v=>v/lead);
+  if(degree===2){
+    const [a,b,d]=c,disc=b*b-4*a*d;
+    const s=scalarSqrt(disc),twoA=2*a;
+    const roots=[scalarDiv(scalarSub(-b,s),twoA),scalarDiv(scalarAdd(-b,s),twoA)]
+      .map(normalizeScalar)
+      .sort((x,y)=>{const a=toComplex(x),b=toComplex(y);return a.re-b.re||a.im-b.im});
+    return[roots];
+  }
+  const radius=1+Math.max(...monic.slice(1).map(Math.abs));
+  let roots=Array.from({length:degree},(_,k)=>{
+    const angle=2*Math.PI*(k+0.25)/degree;
+    return complex(radius*Math.cos(angle),radius*Math.sin(angle));
+  });
+  for(let iteration=0;iteration<600;iteration++){
+    let maxDelta=0;
+    const next=roots.map((root,i)=>{
+      let denominator=complex(1,0);
+      for(let j=0;j<roots.length;j++)if(j!==i)denominator=toComplex(scalarMul(denominator,scalarSub(root,roots[j])));
+      if(scalarAbs(denominator)<1e-18)denominator=complex(1e-12,1e-12*(i+1));
+      const correction=scalarDiv(evaluatePolynomialComplex(monic,root),denominator);
+      maxDelta=Math.max(maxDelta,scalarAbs(correction));
+      return toComplex(scalarSub(root,correction));
+    });
+    roots=next;
+    if(maxDelta<1e-11)break;
+    if(iteration===599)throw new Error("ROOTS_DID_NOT_CONVERGE");
+  }
+  const cleaned=roots.map(normalizeScalar).sort((x,y)=>{
+    const a=toComplex(x),b=toComplex(y);
+    const ar=Math.abs(a.re)<1e-9?0:a.re,br=Math.abs(b.re)<1e-9?0:b.re;
+    const ai=Math.abs(a.im)<1e-9?0:a.im,bi=Math.abs(b.im)<1e-9?0:b.im;
+    return ar-br||ai-bi;
+  });
+  return[cleaned];
+}
+
+function convolveSignals(aValue,bValue){
+  const a=flatten(aValue),b=flatten(bValue);
+  if(!a.length||!b.length)return[[]];
+  if(a.length+b.length>4097)throw new Error("SIGNAL_TOO_LARGE");
+  const out=Array(a.length+b.length-1).fill(0);
+  for(let i=0;i<a.length;i++)for(let j=0;j<b.length;j++)out[i+j]=scalarAdd(out[i+j],scalarMul(a[i],b[j]));
+  return[out.map(normalizeScalar)];
+}
+
+function shiftSignal(value,inverse=false){
+  const data=flatten(value);
+  if(!data.length)return[[]];
+  const split=inverse?Math.ceil(data.length/2):Math.floor(data.length/2);
+  return[[...data.slice(split),...data.slice(0,split)].map(clone)];
+}
+
+function movingMean(value,windowValue){
+  const data=flatten(value),window=Number(windowValue);
+  if(!Number.isInteger(window)||window<1||window>data.length)throw new Error("INVALID_WINDOW_SIZE");
+  return[data.map((_,i)=>{
+    const half=Math.floor(window/2),left=Math.max(0,i-half),right=Math.min(data.length,i+(window-half));
+    let sum=0;
+    for(let j=left;j<right;j++)sum=scalarAdd(sum,data[j]);
+    return normalizeScalar(scalarDiv(sum,right-left));
+  })];
+}
+
+function crossCorrelation(aValue,bValue=aValue){
+  const a=flatten(aValue),b=flatten(bValue);
+  if(!a.length||!b.length)return[[]];
+  const reversed=b.slice().reverse().map(scalarConj);
+  return convolveSignals(a,reversed);
 }
 
 function discreteFourierTransform(value,inverse=false){
@@ -1114,7 +1185,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
-  "polyfit","polyval","roots","complex","real","imag","conj","angle","fft","ifft","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
+  "polyfit","polyval","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
@@ -1267,6 +1338,11 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="angle"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"angle")}
     if(fn==="fft"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return discreteFourierTransform(args[0],false)}
     if(fn==="ifft"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return discreteFourierTransform(args[0],true)}
+    if(fn==="fftshift"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return shiftSignal(args[0],false)}
+    if(fn==="ifftshift"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return shiftSignal(args[0],true)}
+    if(fn==="conv"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return convolveSignals(args[0],args[1])}
+    if(fn==="xcorr"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return crossCorrelation(args[0],args[1]??args[0])}
+    if(fn==="movmean"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return movingMean(args[0],args[1])}
     if(fn==="trapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return trapezoidalIntegral(args[0],args[1]??null)}
     if(fn==="cumtrapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return cumulativeTrapezoid(args[0],args[1]??null)}
     if(fn==="gradient"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return numericalGradient(args[0],args[1]??1)}
