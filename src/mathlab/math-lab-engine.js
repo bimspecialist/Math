@@ -303,6 +303,7 @@ function binaryArrayOperation(op,left,right){
     if(isMatrix(left)&&isMatrix(right))return matrixMultiply(left,right);
   }
   if(op==="/")return matrixRightDivide(left,right);
+  if(op==="\\")return matrixLeftDivide(left,right);
   if(op==="^"){
     if((typeof left==="number"||isComplex(left))&&(typeof right==="number"||isComplex(right)))return scalarPow(left,right);
     if(isMatrix(left)&&typeof right==="number")return matrixPower(left,right);
@@ -531,6 +532,41 @@ function qrDecomposition(value){
   const Q=Array.from({length:m},(_,i)=>Array.from({length:n},(_,j)=>qColumns[j][i]));
   const clean=m=>m.map(row=>row.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
   return{Q:clean(Q),R:clean(R)};
+}
+
+function leastSquaresSolve(aValue,bValue){
+  const a=realMatrix(aValue),b=realMatrix(bValue);
+  const [m,n]=matrixShape(a),[br]=matrixShape(b);
+  if(br!==m)throw new Error("MATRIX_DIMENSION_MISMATCH");
+  if(m===n)return solveLinearMatrix(a,b);
+  if(m>n){
+    const {Q,R}=qrDecomposition(a);
+    return solveLinearMatrix(R,matrixMultiply(transpose(Q),b));
+  }
+  return matrixMultiply(pseudoInverse(a),b);
+}
+
+function pseudoInverse(value){
+  const a=realMatrix(value),[m,n]=matrixShape(a);
+  if(m===n)return inverse(a);
+  if(m>n){
+    const {Q,R}=qrDecomposition(a);
+    const invR=solveLinearMatrix(R,identity(n));
+    return matrixMultiply(invR,transpose(Q));
+  }
+  const at=transpose(a),aat=matrixMultiply(a,at);
+  const invAat=solveLinearMatrix(aat,identity(m));
+  return matrixMultiply(at,invAat);
+}
+
+function matrixLeftDivide(left,right){
+  const scalarLeft=typeof left==="number",scalarRight=typeof right==="number";
+  if(scalarLeft&&scalarRight){
+    if(left===0)throw new Error("DIVISION_BY_ZERO");
+    return right/left;
+  }
+  if(!isMatrix(left)||!isMatrix(right))throw new Error("INVALID_MATRIX_OPERATION");
+  return leastSquaresSolve(left,right);
 }
 
 function choleskyDecomposition(value){
@@ -1327,7 +1363,7 @@ export function describeMathLabValue(value){
 }
 
 const MATHLAB_FUNCTIONS=new Set([
-  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve",
+  "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve","lstsq",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
@@ -1403,7 +1439,7 @@ function evalValue(source,workspace,functions={}){
     if(typeof value==="number")return value===0?1:0;
     return mapNumericLike(value,x=>x===0?1:0);
   }
-  for(const operators of [["+","-"],[".*","./","*","/"],[".^","^"]]){
+  for(const operators of [["+","-"],[".*","./","*","/","\\"],[".^","^"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
       const leftText=text.slice(0,match.index).trim();
@@ -1446,6 +1482,7 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="det"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return determinant(args[0])}
     if(fn==="transpose"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return transpose(args[0])}
     if(fn==="inv"||fn==="inverse"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return inverse(args[0])}
+    if(fn==="pinv"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return pseudoInverse(args[0])}
     if(fn==="matmul"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixMultiply(args[0],args[1])}
     if(fn==="trace"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return trace(args[0])}
     if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues(args[0])}
@@ -1455,6 +1492,7 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="chol"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return choleskyDecomposition(args[0])}
     if(fn==="rref"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return reducedRowEchelon(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
+    if(fn==="lstsq"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return leastSquaresSolve(args[0],args[1])}
     if(fn==="eye"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0],args[1]??args[0])}
     if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
     if(fn==="ones"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1]??args[0])}
