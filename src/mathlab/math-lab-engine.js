@@ -1268,6 +1268,48 @@ function blockDiagonal(values){
   return out;
 }
 
+function vectorValues(value){
+  if(typeof value==="number"||isComplex(value))return[clone(value)];
+  if(!isMatrix(value))throw new Error("VECTOR_REQUIRED");
+  const [rows,cols]=matrixShape(value);
+  if(rows!==1&&cols!==1)throw new Error("VECTOR_REQUIRED");
+  return linearColumnMajor(value).map(clone);
+}
+
+function toeplitzMatrix(columnValue,rowValue=undefined){
+  const col=vectorValues(columnValue);
+  const row=rowValue===undefined?col.map(scalarConj):vectorValues(rowValue);
+  if(col.length>100||row.length>100)throw new Error("INVALID_MATRIX_SIZE");
+  row[0]=clone(col[0]);
+  return Array.from({length:col.length},(_,i)=>Array.from({length:row.length},(_,j)=>
+    j>=i?clone(row[j-i]):clone(col[i-j])
+  ));
+}
+
+function hankelMatrix(columnValue,rowValue=undefined){
+  const col=vectorValues(columnValue);
+  let row;
+  if(rowValue===undefined){
+    row=Array(col.length).fill(0);
+    row[0]=clone(col.at(-1));
+  }else{
+    row=vectorValues(rowValue);
+    row[0]=clone(col.at(-1));
+  }
+  if(col.length>100||row.length>100)throw new Error("INVALID_MATRIX_SIZE");
+  const sequence=[...col,...row.slice(1)];
+  return Array.from({length:col.length},(_,i)=>Array.from({length:row.length},(_,j)=>clone(sequence[i+j])));
+}
+
+function triangularPart(value,offset=0,upper=false){
+  const m=matrixValue(value),k=Number(offset);
+  if(!Number.isInteger(k))throw new Error("INVALID_DIAGONAL_OFFSET");
+  return m.map((row,i)=>row.map((item,j)=>{
+    const keep=upper?(j-i>=k):(j-i<=k);
+    return keep?clone(item):0;
+  }));
+}
+
 function linearColumnMajor(m){
   if(!isMatrix(m))return[m];
   const rows=m.length,cols=m[0]?.length??0,out=[];
@@ -1526,7 +1568,7 @@ export function describeMathLabValue(value){
 const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve","lstsq",
   "eye","zeros","ones","linspace","logspace","meshgrid","ndgrid","diag","norm","sum","mean","median","min","max",
-  "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape","repmat","fliplr","flipud","rot90","kron","blkdiag",
+  "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape","repmat","fliplr","flipud","rot90","kron","blkdiag","toeplitz","hankel","tril","triu",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
@@ -1717,6 +1759,10 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="rot90"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return rotate90(args[0],args[1]??1)}
     if(fn==="kron"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return kroneckerProduct(args[0],args[1])}
     if(fn==="blkdiag"){return blockDiagonal(args)}
+    if(fn==="toeplitz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return toeplitzMatrix(args[0],args[1])}
+    if(fn==="hankel"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return hankelMatrix(args[0],args[1])}
+    if(fn==="tril"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return triangularPart(args[0],args[1]??0,false)}
+    if(fn==="triu"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return triangularPart(args[0],args[1]??0,true)}
     if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
     if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
     if(fn==="polyder"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialDerivative(args[0])}
