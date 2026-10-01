@@ -185,12 +185,17 @@ function sameShape(a,b){
 }
 function mapMatrix(m,fn){return m.map((row,r)=>row.map((value,c)=>fn(value,r,c)))}
 function matrixElementwise(a,b,fn){
-  if(typeof a==="number"&&typeof b==="number")return fn(a,b);
-  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>fn(a,v));
-  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>fn(v,b));
+  if(typeof a==="number"&&typeof b==="number")return normalizeNumericResult(fn(a,b));
+  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>normalizeNumericResult(fn(a,v)));
+  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>normalizeNumericResult(fn(v,b)));
   if(isMatrix(a)&&isMatrix(b)){
-    if(!sameShape(a,b))throw new Error("MATRIX_DIMENSION_MISMATCH");
-    return a.map((row,r)=>row.map((value,c)=>fn(value,b[r][c])));
+    const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
+    if((ar!==br&&ar!==1&&br!==1)||(ac!==bc&&ac!==1&&bc!==1))throw new Error("MATRIX_DIMENSION_MISMATCH");
+    const rows=Math.max(ar,br),cols=Math.max(ac,bc);
+    return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>{
+      const av=a[ar===1?0:r][ac===1?0:c],bv=b[br===1?0:r][bc===1?0:c];
+      return normalizeNumericResult(fn(av,bv));
+    }));
   }
   throw new Error("INVALID_MATRIX_OPERATION");
 }
@@ -752,7 +757,7 @@ function switchMatches(selector,candidate){
 }
 
 export function describeMathLabValue(value){
-  if(isFunctionHandle(value))return{size:"1×1",className:"function_handle",preview:"@("+value.params.join(",")+") "+value.expression};
+  if(isFunctionHandle(value))return{size:"1×1",className:"function_handle",preview:value.named?"@"+value.named:"@("+value.params.join(",")+") "+value.expression};
   if(typeof value==="number")return{size:"1×1",className:"double",preview:String(value)};
   if(isMatrix(value)){
     const rows=value.length,cols=value[0]?.length??0;
@@ -774,22 +779,26 @@ const MATHLAB_FUNCTIONS=new Set([
 ]);
 function isFunctionHandle(value){return Boolean(value&&typeof value==="object"&&value.__mathlabFunctionHandle===true)}
 function createFunctionHandle(source,workspace){
-  const match=String(source).trim().match(/^@\(([^)]*)\)\s*(.+)$/);
+  const text=String(source).trim();
+  const named=text.match(/^@([A-Za-z][A-Za-z0-9_]*)$/);
+  if(named)return{__mathlabFunctionHandle:true,named:named[1],params:null,expression:null,closure:{}};
+  const match=text.match(/^@\(([^)]*)\)\s*(.+)$/);
   if(!match)return null;
   const params=match[1].split(",").map(x=>x.trim()).filter(Boolean);
   if(params.some(p=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(p)))throw new Error("INVALID_FUNCTION_HANDLE");
   const closure={};
   for(const [key,value] of Object.entries(workspace))closure[key]=clone(value);
-  return{__mathlabFunctionHandle:true,params,expression:match[2].trim(),closure};
+  return{__mathlabFunctionHandle:true,named:null,params,expression:match[2].trim(),closure};
 }
 function invokeFunctionHandle(handle,argSources,callerWorkspace,functions){
-  if(argSources.length!==handle.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-  const local={};
-  for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
-  handle.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
-  return evalValue(handle.expression,local,functions);
+  const values=argSources.map(source=>clone(evalValue(source,callerWorkspace,functions)));
+  return invokeFunctionHandleValues(handle,values,functions);
 }
 function invokeFunctionHandleValues(handle,args,functions){
+  if(handle.named){
+    const local={};args.forEach((value,i)=>{local["__arg"+i]=clone(value)});
+    return evalCommand(handle.named+"("+args.map((_,i)=>"__arg"+i).join(",")+")",local,functions);
+  }
   if(args.length!==handle.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
   const local={};
   for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
