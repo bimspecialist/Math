@@ -323,7 +323,7 @@ test("Math Lab provides MATLAB-style constructors and vector utilities",()=>{
   assert.equal(r.ok,true);
   assert.deepEqual(r.workspace.O,[[1,1,1],[1,1,1]]);
   assert.deepEqual(r.workspace.v,[0,0.25,0.5,0.75,1]);
-  assert.deepEqual(r.outputs[2].value,[1,4]);
+  assert.deepEqual(r.outputs[2].value,[[1],[4]]);
   assert.equal(r.outputs[3].value,5);
 });
 
@@ -472,7 +472,7 @@ test("Math Lab supports dot and 3D cross products",()=>{
 test("Math Lab reshapes arrays and reports dimensions",()=>{
   const r=runMathLabScript("A = reshape([1,2,3,4,5,6],2,3)\nsize(A)\nrows(A)\ncols(A)\nnumel(A)");
   assert.equal(r.ok,true);
-  assert.deepEqual(r.workspace.A,[[1,2,3],[4,5,6]]);
+  assert.deepEqual(r.workspace.A,[[1,3,5],[2,4,6]]);
   assert.deepEqual(r.outputs[1].value,[2,3]);
   assert.equal(r.outputs[2].value,2);
   assert.equal(r.outputs[3].value,3);
@@ -506,7 +506,7 @@ test("Math Lab UI exposes persistent workspace controls statistics and vectors",
   assert.match(index,/data-i18n="vectors"/);
   assert.match(index,/data-i18n="linearSystems"/);
   assert.match(app,/let mathLabWorkspaceState=\{\}/);
-  assert.match(app,/runMathLabScript\(mathLabInput\.value,mathLabWorkspaceState\)/);
+  assert.match(app,/runMathLabScript\(mathLabInput\.value,mathLabWorkspaceState,\{runtimeState:mathLabRuntimeState\}\)/);
   assert.match(app,/event\.key==="Enter"/);
 });
 
