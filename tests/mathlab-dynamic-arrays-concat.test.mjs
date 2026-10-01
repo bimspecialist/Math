@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { runMathLabScript } from "../src/mathlab/math-lab-engine.js";
 
 test("Math Lab concatenates matrices horizontally and vertically",()=>{
@@ -87,4 +88,15 @@ test("Undefined colon indexed assignment remains rejected",()=>{
   const r=runMathLabScript("A(:)=1");
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"UNDEFINED_VARIABLE");
+});
+
+
+test("Math Lab UI documents dynamic arrays and concatenation",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const strings=readFileSync(new URL("../src/i18n/ui-strings.js",import.meta.url),"utf8");
+  assert.match(index,/data-i18n="dynamicArrays"/);
+  assert.match(index,/mathLabDynamicArrayCommands/);
+  assert.match(index,/A\(end\+1\)/);
+  assert.match(strings,/ml_CONCAT_DIMENSION_MISMATCH/);
+  assert.match(strings,/ml_LINEAR_DELETE_REQUIRES_VECTOR/);
 });
