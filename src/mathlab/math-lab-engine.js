@@ -1009,6 +1009,27 @@ function linspace(start,end,count){
   return Array.from({length:count},(_,i)=>i===count-1?end:Number((start+i*step).toPrecision(14)));
 }
 
+function logspace(start,end,count=50){
+  start=Number(start);end=Number(end);count=Number(count);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||!Number.isInteger(count)||count<2||count>10000)throw new Error("INVALID_SAMPLE_COUNT");
+  return linspace(start,end,count).map(power=>Number((10**power).toPrecision(14)));
+}
+
+function gridVectors(xValue,yValue=xValue,mode="meshgrid"){
+  const x=numericValues(xValue),y=numericValues(yValue);
+  if(x.length>100||y.length>100)throw new Error("INVALID_MATRIX_SIZE");
+  if(mode==="meshgrid"){
+    return{
+      X:Array.from({length:y.length},()=>x.slice()),
+      Y:Array.from({length:y.length},(_,r)=>Array(x.length).fill(y[r]))
+    };
+  }
+  return{
+    X:Array.from({length:x.length},(_,r)=>Array(y.length).fill(x[r])),
+    Y:Array.from({length:x.length},()=>y.slice())
+  };
+}
+
 function diagonal(value){
   if(!isMatrix(value))throw new Error("INVALID_MATRIX");
   const [rows,cols]=matrixShape(value);
@@ -1504,7 +1525,7 @@ export function describeMathLabValue(value){
 
 const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve","lstsq",
-  "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
+  "eye","zeros","ones","linspace","logspace","meshgrid","ndgrid","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape","repmat","fliplr","flipud","rot90","kron","blkdiag",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
@@ -1640,6 +1661,11 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
     if(fn==="ones"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1]??args[0])}
     if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
+    if(fn==="logspace"){if(args.length<2||args.length>3)throw new Error("INVALID_ARGUMENT_COUNT");return logspace(args[0],args[1],args[2]??50)}
+    if(fn==="meshgrid"||fn==="ndgrid"){
+      if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
+      return gridVectors(args[0],args[1]??args[0],fn).X;
+    }
     if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
     if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
     if(fn==="sum"){
@@ -1850,6 +1876,18 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     return;
   }
   const multiAssignment=source.match(/^\[([^\]]+)\]\s*=\s*([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(multiAssignment&&["meshgrid","ndgrid"].includes(multiAssignment[2].toLowerCase())){
+    const name=multiAssignment[2].toLowerCase(),targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
+    if(targets.length!==2)throw new Error("INVALID_OUTPUT_COUNT");
+    const argSources=splitArgs(multiAssignment[3]);
+    if(argSources.length<1||argSources.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
+    const x=evalValue(argSources[0],workspace,functions),y=argSources.length===2?evalValue(argSources[1],workspace,functions):x;
+    const result=gridVectors(x,y,name),values=[result.X,result.Y];
+    targets.forEach((target,i)=>{workspace[target]=clone(values[i])});
+    syncScopeState(workspace);
+    if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
+    return;
+  }
   if(multiAssignment&&["lu","qr"].includes(multiAssignment[2].toLowerCase())){
     const name=multiAssignment[2].toLowerCase(),targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     const argSources=splitArgs(multiAssignment[3]);
