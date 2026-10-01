@@ -11,7 +11,8 @@ for(const key of KEY_CONTRACT)for(const action of [key.primaryAction,key.shiftAc
 const modeMenu=buildModeMenu(ES_PLUS_PROFILE);for(const choice of modeMenu.choices){const mode=ES_PLUS_PROFILE.modes.find(m=>m.id===choice.id);if(!mode?.implemented)failures.push("unimplemented visible mode: "+choice.id)}
 const workflow=".github/workflows/pages.yml";if(!existsSync(workflow))failures.push("Pages workflow missing");else if(!readFileSync(workflow,"utf8").includes("node scripts/verify-calculator.mjs"))failures.push("Pages workflow does not run calculator verification");
 const testFiles=readdirSync("tests").filter(name=>name.endsWith(".test.mjs")).sort().map(name=>"tests/"+name);
-const tests=spawnSync(process.execPath,["--test",...testFiles],{encoding:"utf8"});
-if(tests.status!==0)failures.push("test suite failed:\n"+tests.stdout+"\n"+tests.stderr);
+const tests=spawnSync(process.execPath,["--test",...testFiles],{stdio:"inherit"});
+if(tests.error)failures.push("test runner failed to start: "+tests.error.message);
+else if(tests.status!==0)failures.push("test suite exited with status "+String(tests.status)+(tests.signal?" (signal "+tests.signal+")":""));
 if(failures.length){console.error("Calculator verification FAILED");for(const f of failures)console.error("- "+f);process.exit(1)}
 console.log("Calculator verification PASS");console.log("keys="+KEY_CONTRACT.length+"; modes="+modeMenu.choices.map(x=>x.id).join(",")+"; testFiles="+testFiles.length+"; tests=PASS");

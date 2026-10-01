@@ -4,6 +4,28 @@ const clone=v=>Array.isArray(v)?v.map(clone):v;
 const isMatrix=v=>Array.isArray(v)&&v.every(Array.isArray);
 const MAX_RANGE_ITEMS=10000;
 const MAX_LOOP_ITERATIONS=10000;
+const scopeMetadata=new WeakMap();
+function cloneRecord(record={}){
+  const out={};for(const [key,value] of Object.entries(record))out[key]=clone(value);return out;
+}
+function normalizeRuntimeState(state={}){
+  const persistents={};
+  for(const [fn,values] of Object.entries(state.persistents??{}))persistents[fn]=cloneRecord(values);
+  return{globals:cloneRecord(state.globals??{}),persistents};
+}
+function scopeFor(workspace){return scopeMetadata.get(workspace)}
+function syncGlobalsIntoWorkspace(workspace){
+  const meta=scopeFor(workspace);if(!meta)return;
+  for(const name of meta.globalNames)if(Object.prototype.hasOwnProperty.call(meta.runtimeState.globals,name))workspace[name]=clone(meta.runtimeState.globals[name]);
+}
+function syncScopeState(workspace){
+  const meta=scopeFor(workspace);if(!meta)return;
+  for(const name of meta.globalNames)if(Object.prototype.hasOwnProperty.call(workspace,name))meta.runtimeState.globals[name]=clone(workspace[name]);
+  if(meta.currentFunction){
+    const bucket=meta.runtimeState.persistents[meta.currentFunction]??={};
+    for(const name of meta.persistentNames)if(Object.prototype.hasOwnProperty.call(workspace,name))bucket[name]=clone(workspace[name]);
+  }
+}
 
 function stripOuterParens(source){
   let text=String(source??"").trim();
@@ -163,12 +185,17 @@ function sameShape(a,b){
 }
 function mapMatrix(m,fn){return m.map((row,r)=>row.map((value,c)=>fn(value,r,c)))}
 function matrixElementwise(a,b,fn){
-  if(typeof a==="number"&&typeof b==="number")return fn(a,b);
-  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>fn(a,v));
-  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>fn(v,b));
+  if(typeof a==="number"&&typeof b==="number")return normalizeNumericResult(fn(a,b));
+  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>normalizeNumericResult(fn(a,v)));
+  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>normalizeNumericResult(fn(v,b)));
   if(isMatrix(a)&&isMatrix(b)){
-    if(!sameShape(a,b))throw new Error("MATRIX_DIMENSION_MISMATCH");
-    return a.map((row,r)=>row.map((value,c)=>fn(value,b[r][c])));
+    const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
+    if((ar!==br&&ar!==1&&br!==1)||(ac!==bc&&ac!==1&&bc!==1))throw new Error("MATRIX_DIMENSION_MISMATCH");
+    const rows=Math.max(ar,br),cols=Math.max(ac,bc);
+    return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>{
+      const av=a[ar===1?0:r][ac===1?0:c],bv=b[br===1?0:r][bc===1?0:c];
+      return normalizeNumericResult(fn(av,bv));
+    }));
   }
   throw new Error("INVALID_MATRIX_OPERATION");
 }
@@ -344,18 +371,19 @@ function solveLinearMatrix(a,b){
   return m.map(row=>row.slice(n).map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
 }
 
-function identity(n){
-  n=Number(n);if(!Number.isInteger(n)||n<1||n>100)throw new Error("INVALID_MATRIX_SIZE");
-  return Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0));
+function identity(rows,cols=rows){
+  rows=Number(rows);cols=Number(cols);
+  if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:rows},(_,i)=>Array.from({length:cols},(_,j)=>i===j?1:0));
 }
 
-function zeros(rows,cols){
+function zeros(rows,cols=rows){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
   return Array.from({length:rows},()=>Array(cols).fill(0));
 }
 
-function ones(rows,cols){
+function ones(rows,cols=rows){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
   return Array.from({length:rows},()=>Array(cols).fill(1));
@@ -368,9 +396,15 @@ function linspace(start,end,count){
   return Array.from({length:count},(_,i)=>i===count-1?end:Number((start+i*step).toPrecision(14)));
 }
 
-function diagonal(m){
-  const [rows,cols]=matrixShape(m),n=Math.min(rows,cols);
-  return Array.from({length:n},(_,i)=>m[i][i]);
+function diagonal(value){
+  if(!isMatrix(value))throw new Error("INVALID_MATRIX");
+  const [rows,cols]=matrixShape(value);
+  if(rows===1||cols===1){
+    const values=linearColumnMajor(value);
+    return Array.from({length:values.length},(_,r)=>Array.from({length:values.length},(_,c)=>r===c?values[r]:0));
+  }
+  const n=Math.min(rows,cols);
+  return Array.from({length:n},(_,i)=>[value[i][i]]);
 }
 
 function euclideanNorm(value){
@@ -384,10 +418,36 @@ function numericValues(value){
   if(!values.length||values.some(v=>!Number.isFinite(v)))throw new Error("INVALID_VALUE");
   return values;
 }
+function numericValuesAllowNaN(value){
+  const values=flatten(value).map(Number);
+  if(!values.length)throw new Error("INVALID_VALUE");
+  return values;
+}
+function rowVector(values){return[values]}
+function cumulative(values,fn,seed){
+  const out=[];let acc=seed;
+  for(const value of values){acc=fn(acc,value);out.push(acc)}
+  return rowVector(out);
+}
+function difference(values){
+  if(values.length<2)return[[]];
+  return rowVector(values.slice(1).map((value,i)=>value-values[i]));
+}
+function uniqueSorted(values){return rowVector([...new Set(values)].sort((a,b)=>a-b))}
+function logicalSelectorIndices(source,workspace,functions,max){
+  const text=String(source).trim();
+  if(!/[<>=~&|]/.test(text))return null;
+  const mask=evalValue(text,workspace,functions);
+  const values=linearColumnMajor(mask);
+  if(values.length!==max)throw new Error("LOGICAL_INDEX_SIZE_MISMATCH");
+  return values.map((value,i)=>Number(value)!==0?i:null).filter(i=>i!==null);
+}
+function normalizeNumericResult(value){return Object.is(value,-0)?0:value}
 function mapNumericLike(value,fn){
-  if(typeof value==="number")return fn(value);
-  if(isMatrix(value))return value.map(row=>row.map(fn));
-  if(Array.isArray(value))return value.map(fn);
+  const apply=x=>normalizeNumericResult(fn(x));
+  if(typeof value==="number")return apply(value);
+  if(isMatrix(value))return value.map(row=>row.map(apply));
+  if(Array.isArray(value))return value.map(apply);
   throw new Error("INVALID_VALUE");
 }
 function findLinearIndices(value){
@@ -452,9 +512,9 @@ function cross(a,b){
 function reshape(value,rows,cols){
   rows=Number(rows);cols=Number(cols);
   if(!Number.isInteger(rows)||!Number.isInteger(cols)||rows<1||cols<1||rows>100||cols>100)throw new Error("INVALID_MATRIX_SIZE");
-  const values=numericValues(value);
-  if(values.length!==rows*cols)throw new Error("RESHAPE_SIZE_MISMATCH");
-  return Array.from({length:rows},(_,r)=>values.slice(r*cols,(r+1)*cols));
+  const values=linearColumnMajor(value).map(Number);
+  if(values.length!==rows*cols||values.some(v=>!Number.isFinite(v)))throw new Error("RESHAPE_SIZE_MISMATCH");
+  return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>values[c*rows+r]));
 }
 
 function linearColumnMajor(m){
@@ -517,13 +577,14 @@ function deleteIndexedValues(value,args,workspace){
   return out[0]?.length?out:[];
 }
 
-function indexWorkspaceValue(value,argSource,workspace){
+function indexWorkspaceValue(value,argSource,workspace,functions={}){
   if(!Array.isArray(value))throw new Error("INDEXING_REQUIRES_ARRAY");
   const args=splitArgs(argSource);
   if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
   if(args.length===1){
     const linear=linearColumnMajor(value);
-    const indices=parseIndexSpec(args[0],workspace,linear.length);
+    const logical=logicalSelectorIndices(args[0],workspace,functions,linear.length);
+    const indices=logical??parseIndexSpec(args[0],workspace,linear.length);
     const picked=indices.map(i=>linear[i]);
     return picked.length===1?picked[0]:[picked];
   }
@@ -539,14 +600,15 @@ function valueForAssignment(rhs,rows,cols){
   if(rr!==rows||rc!==cols)throw new Error("INDEX_ASSIGNMENT_SHAPE_MISMATCH");
   return rhs;
 }
-function assignWorkspaceIndex(value,argSource,rhs,workspace){
+function assignWorkspaceIndex(value,argSource,rhs,workspace,functions={}){
   if(!isMatrix(value)||!value.length)throw new Error("INDEXING_REQUIRES_ARRAY");
   const args=splitArgs(argSource);
   if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
   if(Array.isArray(rhs)&&rhs.length===0)return deleteIndexedValues(value,args,workspace);
   if(args.length===1){
     const [rows,cols]=matrixShape(value),max=rows*cols;
-    const indices=parseAssignmentIndexSpec(args[0],workspace,max);
+    const logical=logicalSelectorIndices(args[0],workspace,functions,max);
+    const indices=logical??parseAssignmentIndexSpec(args[0],workspace,max);
     const replacement=typeof rhs==="number"?Array(indices.length).fill(rhs):linearColumnMajor(rhs);
     if(replacement.length!==indices.length)throw new Error("INDEX_ASSIGNMENT_SHAPE_MISMATCH");
     const needed=Math.max(max,...indices.map(i=>i+1));
@@ -598,16 +660,16 @@ function splitStatements(line){
 }
 function blockOpener(line){
   const text=stripInlineComment(line).trim().toLowerCase();
-  return /^(if\b|for\b|while\b)/.test(text);
+  return /^(if\b|for\b|while\b|switch\b|try\b)/.test(text);
 }
 function parseUserFunctions(script){
   const lines=String(script??"").split(/\r?\n/);
   const functions={},body=[];
   for(let i=0;i<lines.length;i++){
     const raw=lines[i].trim();
-    const header=raw.match(/^function\s+(\[[^\]]+\]|[A-Za-z][A-Za-z0-9_]*)\s*=\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
+    const header=raw.match(/^function\s+(?:(\[[^\]]+\]|[A-Za-z][A-Za-z0-9_]*)\s*=\s*)?([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
     if(!header){body.push(lines[i]);continue}
-    const outputs=header[1].startsWith("[")?header[1].slice(1,-1).split(",").map(x=>x.trim()).filter(Boolean):[header[1]];
+    const outputs=!header[1]?[]:(header[1].startsWith("[")?header[1].slice(1,-1).split(",").map(x=>x.trim()).filter(Boolean):[header[1]]);
     const name=header[2],params=header[3].split(",").map(x=>x.trim()).filter(Boolean);
     const fnLines=[];let foundEnd=false,depth=0;
     for(i=i+1;i<lines.length;i++){
@@ -655,8 +717,47 @@ function splitIfBranches(lines,start,end){
   branches.push({condition:currentCondition,lines:lines.slice(branchStart,end),offset:branchStart});
   return branches;
 }
+function splitSwitchCases(lines,start,end){
+  const cases=[];let depth=0,current=null,branchStart=start+1;
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim(),lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^case\b/i.test(raw)){
+      if(current)cases.push({...current,lines:lines.slice(branchStart,i)});
+      current={expression:raw.replace(/^case\s+/i,"").trim(),otherwise:false,offset:i+1};branchStart=i+1;
+    }else if(depth===0&&lower==="otherwise"){
+      if(current)cases.push({...current,lines:lines.slice(branchStart,i)});
+      current={expression:null,otherwise:true,offset:i+1};branchStart=i+1;
+    }
+  }
+  if(current)cases.push({...current,lines:lines.slice(branchStart,end)});
+  return cases;
+}
+function splitTryCatch(lines,start,end){
+  let depth=0,catchIndex=-1,catchName="";
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim(),lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^catch(?:\s+|$)/i.test(raw)){
+      catchIndex=i;catchName=raw.replace(/^catch\s*/i,"").trim();break;
+    }
+  }
+  return catchIndex<0?{tryLines:lines.slice(start+1,end),catchLines:null,tryOffset:start+1,catchOffset:end,catchName:""}:{
+    tryLines:lines.slice(start+1,catchIndex),catchLines:lines.slice(catchIndex+1,end),
+    tryOffset:start+1,catchOffset:catchIndex+1,catchName
+  };
+}
+function switchMatches(selector,candidate){
+  if(typeof selector!=="number")throw new Error("SWITCH_SCALAR_REQUIRED");
+  if(typeof candidate==="number")return selector===candidate;
+  if(Array.isArray(candidate))return flatten(candidate).some(value=>Number(value)===selector);
+  return false;
+}
 
 export function describeMathLabValue(value){
+  if(isFunctionHandle(value))return{size:"1×1",className:"function_handle",preview:value.named?"@"+value.named:"@("+value.params.join(",")+") "+value.expression};
   if(typeof value==="number")return{size:"1×1",className:"double",preview:String(value)};
   if(isMatrix(value)){
     const rows=value.length,cols=value[0]?.length??0;
@@ -673,8 +774,50 @@ const MATHLAB_FUNCTIONS=new Set([
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
-  "any","all","find","mod"
+  "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
+  "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
 ]);
+function isFunctionHandle(value){return Boolean(value&&typeof value==="object"&&value.__mathlabFunctionHandle===true)}
+function createFunctionHandle(source,workspace){
+  const text=String(source).trim();
+  const named=text.match(/^@([A-Za-z][A-Za-z0-9_]*)$/);
+  if(named)return{__mathlabFunctionHandle:true,named:named[1],params:null,expression:null,closure:{}};
+  const match=text.match(/^@\(([^)]*)\)\s*(.+)$/);
+  if(!match)return null;
+  const params=match[1].split(",").map(x=>x.trim()).filter(Boolean);
+  if(params.some(p=>!/^[A-Za-z][A-Za-z0-9_]*$/.test(p)))throw new Error("INVALID_FUNCTION_HANDLE");
+  const closure={};
+  for(const [key,value] of Object.entries(workspace))closure[key]=clone(value);
+  return{__mathlabFunctionHandle:true,named:null,params,expression:match[2].trim(),closure};
+}
+function invokeFunctionHandle(handle,argSources,callerWorkspace,functions){
+  const values=argSources.map(source=>clone(evalValue(source,callerWorkspace,functions)));
+  return invokeFunctionHandleValues(handle,values,functions);
+}
+function invokeFunctionHandleValues(handle,args,functions){
+  if(handle.named){
+    const local={};args.forEach((value,i)=>{local["__arg"+i]=clone(value)});
+    return evalCommand(handle.named+"("+args.map((_,i)=>"__arg"+i).join(",")+")",local,functions);
+  }
+  if(args.length!==handle.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const local={};
+  for(const [key,value] of Object.entries(handle.closure??{}))local[key]=clone(value);
+  handle.params.forEach((param,i)=>{local[param]=clone(args[i])});
+  return evalValue(handle.expression,local,functions);
+}
+function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOutputs=1){
+  if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const local={nargin:argSources.length,nargout:requestedOutputs};
+  fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
+  const callerMeta=scopeFor(callerWorkspace);
+  const result=runMathLabScript(fn.body,local,{functions,isFunction:true,runtimeState:callerMeta?.runtimeState,currentFunction:fn.name});
+  if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
+  const values=fn.outputs.map(output=>{
+    if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
+    return clone(result.workspace[output]);
+  });
+  return{values,workspace:result.workspace};
+}
 
 function evalValue(source,workspace,functions={}){
   const stripped=stripOuterParens(source);
@@ -686,6 +829,8 @@ function evalValue(source,workspace,functions={}){
     return transpose(value);
   }
   const text=transposeInfo.source;
+  const anonymous=createFunctionHandle(text,workspace);
+  if(anonymous)return anonymous;
   for(const operators of [["||"],["&&"],["|"],["&"],["==","~=",">=","<=",">","<"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
@@ -715,21 +860,14 @@ function evalValue(source,workspace,functions={}){
   if(range)return[range];
   const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
   if(nestedCall&&Object.prototype.hasOwnProperty.call(workspace,nestedCall[1])){
-    return indexWorkspaceValue(workspace[nestedCall[1]],nestedCall[2],workspace);
+    const target=workspace[nestedCall[1]];
+    if(isFunctionHandle(target))return invokeFunctionHandle(target,splitArgs(nestedCall[2]),workspace,functions);
+    return indexWorkspaceValue(target,nestedCall[2],workspace,functions);
   }
   if(nestedCall&&functions[nestedCall[1].toLowerCase()]){
     const fn=functions[nestedCall[1].toLowerCase()];
-    const argSources=splitArgs(nestedCall[2]);
-    if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-    const local={};
-    fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],workspace,functions))});
-    const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
-    if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
-    const values=fn.outputs.map(output=>{
-      if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
-      return clone(result.workspace[output]);
-    });
-    return values[0];
+    if(!fn.outputs.length)throw new Error("FUNCTION_HAS_NO_OUTPUT");
+    return invokeUserFunction(fn,splitArgs(nestedCall[2]),workspace,functions,1).values[0];
   }
   if(nestedCall&&MATHLAB_FUNCTIONS.has(nestedCall[1].toLowerCase()))return evalCommand(text,workspace,functions);
   return numericExpression(text,workspace);
@@ -739,7 +877,11 @@ function evalCommand(expr,workspace,functions={}){
   const text=expr.trim();
   if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace,functions);
   const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
-  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace);
+  if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1])){
+    const target=workspace[call[1]];
+    if(isFunctionHandle(target))return invokeFunctionHandle(target,splitArgs(call[2]),workspace,functions);
+    return indexWorkspaceValue(target,call[2],workspace,functions);
+  }
   if(call&&functions[call[1].toLowerCase()])return evalValue(text,workspace,functions);
   if(call){
     const fn=call[1].toLowerCase(),args=splitArgs(call[2]).map(x=>evalValue(x,workspace,functions));
@@ -751,9 +893,9 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues2(args[0])}
     if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors2(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
-    if(fn==="eye"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0])}
-    if(fn==="zeros"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1])}
-    if(fn==="ones"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1])}
+    if(fn==="eye"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0],args[1]??args[0])}
+    if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
+    if(fn==="ones"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return ones(args[0],args[1]??args[0])}
     if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
     if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
     if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
@@ -769,10 +911,16 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
     if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
-    if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).length}
+    if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).length}
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
-    if(fn==="size"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];return isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,1]}
+    if(fn==="size"){
+      if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");
+      const arg=args[0],shape=isMatrix(arg)?[arg.length,arg[0]?.length??0]:[1,Array.isArray(arg)?arg.length:1];
+      if(args.length===1)return shape;
+      const dim=Number(args[1]);if(!Number.isInteger(dim)||dim<1)throw new Error("INVALID_DIMENSION");
+      return shape[dim-1]??1;
+    }
     if(fn==="length"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];if(isMatrix(arg))return Math.max(arg.length,arg[0]?.length??0);return Array.isArray(arg)?arg.length:1}
     if(fn==="abs"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.abs)}
     if(fn==="sqrt"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>{if(x<0)throw new Error("DOMAIN_ERROR");return Math.sqrt(x)})}
@@ -785,6 +933,29 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="all"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).every(x=>x!==0)?1:0}
     if(fn==="find"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return findLinearIndices(args[0])}
     if(fn==="mod"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return ((a%b)+b)%b})}
+    if(fn==="rem"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return a%b})}
+    if(fn==="prod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).reduce((a,b)=>a*b,1)}
+    if(fn==="cumsum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a+b,0)}
+    if(fn==="cumprod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a*b,1)}
+    if(fn==="diff"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return difference(numericValues(args[0]))}
+    if(fn==="sort"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return rowVector(numericValues(args[0]).slice().sort((a,b)=>a-b))}
+    if(fn==="unique"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return uniqueSorted(numericValues(args[0]))}
+    if(fn==="round"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.round)}
+    if(fn==="floor"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.floor)}
+    if(fn==="ceil"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.ceil)}
+    if(fn==="fix"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.trunc)}
+    if(fn==="sign"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.sign)}
+    if(fn==="isfinite"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isFinite(x)?1:0)}
+    if(fn==="isnan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>Number.isNaN(x)?1:0)}
+    if(fn==="isempty"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Array.isArray(args[0])&&flatten(args[0]).length===0?1:0}
+    if(fn==="feval"){
+      if(args.length<1||!isFunctionHandle(args[0]))throw new Error("FUNCTION_HANDLE_REQUIRED");
+      return invokeFunctionHandleValues(args[0],args.slice(1),functions);
+    }
+    if(fn==="arrayfun"){
+      if(args.length!==2||!isFunctionHandle(args[0]))throw new Error("FUNCTION_HANDLE_REQUIRED");
+      return mapNumericLike(args[1],value=>invokeFunctionHandleValues(args[0],[value],functions));
+    }
     return numericExpression(text,workspace);
   }
   return evalValue(text,workspace,functions);
@@ -792,14 +963,48 @@ function evalCommand(expr,workspace,functions={}){
 
 function executeSimpleStatement(source,suppressed,context,lineNumber){
   const {workspace,functions,outputs,events,options}=context;
+  syncGlobalsIntoWorkspace(workspace);
   const raw=source+(suppressed?";":"");
+  const globalDecl=source.match(/^global\s+(.+)$/i);
+  if(globalDecl){
+    const meta=scopeFor(workspace),names=globalDecl[1].split(/\s+/).filter(Boolean);
+    for(const name of names){
+      if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))throw new Error("INVALID_VARIABLE_NAME");
+      meta.globalNames.add(name);
+      if(Object.prototype.hasOwnProperty.call(meta.runtimeState.globals,name))workspace[name]=clone(meta.runtimeState.globals[name]);
+      else meta.runtimeState.globals[name]=clone(Object.prototype.hasOwnProperty.call(workspace,name)?workspace[name]:[]);
+    }
+    syncGlobalsIntoWorkspace(workspace);return;
+  }
+  const persistentDecl=source.match(/^persistent\s+(.+)$/i);
+  if(persistentDecl){
+    const meta=scopeFor(workspace);
+    if(!meta?.currentFunction)throw new Error("PERSISTENT_OUTSIDE_FUNCTION");
+    const bucket=meta.runtimeState.persistents[meta.currentFunction]??={};
+    for(const name of persistentDecl[1].split(/\s+/).filter(Boolean)){
+      if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(name))throw new Error("INVALID_VARIABLE_NAME");
+      meta.persistentNames.add(name);
+      workspace[name]=Object.prototype.hasOwnProperty.call(bucket,name)?clone(bucket[name]):[];
+    }
+    return;
+  }
   const command=source.match(/^(clear|clc|who|whos)(?:\s+(.*))?$/i);
   if(command){
     const cmd=command[1].toLowerCase(),arg=(command[2]??"").trim();
     if(cmd==="clc"){events.push({type:"clear-output",line:lineNumber});return}
     if(cmd==="clear"){
-      if(!arg||arg.toLowerCase()==="all"){for(const key of Object.keys(workspace))delete workspace[key]}
-      else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
+      const meta=scopeFor(workspace),lowerArg=arg.toLowerCase();
+      if(!arg){for(const key of Object.keys(workspace))delete workspace[key]}
+      else if(lowerArg==="all"){
+        for(const key of Object.keys(workspace))delete workspace[key];
+        meta.runtimeState.globals={};meta.runtimeState.persistents={};
+        meta.globalNames.clear();meta.persistentNames.clear();
+      }else if(lowerArg==="functions")meta.runtimeState.persistents={};
+      else if(lowerArg==="global"||lowerArg.startsWith("global ")){
+        const names=arg.split(/\s+/).slice(1);
+        if(!names.length){meta.runtimeState.globals={};meta.globalNames.clear()}
+        else for(const name of names){delete meta.runtimeState.globals[name];meta.globalNames.delete(name);delete workspace[name]}
+      }else for(const key of arg.split(/\s+/).filter(Boolean))delete workspace[key];
       events.push({type:"workspace-changed",line:lineNumber});return;
     }
     const names=Object.keys(workspace).sort();
@@ -812,18 +1017,15 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     const targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     const fn=functions[multiAssignment[2].toLowerCase()];
     if(targets.length>fn.outputs.length)throw new Error("TOO_MANY_OUTPUTS");
-    const argSources=splitArgs(multiAssignment[3]);
-    if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-    const local={};
-    fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],workspace,functions))});
-    const result=runMathLabScript(fn.body,local,{functions,isFunction:true});
-    if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
-    const values=fn.outputs.map(output=>{
-      if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
-      return clone(result.workspace[output]);
-    });
+    const invoked=invokeUserFunction(fn,splitArgs(multiAssignment[3]),workspace,functions,targets.length);
+    const values=invoked.values;
     targets.forEach((target,i)=>{workspace[target]=values[i]});
     if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
+    return;
+  }
+  const standaloneCall=source.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(standaloneCall&&functions[standaloneCall[1].toLowerCase()]&&!functions[standaloneCall[1].toLowerCase()].outputs.length){
+    invokeUserFunction(functions[standaloneCall[1].toLowerCase()],splitArgs(standaloneCall[2]),workspace,functions,0);
     return;
   }
   const indexedAssignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*\((.*)\)\s*=\s*(.+)$/);
@@ -834,8 +1036,9 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
       if((Array.isArray(rhs)&&rhs.length===0)||indexSource.includes(":"))throw new Error("UNDEFINED_VARIABLE");
       workspace[name]=[[0]];
     }
-    workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace);
+    workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace,functions);
     if(!suppressed)outputs.push({line:lineNumber,source:raw,name,value:clone(workspace[name])});
+    syncScopeState(workspace);
     return;
   }
   const assignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/);
@@ -843,10 +1046,12 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     const value=evalCommand(assignment[2],workspace,functions);
     workspace[assignment[1]]=clone(value);
     if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:assignment[1],value:clone(value)});
+    syncScopeState(workspace);
     return;
   }
   const value=evalCommand(source,workspace,functions);
   workspace.ans=clone(value);
+  syncScopeState(workspace);
   if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:"ans",value:clone(value)});
 }
 
@@ -857,6 +1062,7 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
     const lower=clean.toLowerCase();
     const lineNumber=baseLine+i+1;
     try{
+      syncGlobalsIntoWorkspace(context.workspace);
       if(/^if\b/i.test(clean)){
         const end=findBlockEnd(lines,i);
         const branches=splitIfBranches(lines,i,end);
@@ -867,6 +1073,34 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
             break;
           }
         }
+        i=end;continue;
+      }
+      const switchMatch=clean.match(/^switch\s+(.+)$/i);
+      if(switchMatch){
+        const end=findBlockEnd(lines,i),selector=evalValue(switchMatch[1],context.workspace,context.functions);
+        const cases=splitSwitchCases(lines,i,end);let selected=null;
+        for(const branch of cases){
+          if(branch.otherwise){if(!selected)selected=branch;continue}
+          if(switchMatches(selector,evalValue(branch.expression,context.workspace,context.functions))){selected=branch;break}
+        }
+        if(selected){
+          const result=executeLines(selected.lines,context,baseLine+selected.offset,loopDepth);
+          if(!result.ok||result.signal)return result;
+        }
+        i=end;continue;
+      }
+      if(lower==="try"){
+        const end=findBlockEnd(lines,i),parts=splitTryCatch(lines,i,end);
+        const attempted=executeLines(parts.tryLines,context,baseLine+parts.tryOffset,loopDepth);
+        if(!attempted.ok){
+          if(parts.catchLines===null)return attempted;
+          if(parts.catchName){
+            if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(parts.catchName))throw new Error("INVALID_VARIABLE_NAME");
+            context.workspace[parts.catchName]={message:attempted.error?.message??"MATHLAB_ERROR",line:attempted.error?.line??lineNumber,source:attempted.error?.source??""};
+          }
+          const recovered=executeLines(parts.catchLines,context,baseLine+parts.catchOffset,loopDepth);
+          if(!recovered.ok||recovered.signal)return recovered;
+        }else if(attempted.signal)return attempted;
         i=end;continue;
       }
       const forMatch=clean.match(/^for\s+([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/i);
@@ -910,7 +1144,7 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
         return{ok:true,signal:"continue"};
       }
       if(lower==="return")return{ok:true,signal:"return"};
-      if(lower==="else"||/^elseif\b/.test(lower)||lower==="end")throw new Error("UNEXPECTED_BLOCK_TOKEN");
+      if(lower==="else"||/^elseif\b/.test(lower)||/^case\b/.test(lower)||lower==="otherwise"||/^catch\b/.test(lower)||lower==="end")throw new Error("UNEXPECTED_BLOCK_TOKEN");
       const statements=splitStatements(clean);
       for(const statement of statements){
         if(statement.source)executeSimpleStatement(statement.source,statement.suppressed,context,lineNumber);
@@ -925,12 +1159,17 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
 export function runMathLabScript(script,initialWorkspace={},options={}){
   let parsed;
   try{parsed=parseUserFunctions(script)}catch(error){
-    return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}};
+    return{ok:false,workspace:{...initialWorkspace},outputs:[],events:[],runtimeState:normalizeRuntimeState(options.runtimeState),error:{message:error.message||"MATHLAB_ERROR",line:1,source:"function"}};
   }
   const functions={...(options.functions??{}),...parsed.functions};
   const workspace={...initialWorkspace},outputs=[],events=[];
-  const context={workspace,functions,outputs,events,options};
+  const runtimeState=options.runtimeState??normalizeRuntimeState();
+  if(!runtimeState.globals)runtimeState.globals={};
+  if(!runtimeState.persistents)runtimeState.persistents={};
+  const context={workspace,functions,outputs,events,options:{...options,runtimeState}};
+  scopeMetadata.set(workspace,{runtimeState,currentFunction:options.currentFunction??null,globalNames:new Set(),persistentNames:new Set()});
   const result=executeLines(String(parsed.script??"").split(/\r?\n/),context,0,0);
-  if(!result.ok)return{ok:false,workspace,outputs,events,error:result.error};
-  return{ok:true,workspace,outputs,events};
+  syncScopeState(workspace);
+  if(!result.ok)return{ok:false,workspace,outputs,events,runtimeState,error:result.error};
+  return{ok:true,workspace,outputs,events,runtimeState};
 }

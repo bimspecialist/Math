@@ -500,6 +500,7 @@ const mathLabEditorValue=document.querySelector("#mathlab-editor-value");
 const mathLabEditorStatus=document.querySelector("#mathlab-editor-status");
 let mathLabEditingOriginalName="";
 let mathLabWorkspaceState={};
+let mathLabRuntimeState={globals:{},persistents:{}};
 let mathLabTranscript=[];
 let mathLabHistory=[];
 
@@ -559,14 +560,16 @@ function renderMathLabWorkspace(){
   const entries=Object.entries(mathLabWorkspaceState).sort(([a],[b])=>a.localeCompare(b));
   mathLabWorkspaceBody.innerHTML=entries.length?entries.map(([name,value])=>{
     const meta=describeMathLabValue(value);
-    return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td><td><button type="button" class="mathlab-row-action" data-mathlab-edit="${escHtml(name)}">${escHtml(translate(locale,"edit"))}</button></td></tr>`;
+    const action=meta.className==="double"?`<button type="button" class="mathlab-row-action" data-mathlab-edit="${escHtml(name)}">${escHtml(translate(locale,"edit"))}</button>`:`<span class="muted">${escHtml(translate(locale,"readOnly"))}</span>`;
+    return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td><td>${action}</td></tr>`;
   }).join(""):`<tr><td colspan="5" class="muted">${escHtml(translate(locale,"noVariables"))}</td></tr>`;
 }
 function runMathLab(){
   if(!mathLabInput)return;
   const script=mathLabInput.value.trim();
-  const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState);
+  const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState,{runtimeState:mathLabRuntimeState});
   mathLabWorkspaceState={...result.workspace};
+  mathLabRuntimeState=result.runtimeState??mathLabRuntimeState;
   if(script){mathLabHistory.push(script);if(mathLabHistory.length>50)mathLabHistory.shift()}
   const clearLine=[...(result.events??[])].filter(x=>x.type==="clear-output").map(x=>x.line??0).at(-1)??0;
   if(clearLine>0)mathLabTranscript=[];
@@ -586,6 +589,7 @@ function runMathLab(){
 document.querySelector("#mathlab-run")?.addEventListener("click",runMathLab);
 document.querySelector("#mathlab-clear-workspace")?.addEventListener("click",()=>{
   mathLabWorkspaceState={};
+  mathLabRuntimeState={globals:{},persistents:{}};
   closeMathLabVariableEditor();
   renderMathLabWorkspace();
   if(mathLabStatus)mathLabStatus.textContent=translate(locale,"workspaceCleared");
