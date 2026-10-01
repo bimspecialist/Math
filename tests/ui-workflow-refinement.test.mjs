@@ -9,9 +9,9 @@ const css=readFileSync(new URL("../styles/ui-quality.css",import.meta.url),"utf8
 
 test("sidebar groups are collapsible and preserve accessible expanded state",()=>{
   assert.match(index,/class="tool-group-title tool-group-toggle" aria-expanded="true"/);
-  assert.match(app,/function setToolGroupCollapsed(group,collapsed)/);
-  assert.match(app,/setAttribute("aria-expanded",String(!collapsed))/);
-  assert.match(app,/setToolGroupCollapsed(group,!group.querySelector("\.tool-item\.active"))/);
+  assert.ok(app.includes("function setToolGroupCollapsed(group,collapsed)"));
+  assert.ok(app.includes('setAttribute("aria-expanded",String(!collapsed))'));
+  assert.ok(app.includes('setToolGroupCollapsed(group,!group.querySelector(".tool-item.active"))'));
   assert.match(css,/\.tool-group\.is-collapsed > :not\(\.tool-group-title\)\{display:none\}/);
 });
 
