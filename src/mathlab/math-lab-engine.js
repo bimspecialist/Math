@@ -648,7 +648,7 @@ function splitStatements(line){
 }
 function blockOpener(line){
   const text=stripInlineComment(line).trim().toLowerCase();
-  return /^(if\b|for\b|while\b)/.test(text);
+  return /^(if\b|for\b|while\b|switch\b|try\b)/.test(text);
 }
 function parseUserFunctions(script){
   const lines=String(script??"").split(/\r?\n/);
@@ -704,6 +704,44 @@ function splitIfBranches(lines,start,end){
   }
   branches.push({condition:currentCondition,lines:lines.slice(branchStart,end),offset:branchStart});
   return branches;
+}
+function splitSwitchCases(lines,start,end){
+  const cases=[];let depth=0,current=null,branchStart=start+1;
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim(),lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^case\b/i.test(raw)){
+      if(current)cases.push({...current,lines:lines.slice(branchStart,i)});
+      current={expression:raw.replace(/^case\s+/i,"").trim(),otherwise:false,offset:i+1};branchStart=i+1;
+    }else if(depth===0&&lower==="otherwise"){
+      if(current)cases.push({...current,lines:lines.slice(branchStart,i)});
+      current={expression:null,otherwise:true,offset:i+1};branchStart=i+1;
+    }
+  }
+  if(current)cases.push({...current,lines:lines.slice(branchStart,end)});
+  return cases;
+}
+function splitTryCatch(lines,start,end){
+  let depth=0,catchIndex=-1,catchName="";
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim(),lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^catch(?:\s+|$)/i.test(raw)){
+      catchIndex=i;catchName=raw.replace(/^catch\s*/i,"").trim();break;
+    }
+  }
+  return catchIndex<0?{tryLines:lines.slice(start+1,end),catchLines:null,tryOffset:start+1,catchOffset:end,catchName:""}:{
+    tryLines:lines.slice(start+1,catchIndex),catchLines:lines.slice(catchIndex+1,end),
+    tryOffset:start+1,catchOffset:catchIndex+1,catchName
+  };
+}
+function switchMatches(selector,candidate){
+  if(typeof selector!=="number")throw new Error("SWITCH_SCALAR_REQUIRED");
+  if(typeof candidate==="number")return selector===candidate;
+  if(Array.isArray(candidate))return flatten(candidate).some(value=>Number(value)===selector);
+  return false;
 }
 
 export function describeMathLabValue(value){
@@ -1006,6 +1044,34 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
         }
         i=end;continue;
       }
+      const switchMatch=clean.match(/^switch\s+(.+)$/i);
+      if(switchMatch){
+        const end=findBlockEnd(lines,i),selector=evalValue(switchMatch[1],context.workspace,context.functions);
+        const cases=splitSwitchCases(lines,i,end);let selected=null;
+        for(const branch of cases){
+          if(branch.otherwise){if(!selected)selected=branch;continue}
+          if(switchMatches(selector,evalValue(branch.expression,context.workspace,context.functions))){selected=branch;break}
+        }
+        if(selected){
+          const result=executeLines(selected.lines,context,baseLine+selected.offset,loopDepth);
+          if(!result.ok||result.signal)return result;
+        }
+        i=end;continue;
+      }
+      if(lower==="try"){
+        const end=findBlockEnd(lines,i),parts=splitTryCatch(lines,i,end);
+        const attempted=executeLines(parts.tryLines,context,baseLine+parts.tryOffset,loopDepth);
+        if(!attempted.ok){
+          if(parts.catchLines===null)return attempted;
+          if(parts.catchName){
+            if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(parts.catchName))throw new Error("INVALID_VARIABLE_NAME");
+            context.workspace[parts.catchName]={message:attempted.error?.message??"MATHLAB_ERROR",line:attempted.error?.line??lineNumber,source:attempted.error?.source??""};
+          }
+          const recovered=executeLines(parts.catchLines,context,baseLine+parts.catchOffset,loopDepth);
+          if(!recovered.ok||recovered.signal)return recovered;
+        }else if(attempted.signal)return attempted;
+        i=end;continue;
+      }
       const forMatch=clean.match(/^for\s+([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+)$/i);
       if(forMatch){
         const end=findBlockEnd(lines,i);
@@ -1047,7 +1113,7 @@ function executeLines(lines,context,baseLine=0,loopDepth=0){
         return{ok:true,signal:"continue"};
       }
       if(lower==="return")return{ok:true,signal:"return"};
-      if(lower==="else"||/^elseif\b/.test(lower)||lower==="end")throw new Error("UNEXPECTED_BLOCK_TOKEN");
+      if(lower==="else"||/^elseif\b/.test(lower)||/^case\b/.test(lower)||lower==="otherwise"||/^catch\b/.test(lower)||lower==="end")throw new Error("UNEXPECTED_BLOCK_TOKEN");
       const statements=splitStatements(clean);
       for(const statement of statements){
         if(statement.source)executeSimpleStatement(statement.source,statement.suppressed,context,lineNumber);
