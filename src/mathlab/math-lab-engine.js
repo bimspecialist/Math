@@ -469,6 +469,151 @@ function polynomialValue(coefficients,value){
   return mapNumericLike(value,x=>coeffs.reduce((acc,c)=>acc*x+c,0));
 }
 
+function trapezoidalIntegral(xValue,yValue=null){
+  const y=numericValues(yValue??xValue);
+  if(y.length<2)return 0;
+  if(yValue===null){
+    return Number(y.slice(0,-1).reduce((sum,v,i)=>sum+(v+y[i+1])/2,0).toPrecision(14));
+  }
+  const x=numericValues(xValue);
+  if(x.length!==y.length)throw new Error("VECTOR_LENGTH_MISMATCH");
+  let total=0;
+  for(let i=0;i<x.length-1;i++)total+=(x[i+1]-x[i])*(y[i]+y[i+1])/2;
+  return Math.abs(total)<1e-12?0:Number(total.toPrecision(14));
+}
+
+function cumulativeTrapezoid(xValue,yValue=null){
+  const y=numericValues(yValue??xValue);
+  const out=[0];
+  if(y.length<2)return rowVector(out);
+  if(yValue===null){
+    for(let i=0;i<y.length-1;i++)out.push(out.at(-1)+(y[i]+y[i+1])/2);
+  }else{
+    const x=numericValues(xValue);
+    if(x.length!==y.length)throw new Error("VECTOR_LENGTH_MISMATCH");
+    for(let i=0;i<x.length-1;i++)out.push(out.at(-1)+(x[i+1]-x[i])*(y[i]+y[i+1])/2);
+  }
+  return rowVector(out.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
+function numericalGradient(value,spacing=1){
+  const y=numericValues(value),h=Number(spacing);
+  if(!Number.isFinite(h)||h===0)throw new Error("INVALID_SPACING");
+  if(y.length===1)return[[0]];
+  const out=Array(y.length);
+  out[0]=(y[1]-y[0])/h;
+  out[y.length-1]=(y.at(-1)-y.at(-2))/h;
+  for(let i=1;i<y.length-1;i++)out[i]=(y[i+1]-y[i-1])/(2*h);
+  return rowVector(out.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
+function linearInterpolate(xValue,yValue,queryValue){
+  const x=numericValues(xValue),y=numericValues(yValue);
+  if(x.length!==y.length||x.length<2)throw new Error("VECTOR_LENGTH_MISMATCH");
+  for(let i=1;i<x.length;i++)if(!(x[i]>x[i-1]))throw new Error("X_MUST_BE_STRICTLY_INCREASING");
+  const interpolate=q=>{
+    if(q<x[0]||q>x.at(-1))throw new Error("INTERPOLATION_OUT_OF_RANGE");
+    if(q===x.at(-1))return y.at(-1);
+    let lo=0,hi=x.length-1;
+    while(hi-lo>1){const mid=Math.floor((lo+hi)/2);if(x[mid]<=q)lo=mid;else hi=mid}
+    const t=(q-x[lo])/(x[lo+1]-x[lo]);
+    const result=y[lo]+t*(y[lo+1]-y[lo]);
+    return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+  };
+  return mapNumericLike(queryValue,interpolate);
+}
+
+function numericDerivative(handle,x,h,functions){
+  if(!isFunctionHandle(handle))throw new Error("FUNCTION_HANDLE_REQUIRED");
+  x=Number(x);h=h===undefined?Math.max(1e-6,Math.abs(x)*1e-5):Number(h);
+  if(!Number.isFinite(x)||!Number.isFinite(h)||h<=0)throw new Error("INVALID_STEP_SIZE");
+  const f1=Number(invokeFunctionHandleValues(handle,[x+h],functions));
+  const f0=Number(invokeFunctionHandleValues(handle,[x-h],functions));
+  if(!Number.isFinite(f1)||!Number.isFinite(f0))throw new Error("INVALID_FUNCTION_VALUE");
+  const result=(f1-f0)/(2*h);
+  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+}
+
+function simpsonIntegral(handle,a,b,n,functions){
+  if(!isFunctionHandle(handle))throw new Error("FUNCTION_HANDLE_REQUIRED");
+  a=Number(a);b=Number(b);n=n===undefined?200:Number(n);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||!Number.isInteger(n)||n<2||n>10000)throw new Error("INVALID_SAMPLE_COUNT");
+  if(n%2)n++;
+  const h=(b-a)/n;
+  let total=Number(invokeFunctionHandleValues(handle,[a],functions))+Number(invokeFunctionHandleValues(handle,[b],functions));
+  if(!Number.isFinite(total))throw new Error("INVALID_FUNCTION_VALUE");
+  for(let i=1;i<n;i++){
+    const value=Number(invokeFunctionHandleValues(handle,[a+i*h],functions));
+    if(!Number.isFinite(value))throw new Error("INVALID_FUNCTION_VALUE");
+    total+=(i%2?4:2)*value;
+  }
+  const result=total*h/3;
+  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+}
+
+function findZero(handle,start,tolerance,functions){
+  if(!isFunctionHandle(handle))throw new Error("FUNCTION_HANDLE_REQUIRED");
+  const values=numericValues(start),tol=tolerance===undefined?1e-10:Number(tolerance);
+  if(!Number.isFinite(tol)||tol<=0)throw new Error("INVALID_TOLERANCE");
+  let a,b;
+  const fn=x=>{
+    const value=Number(invokeFunctionHandleValues(handle,[x],functions));
+    if(!Number.isFinite(value))throw new Error("INVALID_FUNCTION_VALUE");
+    return value;
+  };
+  if(values.length===2){[a,b]=values}
+  else if(values.length===1){
+    const x0=values[0];let step=Math.max(1,Math.abs(x0)*0.1);
+    a=x0-step;b=x0+step;
+    let fa=fn(a),fb=fn(b),tries=0;
+    while(fa*fb>0&&tries++<30){step*=1.7;a=x0-step;b=x0+step;fa=fn(a);fb=fn(b)}
+    if(fa*fb>0)throw new Error("ROOT_NOT_BRACKETED");
+  }else throw new Error("INVALID_ROOT_START");
+  let fa=fn(a),fb=fn(b);
+  if(Math.abs(fa)<=tol)return a;
+  if(Math.abs(fb)<=tol)return b;
+  if(fa*fb>0)throw new Error("ROOT_NOT_BRACKETED");
+  for(let i=0;i<200;i++){
+    const mid=(a+b)/2,fm=fn(mid);
+    if(Math.abs(fm)<=tol||Math.abs(b-a)<=tol*Math.max(1,Math.abs(mid)))return Math.abs(mid)<1e-12?0:Number(mid.toPrecision(14));
+    if(fa*fm<=0){b=mid;fb=fm}else{a=mid;fa=fm}
+  }
+  throw new Error("ROOT_DID_NOT_CONVERGE");
+}
+
+function rk4Solve(handle,tspan,y0,steps,functions){
+  if(!isFunctionHandle(handle))throw new Error("FUNCTION_HANDLE_REQUIRED");
+  const span=numericValues(tspan);
+  if(span.length!==2)throw new Error("INVALID_TIME_SPAN");
+  const start=span[0],end=span[1],initial=Number(y0),count=steps===undefined?100:Number(steps);
+  if(!Number.isFinite(initial)||!Number.isInteger(count)||count<1||count>10000)throw new Error("INVALID_SAMPLE_COUNT");
+  const h=(end-start)/count,out=[[start,initial]];
+  const f=(t,y)=>{
+    const value=Number(invokeFunctionHandleValues(handle,[t,y],functions));
+    if(!Number.isFinite(value))throw new Error("INVALID_FUNCTION_VALUE");
+    return value;
+  };
+  let t=start,y=initial;
+  for(let i=0;i<count;i++){
+    const k1=f(t,y),k2=f(t+h/2,y+h*k1/2),k3=f(t+h/2,y+h*k2/2),k4=f(t+h,y+h*k3);
+    y+=h*(k1+2*k2+2*k3+k4)/6;t=start+(i+1)*h;
+    out.push([Number(t.toPrecision(14)),Math.abs(y)<1e-12?0:Number(y.toPrecision(14))]);
+  }
+  return out;
+}
+
+function quadraticRealRoots(coefficients){
+  const c=numericValues(coefficients);
+  while(c.length>1&&Math.abs(c[0])<1e-15)c.shift();
+  if(c.length===2)return[[-c[1]/c[0]]];
+  if(c.length!==3)throw new Error("ROOTS_REAL_QUADRATIC_ONLY");
+  const [a,b,d]=c,disc=b*b-4*a*d;
+  if(disc<-1e-12)throw new Error("COMPLEX_ROOTS_NOT_SUPPORTED");
+  const s=Math.sqrt(Math.max(0,disc));
+  const roots=Math.abs(s)<1e-12?[-b/(2*a)]:[(-b-s)/(2*a),(-b+s)/(2*a)];
+  return rowVector(roots.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
 function solveLinearMatrix(a,b){
   const [n,cols]=matrixShape(a),[br,bc]=matrixShape(b);
   if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
@@ -892,7 +1037,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
-  "polyfit","polyval",
+  "polyfit","polyval","roots","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
@@ -1037,6 +1182,15 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
     if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
     if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
+    if(fn==="roots"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return quadraticRealRoots(args[0])}
+    if(fn==="trapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return trapezoidalIntegral(args[0],args[1]??null)}
+    if(fn==="cumtrapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return cumulativeTrapezoid(args[0],args[1]??null)}
+    if(fn==="gradient"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return numericalGradient(args[0],args[1]??1)}
+    if(fn==="interp1"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linearInterpolate(args[0],args[1],args[2])}
+    if(fn==="derivative"){if(args.length<2||args.length>3)throw new Error("INVALID_ARGUMENT_COUNT");return numericDerivative(args[0],args[1],args[2],functions)}
+    if(fn==="integral"){if(args.length<3||args.length>4)throw new Error("INVALID_ARGUMENT_COUNT");return simpsonIntegral(args[0],args[1],args[2],args[3],functions)}
+    if(fn==="fzero"){if(args.length<2||args.length>3)throw new Error("INVALID_ARGUMENT_COUNT");return findZero(args[0],args[1],args[2],functions)}
+    if(fn==="rk4"||fn==="ode4"){if(args.length<3||args.length>4)throw new Error("INVALID_ARGUMENT_COUNT");return rk4Solve(args[0],args[1],args[2],args[3],functions)}
     if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).length}
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
