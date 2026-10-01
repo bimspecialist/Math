@@ -480,6 +480,104 @@ function matrixRank(value){
   return rank;
 }
 
+function realMatrix(value){
+  if(!isMatrix(value))throw new Error("MATRIX_REQUIRED");
+  const matrix=value.map(row=>row.map(Number));
+  if(matrix.some(row=>row.some(v=>!Number.isFinite(v))))throw new Error("REAL_MATRIX_REQUIRED");
+  return matrix;
+}
+
+function luDecomposition(value){
+  const a=realMatrix(value),[n,cols]=matrixShape(a);
+  if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  const U=a.map(row=>row.slice()),L=identity(n),P=identity(n),tol=1e-12;
+  for(let k=0;k<n;k++){
+    let pivot=k;
+    for(let r=k+1;r<n;r++)if(Math.abs(U[r][k])>Math.abs(U[pivot][k]))pivot=r;
+    if(Math.abs(U[pivot][k])<tol)throw new Error("SINGULAR_MATRIX");
+    if(pivot!==k){
+      [U[k],U[pivot]]=[U[pivot],U[k]];
+      [P[k],P[pivot]]=[P[pivot],P[k]];
+      for(let j=0;j<k;j++)[L[k][j],L[pivot][j]]=[L[pivot][j],L[k][j]];
+    }
+    for(let i=k+1;i<n;i++){
+      const factor=U[i][k]/U[k][k];
+      L[i][k]=factor;
+      U[i][k]=0;
+      for(let j=k+1;j<n;j++)U[i][j]-=factor*U[k][j];
+    }
+  }
+  const clean=m=>m.map(row=>row.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+  return{L:clean(L),U:clean(U),P:clean(P)};
+}
+
+function qrDecomposition(value){
+  const a=realMatrix(value),[m,n]=matrixShape(a);
+  if(m<n)throw new Error("QR_ROWS_MUST_EXCEED_COLS");
+  const columns=Array.from({length:n},(_,j)=>a.map(row=>row[j]));
+  const qColumns=[],R=Array.from({length:n},()=>Array(n).fill(0));
+  for(let j=0;j<n;j++){
+    let v=columns[j].slice();
+    for(let i=0;i<j;i++){
+      const rij=qColumns[i].reduce((sum,x,k)=>sum+x*columns[j][k],0);
+      R[i][j]=rij;
+      v=v.map((x,k)=>x-rij*qColumns[i][k]);
+    }
+    const norm=Math.hypot(...v);
+    if(norm<1e-12)throw new Error("RANK_DEFICIENT_MATRIX");
+    R[j][j]=norm;
+    qColumns.push(v.map(x=>x/norm));
+  }
+  const Q=Array.from({length:m},(_,i)=>Array.from({length:n},(_,j)=>qColumns[j][i]));
+  const clean=m=>m.map(row=>row.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+  return{Q:clean(Q),R:clean(R)};
+}
+
+function choleskyDecomposition(value){
+  const a=realMatrix(value),[n,cols]=matrixShape(a);
+  if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(a[i][j]-a[j][i])>1e-10)throw new Error("POSITIVE_DEFINITE_REQUIRED");
+  const L=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++){
+    for(let j=0;j<=i;j++){
+      let sum=0;
+      for(let k=0;k<j;k++)sum+=L[i][k]*L[j][k];
+      if(i===j){
+        const d=a[i][i]-sum;
+        if(d<=1e-12)throw new Error("POSITIVE_DEFINITE_REQUIRED");
+        L[i][j]=Math.sqrt(d);
+      }else L[i][j]=(a[i][j]-sum)/L[j][j];
+    }
+  }
+  return transpose(L).map(row=>row.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+}
+
+function reducedRowEchelon(value){
+  const a=realMatrix(value).map(row=>row.slice()),rows=a.length,cols=a[0]?.length??0,tol=1e-10;
+  let lead=0;
+  for(let r=0;r<rows&&lead<cols;r++){
+    let pivot=r;
+    while(lead<cols){
+      pivot=r;
+      for(let i=r+1;i<rows;i++)if(Math.abs(a[i][lead])>Math.abs(a[pivot][lead]))pivot=i;
+      if(Math.abs(a[pivot][lead])>tol)break;
+      lead++;
+    }
+    if(lead>=cols)break;
+    [a[r],a[pivot]]=[a[pivot],a[r]];
+    const div=a[r][lead];
+    for(let j=0;j<cols;j++)a[r][j]/=div;
+    for(let i=0;i<rows;i++){
+      if(i===r)continue;
+      const factor=a[i][lead];
+      if(Math.abs(factor)<=tol)continue;
+      for(let j=0;j<cols;j++)a[i][j]-=factor*a[r][j];
+    }
+    lead++;
+  }
+  return a.map(row=>row.map(v=>Math.abs(v)<1e-10?0:Number(v.toPrecision(14))));
+}
+
 function covariance(valueA,valueB=valueA){
   const a=numericValues(valueA),b=numericValues(valueB);
   if(a.length!==b.length)throw new Error("VECTOR_LENGTH_MISMATCH");
@@ -1229,7 +1327,7 @@ export function describeMathLabValue(value){
 }
 
 const MATHLAB_FUNCTIONS=new Set([
-  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
+  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
@@ -1353,6 +1451,9 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues(args[0])}
     if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors(args[0])}
     if(fn==="rank"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return matrixRank(args[0])}
+    if(fn==="lu"||fn==="qr")throw new Error("MULTIPLE_OUTPUTS_REQUIRED")
+    if(fn==="chol"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return choleskyDecomposition(args[0])}
+    if(fn==="rref"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return reducedRowEchelon(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
     if(fn==="eye"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0],args[1]??args[0])}
     if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
@@ -1505,6 +1606,25 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     return;
   }
   const multiAssignment=source.match(/^\[([^\]]+)\]\s*=\s*([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(multiAssignment&&["lu","qr"].includes(multiAssignment[2].toLowerCase())){
+    const name=multiAssignment[2].toLowerCase(),targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
+    const argSources=splitArgs(multiAssignment[3]);
+    if(argSources.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");
+    const matrix=evalValue(argSources[0],workspace,functions);
+    let values;
+    if(name==="lu"){
+      if(targets.length<2||targets.length>3)throw new Error("INVALID_OUTPUT_COUNT");
+      const result=luDecomposition(matrix);
+      values=targets.length===2?[matrixMultiply(transpose(result.P),result.L),result.U]:[result.L,result.U,result.P];
+    }else{
+      if(targets.length!==2)throw new Error("INVALID_OUTPUT_COUNT");
+      const result=qrDecomposition(matrix);values=[result.Q,result.R];
+    }
+    targets.forEach((target,i)=>{workspace[target]=clone(values[i])});
+    syncScopeState(workspace);
+    if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
+    return;
+  }
   if(multiAssignment&&multiAssignment[2].toLowerCase()==="deconv"){
     const targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     if(targets.length>2)throw new Error("TOO_MANY_OUTPUTS");
