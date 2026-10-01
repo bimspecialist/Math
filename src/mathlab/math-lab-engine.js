@@ -408,10 +408,12 @@ function logicalSelectorIndices(source,workspace,functions,max){
   if(values.length!==max)throw new Error("LOGICAL_INDEX_SIZE_MISMATCH");
   return values.map((value,i)=>Number(value)!==0?i:null).filter(i=>i!==null);
 }
+function normalizeNumericResult(value){return Object.is(value,-0)?0:value}
 function mapNumericLike(value,fn){
-  if(typeof value==="number")return fn(value);
-  if(isMatrix(value))return value.map(row=>row.map(fn));
-  if(Array.isArray(value))return value.map(fn);
+  const apply=x=>normalizeNumericResult(fn(x));
+  if(typeof value==="number")return apply(value);
+  if(isMatrix(value))return value.map(row=>row.map(apply));
+  if(Array.isArray(value))return value.map(apply);
   throw new Error("INVALID_VALUE");
 }
 function findLinearIndices(value){
