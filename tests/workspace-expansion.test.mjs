@@ -171,12 +171,12 @@ test("localization dictionary has complete English and Arabic terminology for ev
     assert.ok(String(UI_STRINGS.en[key]).trim(),"empty English "+key);
     assert.ok(String(UI_STRINGS.ar[key]).trim(),"empty Arabic "+key);
   }
-  assert.equal(UI_STRINGS.en.navScientific,"Scientific");
-  assert.equal(UI_STRINGS.ar.navScientific,"علمي");
-  assert.equal(UI_STRINGS.en.navGraphing,"Graphing");
-  assert.equal(UI_STRINGS.ar.navGraphing,"الرسم البياني");
-  assert.equal(UI_STRINGS.en.navProgrammer,"Programmer");
-  assert.equal(UI_STRINGS.ar.navProgrammer,"مبرمج");
+  assert.equal(UI_STRINGS.en.navScientific,"Scientific Calculator");
+  assert.equal(UI_STRINGS.ar.navScientific,"الحاسبة العلمية");
+  assert.equal(UI_STRINGS.en.navGraphing,"Graphing Calculator");
+  assert.equal(UI_STRINGS.ar.navGraphing,"حاسبة الرسم البياني");
+  assert.equal(UI_STRINGS.en.navProgrammer,"Programmer Calculator");
+  assert.equal(UI_STRINGS.ar.navProgrammer,"حاسبة المبرمج");
   assert.equal(UI_STRINGS.en.navDateCalculation,"Date calculation");
   assert.equal(UI_STRINGS.ar.navDateCalculation,"حساب التاريخ");
 });
