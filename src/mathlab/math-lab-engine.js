@@ -1166,6 +1166,64 @@ function reshape(value,rows,cols){
   return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>values[c*rows+r]));
 }
 
+function matrixValue(value){
+  if(typeof value==="number"||isComplex(value))return[[clone(value)]];
+  if(!isMatrix(value))throw new Error("MATRIX_REQUIRED");
+  return clone(value);
+}
+
+function repeatMatrix(value,rowCopies,colCopies){
+  const m=matrixValue(value),[rows,cols]=matrixShape(m);
+  rowCopies=Number(rowCopies);colCopies=Number(colCopies);
+  if(!Number.isInteger(rowCopies)||!Number.isInteger(colCopies)||rowCopies<1||colCopies<1||rows*rowCopies>100||cols*colCopies>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:rows*rowCopies},(_,r)=>
+    Array.from({length:cols*colCopies},(_,col)=>clone(m[r%rows][col%cols]))
+  );
+}
+
+function flipLeftRight(value){
+  return matrixValue(value).map(row=>row.slice().reverse().map(clone));
+}
+
+function flipUpDown(value){
+  return matrixValue(value).slice().reverse().map(row=>row.map(clone));
+}
+
+function rotate90(value,count=1){
+  let m=matrixValue(value),k=Number(count);
+  if(!Number.isInteger(k))throw new Error("INVALID_ROTATION_COUNT");
+  k=((k%4)+4)%4;
+  for(let n=0;n<k;n++)m=flipUpDown(transpose(m));
+  return m;
+}
+
+function kroneckerProduct(aValue,bValue){
+  const a=matrixValue(aValue),b=matrixValue(bValue);
+  const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
+  if(ar*br>100||ac*bc>100)throw new Error("INVALID_MATRIX_SIZE");
+  return Array.from({length:ar*br},(_,r)=>Array.from({length:ac*bc},(_,col)=>{
+    const av=a[Math.floor(r/br)][Math.floor(col/bc)];
+    const bv=b[r%br][col%bc];
+    return normalizeScalar(scalarMul(av,bv));
+  }));
+}
+
+function blockDiagonal(values){
+  if(!values.length)throw new Error("INVALID_ARGUMENT_COUNT");
+  const blocks=values.map(matrixValue);
+  const shapes=blocks.map(matrixShape);
+  const totalRows=shapes.reduce((s,x)=>s+x[0],0),totalCols=shapes.reduce((s,x)=>s+x[1],0);
+  if(totalRows>100||totalCols>100)throw new Error("INVALID_MATRIX_SIZE");
+  const out=Array.from({length:totalRows},()=>Array(totalCols).fill(0));
+  let rowOffset=0,colOffset=0;
+  blocks.forEach((block,i)=>{
+    const [rows,cols]=shapes[i];
+    for(let r=0;r<rows;r++)for(let col=0;col<cols;col++)out[rowOffset+r][colOffset+col]=clone(block[r][col]);
+    rowOffset+=rows;colOffset+=cols;
+  });
+  return out;
+}
+
 function linearColumnMajor(m){
   if(!isMatrix(m))return[m];
   const rows=m.length,cols=m[0]?.length??0,out=[];
@@ -1424,7 +1482,7 @@ export function describeMathLabValue(value){
 const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve","lstsq",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
-  "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
+  "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape","repmat","fliplr","flipud","rot90","kron","blkdiag",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
@@ -1601,6 +1659,12 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
     if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
+    if(fn==="repmat"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return repeatMatrix(args[0],args[1],args[2])}
+    if(fn==="fliplr"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flipLeftRight(args[0])}
+    if(fn==="flipud"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flipUpDown(args[0])}
+    if(fn==="rot90"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return rotate90(args[0],args[1]??1)}
+    if(fn==="kron"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return kroneckerProduct(args[0],args[1])}
+    if(fn==="blkdiag"){return blockDiagonal(args)}
     if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
     if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
     if(fn==="polyder"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialDerivative(args[0])}
