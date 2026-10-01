@@ -241,6 +241,7 @@
                   <button type="button" data-mathlab-example="A = [4 2;2 3]&#10;R = chol(A)&#10;R'*R&#10;rref([1 2 1;2 4 0;3 6 3])" data-i18n="matrixReduction">Matrix reduction</button>
                   <button type="button" data-mathlab-example="f = @(x) x.^2 - 2&#10;r = fzero(f,[0 2])&#10;d = derivative(f,r)&#10;I = integral(@(x) x.^2,0,3,200)" data-i18n="numericalMethods">Numerical methods</button>
                   <button type="button" data-mathlab-example="x = [0 1 2 3]&#10;y = [0 1 4 9]&#10;trapz(x,y)&#10;gradient(y,1)&#10;interp1(x,y,1.5)" data-i18n="sampledData">Sampled data</button>
+                  <button type="button" data-mathlab-example="x = [0 1 2]&#10;y = [0 10 20]&#10;interp1(x,y,[0.2 1.7],'nearest')&#10;interp1(x,y,[-1 3],'linear','extrap')&#10;interp1(x,y,[-1 3],'linear',99)" data-i18n="interpolationMethods">Interpolation methods</button>
                   <button type="button" data-mathlab-example="f = @(t,y) y&#10;S = rk4(f,[0 1],1,20)&#10;S(end,:)" data-i18n="odeSolvers">ODE solvers</button>
                   <button type="button" data-mathlab-example="z = complex(3,4)&#10;abs(z)&#10;angle(z)&#10;conj(z)&#10;sqrt(-1)" data-i18n="complexNumbers">Complex numbers</button>
                   <button type="button" data-mathlab-example="x = [1 2 3 4]&#10;X = fft(x)&#10;real(X)&#10;imag(X)&#10;ifft(X)" data-i18n="fourierTools">FFT / IFFT</button>
@@ -278,6 +279,7 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabAdvancedControlCommands">Advanced control</strong><code dir="ltr">switch/case/otherwise/end · try/catch/end</code></p>
                     <p><strong data-i18n="mathLabUtilityCommands">Array utilities</strong><code dir="ltr">prod · cumsum · cumprod · diff · sort · unique · round · floor · ceil · fix · sign · rem</code></p>
                     <p><strong data-i18n="mathLabNumericalCommands">Numerical methods</strong><code dir="ltr">trapz · cumtrapz · gradient · interp1 · derivative · integral · fzero · rk4 / ode4 · roots</code></p>
+                    <p><strong data-i18n="mathLabInterpolationCommands">Interpolation</strong><code dir="ltr">interp1(x,y,xq,'linear'|'nearest'|'previous'|'next', 'extrap'|value)</code></p>
                     <p><strong data-i18n="mathLabComplexCommands">Complex & Fourier</strong><code dir="ltr">complex · real · imag · conj · angle · fft · ifft · sqrt(-1) · roots([1 0 1])</code></p>
                     <p><strong data-i18n="mathLabSignalCommands">Polynomial & signal</strong><code dir="ltr">roots (degree ≤ 20) · conv · xcorr · movmean · fftshift · ifftshift</code></p>
                     <p><strong data-i18n="mathLabEngineeringCommands">Engineering utilities</strong><code dir="ltr">polyder · polyint · deconv · [q,r]=deconv(...) · rms · detrend</code></p>
