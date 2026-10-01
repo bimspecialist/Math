@@ -71,3 +71,20 @@ test("Math Lab rejects ambiguous deletion from a true 2D matrix",()=>{
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"LINEAR_DELETE_REQUIRES_VECTOR");
 });
+
+
+test("Math Lab can create arrays directly from indexed assignment",()=>{
+  let r=runMathLabScript("A(3)=5");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.A,[[0,0,5]]);
+
+  r=runMathLabScript("B(2,3)=7");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.B,[[0,0,0],[0,0,7]]);
+});
+
+test("Undefined colon indexed assignment remains rejected",()=>{
+  const r=runMathLabScript("A(:)=1");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"UNDEFINED_VARIABLE");
+});
