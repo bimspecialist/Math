@@ -1060,6 +1060,36 @@ function variance(value){
   return values.reduce((sum,v)=>sum+(v-mean)**2,0)/(values.length-1);
 }
 
+function dimensionSlices(value,dim){
+  if(!isMatrix(value))throw new Error("MATRIX_REQUIRED");
+  const dimension=Number(dim);
+  if(!Number.isInteger(dimension)||(dimension!==1&&dimension!==2))throw new Error("INVALID_DIMENSION");
+  const matrix=value.map(row=>row.map(Number));
+  if(matrix.some(row=>row.some(v=>!Number.isFinite(v))))throw new Error("INVALID_VALUE");
+  if(dimension===1){
+    const cols=matrix[0]?.length??0;
+    return{dimension,slices:Array.from({length:cols},(_,col)=>matrix.map(row=>row[col]))};
+  }
+  return{dimension,slices:matrix.map(row=>row.slice())};
+}
+
+function reduceByDimension(value,dim,reducer){
+  const {dimension,slices}=dimensionSlices(value,dim);
+  const reduced=slices.map(slice=>normalizeScalar(reducer(slice)));
+  return dimension===1?[reduced]:reduced.map(v=>[v]);
+}
+
+function medianValues(values){
+  const sorted=values.slice().sort((a,b)=>a-b),mid=Math.floor(sorted.length/2);
+  return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+}
+
+function varianceValues(values){
+  if(values.length<2)return 0;
+  const mean=values.reduce((a,b)=>a+b,0)/values.length;
+  return values.reduce((sum,v)=>sum+(v-mean)**2,0)/(values.length-1);
+}
+
 function percentileMidpoint(value,pct){
   const values=numericValues(value).slice().sort((a,b)=>a-b);
   const p=Number(pct);
@@ -1499,13 +1529,41 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="linspace"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linspace(args[0],args[1],args[2])}
     if(fn==="diag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return diagonal(args[0])}
     if(fn==="norm"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return euclideanNorm(args[0])}
-    if(fn==="sum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).reduce((a,b)=>a+b,0)}
-    if(fn==="mean"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const a=numericValues(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
-    if(fn==="median"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return median(args[0])}
-    if(fn==="min"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.min(...numericValues(args[0]))}
-    if(fn==="max"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.max(...numericValues(args[0]))}
-    if(fn==="var"||fn==="variance"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return variance(args[0])}
-    if(fn==="std"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.sqrt(variance(args[0]))}
+    if(fn==="sum"){
+      if(args.length===1)return numericValues(args[0]).reduce((a,b)=>a+b,0);
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.reduce((a,b)=>a+b,0));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="mean"){
+      if(args.length===1){const a=numericValues(args[0]);return a.reduce((x,y)=>x+y,0)/a.length}
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.reduce((a,b)=>a+b,0)/values.length);
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="median"){
+      if(args.length===1)return median(args[0]);
+      if(args.length===2)return reduceByDimension(args[0],args[1],medianValues);
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="min"){
+      if(args.length===1)return Math.min(...numericValues(args[0]));
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>Math.min(...values));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="max"){
+      if(args.length===1)return Math.max(...numericValues(args[0]));
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>Math.max(...values));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="var"||fn==="variance"){
+      if(args.length===1)return variance(args[0]);
+      if(args.length===2)return reduceByDimension(args[0],args[1],varianceValues);
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="std"){
+      if(args.length===1)return Math.sqrt(variance(args[0]));
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>Math.sqrt(varianceValues(values)));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
     if(fn==="cov"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return covariance(args[0],args[1]??args[0])}
     if(fn==="corr"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return correlation(args[0],args[1])}
     if(fn==="corrcoef"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");const r=correlation(args[0],args[1]);return [[1,r],[r,1]]}
@@ -1560,12 +1618,24 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="tan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>scalarDiv(scalarSin(x),scalarCos(x)))}
     if(fn==="exp"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarExp)}
     if(fn==="log"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarLog)}
-    if(fn==="any"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).some(x=>x!==0)?1:0}
-    if(fn==="all"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).every(x=>x!==0)?1:0}
+    if(fn==="any"){
+      if(args.length===1)return numericValues(args[0]).some(x=>x!==0)?1:0;
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.some(x=>x!==0)?1:0);
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="all"){
+      if(args.length===1)return numericValues(args[0]).every(x=>x!==0)?1:0;
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.every(x=>x!==0)?1:0);
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
     if(fn==="find"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return findLinearIndices(args[0])}
     if(fn==="mod"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return ((a%b)+b)%b})}
     if(fn==="rem"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixElementwise(args[0],args[1],(a,b)=>{if(b===0)throw new Error("DIVISION_BY_ZERO");return a%b})}
-    if(fn==="prod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).reduce((a,b)=>a*b,1)}
+    if(fn==="prod"){
+      if(args.length===1)return numericValues(args[0]).reduce((a,b)=>a*b,1);
+      if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.reduce((a,b)=>a*b,1));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
     if(fn==="cumsum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a+b,0)}
     if(fn==="cumprod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a*b,1)}
     if(fn==="diff"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return difference(numericValues(args[0]))}
