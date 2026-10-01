@@ -86,10 +86,10 @@ test("Math Lab validates function definitions and outputs",()=>{
   assert.equal(r.error.message,"FUNCTION_OUTPUT_NOT_ASSIGNED");
 });
 
-test("Math Lab rejects indexed assignment to undefined variables",()=>{
+test("Math Lab indexed assignment can initialize a new variable",()=>{
   const r=runMathLabScript("A(1)=2");
-  assert.equal(r.ok,false);
-  assert.equal(r.error.message,"UNDEFINED_VARIABLE");
+  assert.equal(r.ok,true);
+  assert.deepEqual(r.workspace.A,[[2]]);
 });
 
 
