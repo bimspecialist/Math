@@ -51,6 +51,8 @@ renderMathLabHistory();
   const activeSection=document.querySelector(".page-section.active");
   const activeTarget=activeSection?.id?.replace(/-section$/,"")||document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
   updateToolHeading(activeTarget);
+  syncToolGroupsForContext();
+  syncRampDuplicateState();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -91,6 +93,30 @@ document.addEventListener("keydown",event=>{
   }
 });
 filterToolNavigation();
+
+const toolGroupToggles=[...document.querySelectorAll("#tool-sidebar .tool-group-toggle")];
+function setToolGroupCollapsed(group,collapsed){
+  if(!group)return;
+  group.classList.toggle("is-collapsed",collapsed);
+  group.querySelector(":scope > .tool-group-toggle")?.setAttribute("aria-expanded",String(!collapsed));
+}
+document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+  setToolGroupCollapsed(group,!group.querySelector(".tool-item.active"));
+});
+for(const toggle of toolGroupToggles){
+  toggle.addEventListener("click",()=>{
+    const group=toggle.closest(".tool-group");
+    setToolGroupCollapsed(group,!group?.classList.contains("is-collapsed"));
+  });
+}
+function syncToolGroupsForContext(){
+  const query=(toolSearch?.value??"").trim();
+  document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+    const containsActive=Boolean(group.querySelector(".tool-item.active"));
+    if(query||containsActive)setToolGroupCollapsed(group,false);
+  });
+}
+toolSearch?.addEventListener("input",syncToolGroupsForContext);
 
 const toolSidebar=document.querySelector("#tool-sidebar");
 const sidebarToggle=document.querySelector("#sidebar-toggle");
@@ -138,6 +164,7 @@ function activateTool(target,{updateHash=true,track=true}={}){
     section.setAttribute("aria-hidden",String(!selected));
   });
   updateToolHeading(target);
+  syncToolGroupsForContext();
   if(target==="graphing"&&!graphInitialized)drawGraph();
   if(updateHash&&window.location.hash!=="#"+target)history.replaceState(null,"","#"+target);
   if(track)trackVirtualPage("/#"+target,document.title);
@@ -864,25 +891,46 @@ function renderCalculatorCategories(){
 renderCalculatorCategories();
 
 const rampRise=document.querySelector("#ramp-rise"),rampRun=document.querySelector("#ramp-run"),rampLength=document.querySelector("#ramp-length"),rampUnit=document.querySelector("#ramp-unit"),rampResult=document.querySelector("#ramp-result"),rampDerivedNote=document.querySelector("#ramp-derived-note");
-const rampDesignRise=document.querySelector("#ramp-design-rise"),rampSlopeType=document.querySelector("#ramp-slope-type"),rampSlopeValue=document.querySelector("#ramp-slope-value"),rampDesignUnit=document.querySelector("#ramp-design-unit"),rampDesignResult=document.querySelector("#ramp-design-result");
+const rampDesignRise=document.querySelector("#ramp-design-rise"),rampSlopeType=document.querySelector("#ramp-slope-type"),rampSlopeValue=document.querySelector("#ramp-slope-value"),rampDesignUnit=document.querySelector("#ramp-design-unit"),rampDesignResult=document.querySelector("#ramp-design-result"),rampDesignMatchNote=document.querySelector("#ramp-design-match-note");
+let lastRampGeometry=null,lastRampDesign=null;
 
 function rampResultHtml(result,unit){
   return `<div><strong>${escHtml(translate(locale,"rampRise"))}</strong><span>${result.rise} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampRun"))}</strong><span>${result.run} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampLength"))}</strong><span>${result.length} ${escHtml(unit)}</span></div><div><strong>${escHtml(translate(locale,"rampAngle"))}</strong><span>${result.angleDeg}°</span></div><div><strong>${escHtml(translate(locale,"rampGrade"))}</strong><span>${result.gradePercent}%</span></div><div><strong>${escHtml(translate(locale,"rampRatio"))}</strong><span>${escHtml(result.ratioText)}</span></div>`;
+}
+
+function rampResultsMatch(a,aUnit,b,bUnit){
+  if(!a||!b||aUnit!==bUnit)return false;
+  return ["rise","run","length","angleDeg","gradePercent"].every(key=>{
+    const av=Number(a[key]),bv=Number(b[key]);
+    return Number.isFinite(av)&&Number.isFinite(bv)&&Math.abs(av-bv)<=1e-9*Math.max(1,Math.abs(av),Math.abs(bv));
+  })&&a.ratioText===b.ratioText;
+}
+function syncRampDuplicateState(){
+  const matches=rampResultsMatch(lastRampGeometry,rampUnit?.value??"",lastRampDesign,rampDesignUnit?.value??"");
+  if(rampDesignResult)rampDesignResult.hidden=matches;
+  if(rampDesignMatchNote){
+    rampDesignMatchNote.hidden=!matches;
+    rampDesignMatchNote.textContent=matches?translate(locale,"rampResultsMatch"):"";
+  }
 }
 
 function updateRampCalculator(){
   if(!rampResult)return;
   try{
     const result=calculateRamp({rise:rampRise?.value,run:rampRun?.value,length:rampLength?.value});
+    lastRampGeometry=result;
     const unit=rampUnit?.value??"";
     rampResult.innerHTML=rampResultHtml(result,unit);
     if(rampDerivedNote){
       const key=result.derivedField==="verified"?"rampValuesVerified":result.derivedField==="rise"?"rampDerivedRise":result.derivedField==="run"?"rampDerivedRun":"rampDerivedLength";
       rampDerivedNote.textContent=translate(locale,key);
     }
+    syncRampDuplicateState();
   }catch(error){
+    lastRampGeometry=null;
     rampResult.textContent=translate(locale,error.message)||error.message;
     if(rampDerivedNote)rampDerivedNote.textContent="";
+    syncRampDuplicateState();
   }
 }
 
@@ -890,9 +938,14 @@ function updateRampDesign(){
   if(!rampDesignResult)return;
   try{
     const result=calculateRampFromSlope({rise:rampDesignRise?.value,slopeType:rampSlopeType?.value,slopeValue:rampSlopeValue?.value});
+    lastRampDesign=result;
     rampDesignResult.innerHTML=rampResultHtml(result,rampDesignUnit?.value??"");
+    syncRampDuplicateState();
   }catch(error){
+    lastRampDesign=null;
+    rampDesignResult.hidden=false;
     rampDesignResult.textContent=translate(locale,error.message)||error.message;
+    if(rampDesignMatchNote){rampDesignMatchNote.hidden=true;rampDesignMatchNote.textContent=""}
   }
 }
 
