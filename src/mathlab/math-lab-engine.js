@@ -72,22 +72,47 @@ function colonValues(source,workspace){
   return values;
 }
 
-function parseMatrix(source,workspace){
+function splitMatrixRowTokens(source){
+  const out=[];let current="",depth=0;
+  const push=()=>{if(current.trim()){out.push(current.trim());current=""}};
+  for(let i=0;i<source.length;i++){
+    const ch=source[i];
+    if(ch==="["||ch==="(")depth++;
+    else if(ch==="]"||ch===")")depth--;
+    if(depth===0&&(ch===","||/\s/.test(ch))){push();continue}
+    current+=ch;
+  }
+  push();
+  return out;
+}
+function asConcatMatrix(value){
+  if(typeof value==="number")return[[value]];
+  if(isMatrix(value))return clone(value);
+  if(Array.isArray(value))return[value.slice()];
+  throw new Error("INVALID_MATRIX");
+}
+function horizontalConcat(parts){
+  if(!parts.length)throw new Error("INVALID_MATRIX");
+  const rows=parts[0].length;
+  if(parts.some(p=>p.length!==rows))throw new Error("CONCAT_DIMENSION_MISMATCH");
+  return Array.from({length:rows},(_,r)=>parts.flatMap(p=>p[r]));
+}
+function parseMatrix(source,workspace,functions={}){
   const inner=source.trim().slice(1,-1).trim();
   if(!inner)return[];
-  const rows=inner.split(";").map(r=>r.trim()).filter(Boolean).map(row=>{
-    const cells=row.includes(",")?splitTopLevel(row,","):row.split(/\s+/);
-    const values=[];
-    for(const cell of cells.filter(Boolean)){
-      const range=colonValues(cell,workspace);
-      if(range)values.push(...range);
-      else values.push(numericExpression(cell,workspace));
-    }
-    return values;
+  const rowGroups=splitTopLevel(inner,";").filter(Boolean).map(group=>{
+    const tokens=splitMatrixRowTokens(group);
+    if(!tokens.length)throw new Error("INVALID_MATRIX");
+    const blocks=tokens.map(token=>{
+      const range=colonValues(token,workspace);
+      if(range)return[range];
+      return asConcatMatrix(evalValue(token,workspace,functions));
+    });
+    return horizontalConcat(blocks);
   });
-  const width=rows[0]?.length??0;
-  if(!width||rows.some(r=>r.length!==width))throw new Error("INVALID_MATRIX");
-  return rows;
+  const width=rowGroups[0]?.[0]?.length??0;
+  if(!width||rowGroups.some(group=>group.some(row=>row.length!==width)))throw new Error("CONCAT_DIMENSION_MISMATCH");
+  return rowGroups.flat();
 }
 
 function determinant(m){
@@ -633,7 +658,7 @@ function evalValue(source,workspace,functions={}){
     }
   }
   if(Object.prototype.hasOwnProperty.call(workspace,text))return clone(workspace[text]);
-  if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
+  if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace,functions);
   const range=colonValues(text,workspace);
   if(range)return[range];
   const nestedCall=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
@@ -660,7 +685,7 @@ function evalValue(source,workspace,functions={}){
 
 function evalCommand(expr,workspace,functions={}){
   const text=expr.trim();
-  if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace);
+  if(text.startsWith("[")&&text.endsWith("]"))return parseMatrix(text,workspace,functions);
   const call=text.match(/^([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
   if(call&&Object.prototype.hasOwnProperty.call(workspace,call[1]))return indexWorkspaceValue(workspace[call[1]],call[2],workspace);
   if(call&&functions[call[1].toLowerCase()])return evalValue(text,workspace,functions);
