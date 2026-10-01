@@ -223,6 +223,7 @@
                   <button type="button" data-mathlab-example="function y = squarePlusOne(x)&#10;y = x.^2 + 1;&#10;end&#10;A = [1 2 3]&#10;B = squarePlusOne(A)" data-i18n="userFunctions">User functions</button>
                   <button type="button" data-mathlab-example="function [s,p] = sumprod(a,b)&#10;s = a+b;&#10;p = a.*b;&#10;end&#10;[x,y] = sumprod([1 2],[3 4])" data-i18n="multiOutputFunctions">Multi-output functions</button>
                   <button type="button" data-mathlab-example="A = [-1 0 4;9 16 25]&#10;abs(A)&#10;sqrt(abs(A))&#10;find(A)&#10;any(A)&#10;all(A)" data-i18n="arrayMath">Array math</button>
+                  <button type="button" data-mathlab-example="A = [1 2 3]&#10;A(end+1) = 4&#10;A(end+2) = 6&#10;B = [A A]&#10;B(:,2) = []&#10;B" data-i18n="dynamicArrays">Dynamic arrays</button>
                   <button type="button" data-mathlab-example="x = 7;&#10;if x &lt; 0&#10;y = -1;&#10;elseif x &lt; 5&#10;y = 0;&#10;else&#10;y = 1;&#10;end&#10;y" data-i18n="conditionals">Conditionals</button>
                   <button type="button" data-mathlab-example="s = 0;&#10;for i = 1:5&#10;s = s + i;&#10;end&#10;s" data-i18n="forLoops">For loops</button>
                   <button type="button" data-mathlab-example="x = 1;&#10;while x &lt; 16&#10;x = x * 2;&#10;end&#10;x" data-i18n="whileLoops">While loops</button>
@@ -251,6 +252,7 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabControlCommands">Control flow</strong><code dir="ltr">if / elseif / else / end · for / end · while / end · break · continue · return</code></p>
                     <p><strong data-i18n="mathLabArrayMathCommands">Array math</strong><code dir="ltr">abs · sqrt · sin · cos · tan · exp · log · mod · any · all · find</code></p>
                     <p><strong data-i18n="mathLabFunctionCommands">Functions</strong><code dir="ltr">function y=f(x) · function [a,b]=f(x) · [u,v]=f(x)</code></p>
+                    <p><strong data-i18n="mathLabDynamicArrayCommands">Dynamic arrays</strong><code dir="ltr">A(end+1)=x · A(3,4)=x · A(2)=[] · A(:,2)=[] · [A B] · [A;B]</code></p>
                   </div>
                 </details>
                 <div class="mathlab-actions">
