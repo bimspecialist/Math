@@ -56,7 +56,7 @@ test("Math Lab supports advanced end-based slicing",()=>{
 });
 
 test("Math Lab validates incompatible matrix operations",()=>{
-  let r=runMathLabScript("A=[1 2]\nB=[1;2]\nA+B");
+  let r=runMathLabScript("A=[1 2 3]\nB=[1 2;3 4]\nA+B");
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"MATRIX_DIMENSION_MISMATCH");
 
