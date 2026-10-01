@@ -1079,6 +1079,35 @@ function reduceByDimension(value,dim,reducer){
   return dimension===1?[reduced]:reduced.map(v=>[v]);
 }
 
+function rebuildDimensionSlices(dimension,slices){
+  if(dimension===2)return slices.map(slice=>slice.map(normalizeScalar));
+  const rows=slices[0]?.length??0;
+  if(rows===0)return[];
+  return Array.from({length:rows},(_,row)=>slices.map(slice=>normalizeScalar(slice[row])));
+}
+
+function transformByDimension(value,dim,transformer){
+  const {dimension,slices}=dimensionSlices(value,dim);
+  return rebuildDimensionSlices(dimension,slices.map(slice=>transformer(slice.slice())));
+}
+
+function cumulativeValues(values,fn,seed){
+  const out=[];let acc=seed;
+  for(const value of values){acc=fn(acc,value);out.push(normalizeScalar(acc))}
+  return out;
+}
+
+function differenceOrder(values,order=1){
+  const n=Number(order);
+  if(!Number.isInteger(n)||n<0)throw new Error("INVALID_DIFFERENCE_ORDER");
+  let out=values.slice();
+  for(let k=0;k<n;k++){
+    if(out.length<2)return[];
+    out=out.slice(1).map((value,i)=>normalizeScalar(value-out[i]));
+  }
+  return out;
+}
+
 function medianValues(values){
   const sorted=values.slice().sort((a,b)=>a-b),mid=Math.floor(sorted.length/2);
   return sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
@@ -1636,10 +1665,27 @@ function evalCommand(expr,workspace,functions={}){
       if(args.length===2)return reduceByDimension(args[0],args[1],values=>values.reduce((a,b)=>a*b,1));
       throw new Error("INVALID_ARGUMENT_COUNT");
     }
-    if(fn==="cumsum"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a+b,0)}
-    if(fn==="cumprod"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return cumulative(numericValues(args[0]),(a,b)=>a*b,1)}
-    if(fn==="diff"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return difference(numericValues(args[0]))}
-    if(fn==="sort"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return rowVector(numericValues(args[0]).slice().sort((a,b)=>a-b))}
+    if(fn==="cumsum"){
+      if(args.length===1)return cumulative(numericValues(args[0]),(a,b)=>a+b,0);
+      if(args.length===2)return transformByDimension(args[0],args[1],values=>cumulativeValues(values,(a,b)=>a+b,0));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="cumprod"){
+      if(args.length===1)return cumulative(numericValues(args[0]),(a,b)=>a*b,1);
+      if(args.length===2)return transformByDimension(args[0],args[1],values=>cumulativeValues(values,(a,b)=>a*b,1));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="diff"){
+      if(args.length===1)return difference(numericValues(args[0]));
+      if(args.length===2)return rowVector(differenceOrder(numericValues(args[0]),args[1]));
+      if(args.length===3)return transformByDimension(args[0],args[2],values=>differenceOrder(values,args[1]));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
+    if(fn==="sort"){
+      if(args.length===1)return rowVector(numericValues(args[0]).slice().sort((a,b)=>a-b));
+      if(args.length===2)return transformByDimension(args[0],args[1],values=>values.sort((a,b)=>a-b));
+      throw new Error("INVALID_ARGUMENT_COUNT");
+    }
     if(fn==="unique"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return uniqueSorted(numericValues(args[0]))}
     if(fn==="round"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.round)}
     if(fn==="floor"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.floor)}
