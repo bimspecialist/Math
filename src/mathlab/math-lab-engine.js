@@ -502,6 +502,10 @@ function splitStatements(line){
   if(current.trim())out.push({source:current.trim(),suppressed:false});
   return out;
 }
+function blockOpener(line){
+  const text=stripInlineComment(line).trim().toLowerCase();
+  return /^(if\b|for\b|while\b)/.test(text);
+}
 function parseUserFunctions(script){
   const lines=String(script??"").split(/\r?\n/);
   const functions={},body=[];
@@ -510,15 +514,51 @@ function parseUserFunctions(script){
     const header=raw.match(/^function\s+([A-Za-z][A-Za-z0-9_]*)\s*=\s*([A-Za-z][A-Za-z0-9_]*)\s*\(([^)]*)\)\s*$/i);
     if(!header){body.push(lines[i]);continue}
     const output=header[1],name=header[2],params=header[3].split(",").map(x=>x.trim()).filter(Boolean);
-    const fnLines=[];let foundEnd=false;
+    const fnLines=[];let foundEnd=false,depth=0;
     for(i=i+1;i<lines.length;i++){
-      if(lines[i].trim().toLowerCase()==="end"){foundEnd=true;break}
+      const trimmed=stripInlineComment(lines[i]).trim().toLowerCase();
+      if(trimmed==="end"){
+        if(depth===0){foundEnd=true;break}
+        depth--;fnLines.push(lines[i]);continue;
+      }
+      if(blockOpener(lines[i]))depth++;
       fnLines.push(lines[i]);
     }
     if(!foundEnd)throw new Error("FUNCTION_END_REQUIRED");
     functions[name.toLowerCase()]={name,output,params,body:fnLines.join("\n")};
   }
   return{functions,script:body.join("\n")};
+}
+function findBlockEnd(lines,start){
+  let depth=0;
+  for(let i=start+1;i<lines.length;i++){
+    const text=stripInlineComment(lines[i]).trim().toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(text==="end"){
+      if(depth===0)return i;
+      depth--;
+    }
+  }
+  throw new Error("BLOCK_END_REQUIRED");
+}
+function splitIfBranches(lines,start,end){
+  const head=stripInlineComment(lines[start]).trim();
+  const branches=[];let branchStart=start+1,currentCondition=head.replace(/^if\s+/i,"").trim(),depth=0;
+  for(let i=start+1;i<end;i++){
+    const raw=stripInlineComment(lines[i]).trim();
+    const lower=raw.toLowerCase();
+    if(blockOpener(lines[i])){depth++;continue}
+    if(lower==="end"){depth--;continue}
+    if(depth===0&&/^elseif\b/i.test(raw)){
+      branches.push({condition:currentCondition,lines:lines.slice(branchStart,i),offset:branchStart});
+      currentCondition=raw.replace(/^elseif\s+/i,"").trim();branchStart=i+1;
+    }else if(depth===0&&lower==="else"){
+      branches.push({condition:currentCondition,lines:lines.slice(branchStart,i),offset:branchStart});
+      currentCondition=null;branchStart=i+1;
+    }
+  }
+  branches.push({condition:currentCondition,lines:lines.slice(branchStart,end),offset:branchStart});
+  return branches;
 }
 
 export function describeMathLabValue(value){
