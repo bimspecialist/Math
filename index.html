@@ -34,7 +34,7 @@
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1600">
-  <link rel="stylesheet" href="./styles/ui-quality.css?v=20261001-2">
+  <link rel="stylesheet" href="./styles/ui-quality.css?v=20261001-3">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
@@ -217,11 +217,11 @@
             </div>
             <div class="mathlab-layout">
               <div class="mathlab-editor-panel">
-                <div class="mathlab-example-browser" aria-labelledby="mathlab-examples-title">
-                  <div class="mathlab-example-browser-head">
+                <details class="mathlab-example-browser" aria-labelledby="mathlab-examples-title">
+                  <summary class="mathlab-example-browser-head">
                     <strong id="mathlab-examples-title" data-i18n="mathLabExamplesTitle">Quick examples</strong>
                     <span data-i18n="mathLabExamplesHint">Choose a topic, then load an example into the editor.</span>
-                  </div>
+                  </summary>
                   <div class="mathlab-example-groups">
                     <details class="mathlab-example-group" open>
                       <summary data-i18n="mathLabExampleGroupBasics">Basics & programming</summary>
@@ -281,7 +281,7 @@
                       </div>
                     </details>
                   </div>
-                </div>
+                </details>
                 <label><span data-i18n="script">Script</span><textarea id="mathlab-input" dir="ltr" spellcheck="false" aria-describedby="mathlab-run-hint">a = 5
 b = a^2 + 3
 b</textarea></label>
