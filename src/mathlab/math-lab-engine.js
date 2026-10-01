@@ -175,17 +175,22 @@ function scalarTruth(value){
   if(typeof value!=="number"||!Number.isFinite(value))throw new Error("SCALAR_LOGICAL_REQUIRED");
   return value!==0;
 }
+function comparisonValue(op,a,b){
+  if(op==="==")return a===b?1:0;
+  if(op==="~=")return a!==b?1:0;
+  if(op==="<")return a<b?1:0;
+  if(op==="<=")return a<=b?1:0;
+  if(op===">")return a>b?1:0;
+  if(op===">=")return a>=b?1:0;
+  if(op==="&")return (a!==0&&b!==0)?1:0;
+  if(op==="|")return (a!==0||b!==0)?1:0;
+  throw new Error("INVALID_LOGICAL_OPERATION");
+}
 function binaryLogicalOperation(op,left,right){
   if(op==="&&")return scalarTruth(left)&&scalarTruth(right)?1:0;
   if(op==="||")return scalarTruth(left)||scalarTruth(right)?1:0;
-  if(typeof left!=="number"||typeof right!=="number")throw new Error("SCALAR_COMPARISON_REQUIRED");
-  if(op==="==")return left===right?1:0;
-  if(op==="~=")return left!==right?1:0;
-  if(op==="<")return left<right?1:0;
-  if(op==="<=")return left<=right?1:0;
-  if(op===">")return left>right?1:0;
-  if(op===">=")return left>=right?1:0;
-  throw new Error("INVALID_LOGICAL_OPERATION");
+  if(typeof left==="number"&&typeof right==="number")return comparisonValue(op,left,right);
+  return matrixElementwise(left,right,(a,b)=>comparisonValue(op,a,b));
 }
 function binaryArrayOperation(op,left,right){
   if(op==="+")return matrixAdd(left,right);
@@ -604,7 +609,7 @@ function evalValue(source,workspace,functions={}){
     return transpose(value);
   }
   const text=transposeInfo.source;
-  for(const operators of [["||"],["&&"],["==","~=",">=","<=",">","<"]]){
+  for(const operators of [["||"],["&&"],["|"],["&"],["==","~=",">=","<=",">","<"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
       const leftText=text.slice(0,match.index).trim();
@@ -613,7 +618,11 @@ function evalValue(source,workspace,functions={}){
       return binaryLogicalOperation(match.op,evalValue(leftText,workspace,functions),evalValue(rightText,workspace,functions));
     }
   }
-  if(text.startsWith("~")&&!text.startsWith("~="))return scalarTruth(evalValue(text.slice(1),workspace,functions))?0:1;
+  if(text.startsWith("~")&&!text.startsWith("~=")){
+    const value=evalValue(text.slice(1),workspace,functions);
+    if(typeof value==="number")return value===0?1:0;
+    return mapNumericLike(value,x=>x===0?1:0);
+  }
   for(const operators of [["+","-"],[".*","./","*","/"],[".^","^"]]){
     const match=findTopLevelOperator(text,operators);
     if(match){
