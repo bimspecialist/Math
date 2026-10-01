@@ -734,18 +734,41 @@ function numericalGradient(value,spacing=1){
   return rowVector(out.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
 }
 
-function linearInterpolate(xValue,yValue,queryValue){
+function interpolate1(xValue,yValue,queryValue,methodValue="linear",extrapolation=undefined){
   const x=numericValues(xValue),y=numericValues(yValue);
   if(x.length!==y.length||x.length<2)throw new Error("VECTOR_LENGTH_MISMATCH");
   for(let i=1;i<x.length;i++)if(!(x[i]>x[i-1]))throw new Error("X_MUST_BE_STRICTLY_INCREASING");
-  const interpolate=q=>{
-    if(q<x[0]||q>x.at(-1))throw new Error("INTERPOLATION_OUT_OF_RANGE");
-    if(q===x.at(-1))return y.at(-1);
+  const method=String(methodValue).toLowerCase();
+  if(!["linear","nearest","previous","next"].includes(method))throw new Error("UNSUPPORTED_INTERPOLATION_METHOD");
+  const extrapolate=extrapolation==="extrap";
+  const constantExtrap=typeof extrapolation==="number"&&Number.isFinite(extrapolation)?extrapolation:undefined;
+  if(extrapolation!==undefined&&!extrapolate&&constantExtrap===undefined)throw new Error("INVALID_EXTRAPOLATION");
+  const locate=q=>{
+    if(q<=x[0])return{lo:0,hi:1,out:q<x[0]};
+    if(q>=x.at(-1))return{lo:x.length-2,hi:x.length-1,out:q>x.at(-1)};
     let lo=0,hi=x.length-1;
     while(hi-lo>1){const mid=Math.floor((lo+hi)/2);if(x[mid]<=q)lo=mid;else hi=mid}
-    const t=(q-x[lo])/(x[lo+1]-x[lo]);
-    const result=y[lo]+t*(y[lo+1]-y[lo]);
-    return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+    return{lo,hi,out:false};
+  };
+  const interpolate=q=>{
+    q=Number(q);
+    if(!Number.isFinite(q))throw new Error("INVALID_VALUE");
+    const {lo,hi,out}=locate(q);
+    if(out&&!extrapolate&&constantExtrap===undefined)throw new Error("INTERPOLATION_OUT_OF_RANGE");
+    if(out&&constantExtrap!==undefined)return constantExtrap;
+    if(q===x[0])return y[0];
+    if(q===x.at(-1))return y.at(-1);
+    if(method==="linear"){
+      const t=(q-x[lo])/(x[hi]-x[lo]);
+      const result=y[lo]+t*(y[hi]-y[lo]);
+      return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+    }
+    if(method==="nearest"){
+      if(out)return q<x[0]?y[0]:y.at(-1);
+      return Math.abs(q-x[lo])<=Math.abs(x[hi]-q)?y[lo]:y[hi];
+    }
+    if(method==="previous")return out?(q<x[0]?y[0]:y.at(-1)):y[lo];
+    return out?(q<x[0]?y[0]:y.at(-1)):y[hi];
   };
   return mapNumericLike(queryValue,interpolate);
 }
@@ -1532,6 +1555,9 @@ function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOut
 
 function evalValue(source,workspace,functions={}){
   const stripped=stripOuterParens(source);
+  if((stripped.startsWith("'")&&stripped.endsWith("'")&&stripped.length>=2)||(stripped.startsWith('"')&&stripped.endsWith('"')&&stripped.length>=2)){
+    return stripped.slice(1,-1);
+  }
   const transposeInfo=stripTranspose(stripped);
   if(transposeInfo.transpose){
     const value=evalValue(transposeInfo.source,workspace,functions);
@@ -1688,7 +1714,7 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="trapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return trapezoidalIntegral(args[0],args[1]??null)}
     if(fn==="cumtrapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return cumulativeTrapezoid(args[0],args[1]??null)}
     if(fn==="gradient"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return numericalGradient(args[0],args[1]??1)}
-    if(fn==="interp1"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return linearInterpolate(args[0],args[1],args[2])}
+    if(fn==="interp1"){if(args.length<3||args.length>5)throw new Error("INVALID_ARGUMENT_COUNT");return interpolate1(args[0],args[1],args[2],args[3]??"linear",args[4])}
     if(fn==="derivative"){if(args.length<2||args.length>3)throw new Error("INVALID_ARGUMENT_COUNT");return numericDerivative(args[0],args[1],args[2],functions)}
     if(fn==="integral"){if(args.length<3||args.length>4)throw new Error("INVALID_ARGUMENT_COUNT");return simpsonIntegral(args[0],args[1],args[2],args[3],functions)}
     if(fn==="fzero"){if(args.length<2||args.length>3)throw new Error("INVALID_ARGUMENT_COUNT");return findZero(args[0],args[1],args[2],functions)}
