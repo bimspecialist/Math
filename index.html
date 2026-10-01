@@ -237,6 +237,7 @@
                   <button type="button" data-mathlab-example="A = [1 0;1 1;1 2]&#10;b = [1;2;2]&#10;x = A\\b&#10;y = lstsq(A,b)&#10;P = pinv(A)" data-i18n="leastSquaresTools">Least squares</button>
                   <button type="button" data-mathlab-example="A = [1 2 3;4 5 6]&#10;sum(A,1)&#10;sum(A,2)&#10;mean(A,1)&#10;std(A,2)" data-i18n="dimensionReductions">Dimension reductions</button>
                   <button type="button" data-mathlab-example="A = [1 4 9;2 8 18]&#10;cumsum(A,2)&#10;cumprod(A,1)&#10;diff(A,1,2)&#10;sort(A,2)" data-i18n="dimensionTransforms">Dimension transforms</button>
+                  <button type="button" data-mathlab-example="A = [1 2;3 4]&#10;repmat(A,2,2)&#10;fliplr(A)&#10;flipud(A)&#10;rot90(A)&#10;kron(A,[1 0;0 1])&#10;blkdiag(A,5)" data-i18n="matrixShapingTools">Matrix shaping</button>
                   <button type="button" data-mathlab-example="A = [4 2;2 3]&#10;R = chol(A)&#10;R'*R&#10;rref([1 2 1;2 4 0;3 6 3])" data-i18n="matrixReduction">Matrix reduction</button>
                   <button type="button" data-mathlab-example="f = @(x) x.^2 - 2&#10;r = fzero(f,[0 2])&#10;d = derivative(f,r)&#10;I = integral(@(x) x.^2,0,3,200)" data-i18n="numericalMethods">Numerical methods</button>
                   <button type="button" data-mathlab-example="x = [0 1 2 3]&#10;y = [0 1 4 9]&#10;trapz(x,y)&#10;gradient(y,1)&#10;interp1(x,y,1.5)" data-i18n="sampledData">Sampled data</button>
@@ -284,6 +285,7 @@ b</textarea></label>
                     <p><strong data-i18n="mathLabLinearSolveCommands">Linear systems</strong><code dir="ltr">A\b · lstsq(A,b) · pinv(A) · solve(A,b) · linsolve(A,b)</code></p>
                     <p><strong data-i18n="mathLabReductionCommands">Dimension reductions</strong><code dir="ltr">sum(A,dim) · mean · median · min · max · var · std · prod · any · all</code></p>
                     <p><strong data-i18n="mathLabDimensionTransformCommands">Dimension transforms</strong><code dir="ltr">cumsum(A,dim) · cumprod(A,dim) · diff(A,n,dim) · sort(A,dim)</code></p>
+                    <p><strong data-i18n="mathLabMatrixShapingCommands">Matrix shaping</strong><code dir="ltr">repmat · fliplr · flipud · rot90 · kron · blkdiag</code></p>
                   </div>
                 </details>
                 <div class="mathlab-actions">
