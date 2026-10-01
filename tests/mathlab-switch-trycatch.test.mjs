@@ -19,21 +19,21 @@ test("Math Lab switch supports membership-style numeric case vectors",()=>{
 });
 
 test("Math Lab supports try catch recovery",()=>{
-  const r=runMathLabScript("x=0;\ntry\ny=sqrt(-1);\ncatch\ny=99;\nend\nz=y+1");
+  const r=runMathLabScript("x=0;\ntry\ny=log(0);\ncatch\ny=99;\nend\nz=y+1");
   assert.equal(r.ok,true);
   assert.equal(r.workspace.y,99);
   assert.equal(r.workspace.z,100);
 });
 
 test("Math Lab exposes catch metadata when requested",()=>{
-  const r=runMathLabScript("try\ny=sqrt(-1);\ncatch ME\ny=5;\nend");
+  const r=runMathLabScript("try\ny=log(0);\ncatch ME\ny=5;\nend");
   assert.equal(r.ok,true);
   assert.equal(r.workspace.y,5);
   assert.equal(r.workspace.ME.message,"DOMAIN_ERROR");
 });
 
 test("uncaught try errors still propagate",()=>{
-  const r=runMathLabScript("try\ny=sqrt(-1);\nend");
+  const r=runMathLabScript("try\ny=log(0);\nend");
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"DOMAIN_ERROR");
 });
