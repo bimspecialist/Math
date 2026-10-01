@@ -448,7 +448,10 @@ function correlation(valueA,valueB){
   const sa=Math.sqrt(variance(valueA)),sb=Math.sqrt(variance(valueB));
   if(sa<1e-15||sb<1e-15)throw new Error("ZERO_VARIANCE");
   const result=cov/(sa*sb);
-  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+  if(Math.abs(result)<1e-12)return 0;
+  if(Math.abs(result-1)<1e-12)return 1;
+  if(Math.abs(result+1)<1e-12)return -1;
+  return Number(result.toPrecision(14));
 }
 
 function polynomialFit(xValue,yValue,degreeValue){
