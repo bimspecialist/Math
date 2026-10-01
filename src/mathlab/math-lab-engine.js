@@ -515,6 +515,53 @@ function polynomialValue(coefficients,value){
   return mapNumericLike(value,x=>coeffs.reduce((acc,c)=>acc*x+c,0));
 }
 
+function polynomialDerivative(value){
+  const coeffs=numericValues(value);
+  if(coeffs.length<=1)return[[0]];
+  const degree=coeffs.length-1;
+  return[coeffs.slice(0,-1).map((v,i)=>normalizeScalar(v*(degree-i)))];
+}
+
+function polynomialIntegral(value,constant=0){
+  const coeffs=numericValues(value),k=Number(constant);
+  if(!Number.isFinite(k))throw new Error("INVALID_INTEGRATION_CONSTANT");
+  const degree=coeffs.length;
+  return[[...coeffs.map((v,i)=>normalizeScalar(v/(degree-i))),normalizeScalar(k)]];
+}
+
+function rootMeanSquare(value){
+  const values=flatten(value);
+  if(!values.length)throw new Error("EMPTY_DATA");
+  const meanSquare=values.reduce((sum,v)=>sum+scalarAbs(v)**2,0)/values.length;
+  return normalizeScalar(Math.sqrt(meanSquare));
+}
+
+function detrendSignal(value){
+  const y=numericValues(value);
+  if(!y.length)return[[]];
+  if(y.length===1)return[[0]];
+  const n=y.length,meanX=(n-1)/2,meanY=y.reduce((a,b)=>a+b,0)/n;
+  let numerator=0,denominator=0;
+  for(let i=0;i<n;i++){const dx=i-meanX;numerator+=dx*(y[i]-meanY);denominator+=dx*dx}
+  const slope=denominator===0?0:numerator/denominator,intercept=meanY-slope*meanX;
+  return[y.map((v,i)=>normalizeScalar(v-(intercept+slope*i)))];
+}
+
+function deconvolveSignals(dividendValue,divisorValue){
+  const dividend=flatten(dividendValue).map(clone),divisor=flatten(divisorValue).map(clone);
+  if(!divisor.length||scalarAbs(divisor[0])<1e-15)throw new Error("INVALID_DIVISOR");
+  if(!dividend.length)return{quotient:[[]],remainder:[[]]};
+  if(dividend.length<divisor.length)return{quotient:[[0]],remainder:[dividend.map(normalizeScalar)]};
+  const remainder=dividend.map(clone),qLength=dividend.length-divisor.length+1,quotient=Array(qLength).fill(0);
+  for(let i=0;i<qLength;i++){
+    const factor=scalarDiv(remainder[i],divisor[0]);
+    quotient[i]=normalizeScalar(factor);
+    for(let j=0;j<divisor.length;j++)remainder[i+j]=normalizeScalar(scalarSub(remainder[i+j],scalarMul(factor,divisor[j])));
+  }
+  const tail=remainder.slice(qLength).map(normalizeScalar);
+  return{quotient:[quotient.map(normalizeScalar)],remainder:[tail.length?tail:[0]]};
+}
+
 function trapezoidalIntegral(xValue,yValue=null){
   const y=numericValues(yValue??xValue);
   if(y.length<2)return 0;
@@ -1185,7 +1232,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
-  "polyfit","polyval","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
+  "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
@@ -1330,6 +1377,9 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
     if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
     if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
+    if(fn==="polyder"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialDerivative(args[0])}
+    if(fn==="polyint"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialIntegral(args[0],args[1]??0)}
+    if(fn==="deconv"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return deconvolveSignals(args[0],args[1]).quotient}
     if(fn==="roots"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialRoots(args[0])}
     if(fn==="complex"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return normalizeScalar(complex(args[0],args[1]??0))}
     if(fn==="real"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"real")}
@@ -1343,6 +1393,8 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="conv"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return convolveSignals(args[0],args[1])}
     if(fn==="xcorr"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return crossCorrelation(args[0],args[1]??args[0])}
     if(fn==="movmean"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return movingMean(args[0],args[1])}
+    if(fn==="rms"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return rootMeanSquare(args[0])}
+    if(fn==="detrend"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return detrendSignal(args[0])}
     if(fn==="trapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return trapezoidalIntegral(args[0],args[1]??null)}
     if(fn==="cumtrapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return cumulativeTrapezoid(args[0],args[1]??null)}
     if(fn==="gradient"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return numericalGradient(args[0],args[1]??1)}
@@ -1453,6 +1505,21 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     return;
   }
   const multiAssignment=source.match(/^\[([^\]]+)\]\s*=\s*([A-Za-z][A-Za-z0-9_]*)\((.*)\)$/);
+  if(multiAssignment&&multiAssignment[2].toLowerCase()==="deconv"){
+    const targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
+    if(targets.length>2)throw new Error("TOO_MANY_OUTPUTS");
+    const argSources=splitArgs(multiAssignment[3]);
+    if(argSources.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");
+    const result=deconvolveSignals(
+      evalValue(argSources[0],workspace,functions),
+      evalValue(argSources[1],workspace,functions)
+    );
+    const values=[result.quotient,result.remainder];
+    targets.forEach((target,i)=>{workspace[target]=clone(values[i])});
+    syncScopeState(workspace);
+    if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
+    return;
+  }
   if(multiAssignment&&functions[multiAssignment[2].toLowerCase()]){
     const targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     const fn=functions[multiAssignment[2].toLowerCase()];
