@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { runMathLabScript } from "../src/mathlab/math-lab-engine.js";
 
 test("Math Lab applies unary math functions element-wise",()=>{
@@ -52,4 +53,15 @@ end
   const r=runMathLabScript(script);
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"TOO_MANY_OUTPUTS");
+});
+
+
+test("Math Lab UI exposes array math and multi-output function examples",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const strings=readFileSync(new URL("../src/i18n/ui-strings.js",import.meta.url),"utf8");
+  assert.match(index,/data-i18n="multiOutputFunctions"/);
+  assert.match(index,/data-i18n="arrayMath"/);
+  assert.match(index,/mathLabArrayMathCommands/);
+  assert.match(index,/mathLabFunctionCommands/);
+  assert.match(strings,/ml_TOO_MANY_OUTPUTS/);
 });
