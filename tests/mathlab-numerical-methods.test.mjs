@@ -59,10 +59,17 @@ test("Math Lab returns real roots for linear and quadratic polynomials",()=>{
   assert.deepEqual(r.workspace.b,[[4]]);
 });
 
-test("Math Lab rejects complex polynomial roots until complex arithmetic is enabled",()=>{
+test("Math Lab returns complex quadratic roots when required",()=>{
   const r=runMathLabScript("r=roots([1 0 1])");
-  assert.equal(r.ok,false);
-  assert.equal(r.error.message,"COMPLEX_ROOTS_NOT_SUPPORTED");
+  assert.equal(r.ok,true);
+  assert.equal(r.workspace.r[0].length,2);
+  const roots=r.workspace.r[0];
+  assert.equal(roots[0].__mathlabComplex,true);
+  assert.equal(roots[1].__mathlabComplex,true);
+  approx(roots[0].re,0,1e-12);
+  approx(Math.abs(roots[0].im),1,1e-12);
+  approx(roots[1].re,0,1e-12);
+  approx(Math.abs(roots[1].im),1,1e-12);
 });
 
 test("Math Lab validates interpolation bounds",()=>{
