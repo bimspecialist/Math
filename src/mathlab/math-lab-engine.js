@@ -350,6 +350,122 @@ function eigenvectors2(m){
   return eigenvalues2(m).map(value=>({value,vector:eigenvectorFor2(m,value)}));
 }
 
+function isSymmetricMatrix(m,tolerance=1e-10){
+  const [rows,cols]=matrixShape(m);
+  if(rows!==cols)return false;
+  for(let i=0;i<rows;i++)for(let j=i+1;j<cols;j++)if(Math.abs(m[i][j]-m[j][i])>tolerance)return false;
+  return true;
+}
+
+function jacobiEigenSymmetric(m){
+  const [n,cols]=matrixShape(m);
+  if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
+  if(n<2||n>10||!isSymmetricMatrix(m))throw new Error("EIGEN_REAL_SYMMETRIC_ONLY");
+  const a=m.map(row=>row.slice());
+  const vectors=identity(n);
+  const maxIterations=Math.max(40,25*n*n);
+  for(let iteration=0;iteration<maxIterations;iteration++){
+    let p=0,q=1,max=Math.abs(a[0][1]??0);
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      const value=Math.abs(a[i][j]);
+      if(value>max){max=value;p=i;q=j}
+    }
+    if(max<1e-12)break;
+    const phi=0.5*Math.atan2(2*a[p][q],a[q][q]-a[p][p]);
+    const cos=Math.cos(phi),sin=Math.sin(phi);
+    for(let k=0;k<n;k++){
+      if(k===p||k===q)continue;
+      const akp=a[k][p],akq=a[k][q];
+      a[k][p]=a[p][k]=cos*akp-sin*akq;
+      a[k][q]=a[q][k]=sin*akp+cos*akq;
+    }
+    const app=a[p][p],aqq=a[q][q],apq=a[p][q];
+    a[p][p]=cos*cos*app-2*sin*cos*apq+sin*sin*aqq;
+    a[q][q]=sin*sin*app+2*sin*cos*apq+cos*cos*aqq;
+    a[p][q]=a[q][p]=0;
+    for(let k=0;k<n;k++){
+      const vkp=vectors[k][p],vkq=vectors[k][q];
+      vectors[k][p]=cos*vkp-sin*vkq;
+      vectors[k][q]=sin*vkp+cos*vkq;
+    }
+  }
+  const pairs=Array.from({length:n},(_,i)=>({
+    value:Math.abs(a[i][i])<1e-12?0:Number(a[i][i].toPrecision(14)),
+    vector:normalizeVector(vectors.map(row=>row[i]))
+  })).sort((x,y)=>x.value-y.value);
+  return pairs;
+}
+
+function eigenvalues(m){
+  const [rows,cols]=matrixShape(m);
+  if(rows===2&&cols===2&&!isSymmetricMatrix(m))return eigenvalues2(m);
+  if(rows===2&&cols===2)return jacobiEigenSymmetric(m).map(item=>item.value);
+  if(rows===cols&&rows>=3&&rows<=10&&isSymmetricMatrix(m))return jacobiEigenSymmetric(m).map(item=>item.value);
+  throw new Error("EIGEN_REAL_SYMMETRIC_ONLY");
+}
+
+function eigenvectors(m){
+  const [rows,cols]=matrixShape(m);
+  if(rows===2&&cols===2&&!isSymmetricMatrix(m))return eigenvectors2(m);
+  if(rows===cols&&rows>=2&&rows<=10&&isSymmetricMatrix(m))return jacobiEigenSymmetric(m);
+  throw new Error("EIGEN_REAL_SYMMETRIC_ONLY");
+}
+
+function matrixRank(value){
+  if(!isMatrix(value))throw new Error("MATRIX_REQUIRED");
+  const a=value.map(row=>row.slice());
+  const rows=a.length,cols=a[0]?.length??0,tolerance=1e-10;
+  let rank=0,pivotRow=0;
+  for(let col=0;col<cols&&pivotRow<rows;col++){
+    let pivot=pivotRow;
+    for(let r=pivotRow+1;r<rows;r++)if(Math.abs(a[r][col])>Math.abs(a[pivot][col]))pivot=r;
+    if(Math.abs(a[pivot][col])<=tolerance)continue;
+    [a[pivotRow],a[pivot]]=[a[pivot],a[pivotRow]];
+    const div=a[pivotRow][col];
+    for(let j=col;j<cols;j++)a[pivotRow][j]/=div;
+    for(let r=0;r<rows;r++){
+      if(r===pivotRow)continue;
+      const factor=a[r][col];
+      if(Math.abs(factor)<=tolerance)continue;
+      for(let j=col;j<cols;j++)a[r][j]-=factor*a[pivotRow][j];
+    }
+    rank++;pivotRow++;
+  }
+  return rank;
+}
+
+function covariance(valueA,valueB=valueA){
+  const a=numericValues(valueA),b=numericValues(valueB);
+  if(a.length!==b.length)throw new Error("VECTOR_LENGTH_MISMATCH");
+  if(a.length<2)return 0;
+  const meanA=a.reduce((s,v)=>s+v,0)/a.length,meanB=b.reduce((s,v)=>s+v,0)/b.length;
+  const result=a.reduce((sum,v,i)=>sum+(v-meanA)*(b[i]-meanB),0)/(a.length-1);
+  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+}
+
+function correlation(valueA,valueB){
+  const cov=covariance(valueA,valueB);
+  const sa=Math.sqrt(variance(valueA)),sb=Math.sqrt(variance(valueB));
+  if(sa<1e-15||sb<1e-15)throw new Error("ZERO_VARIANCE");
+  const result=cov/(sa*sb);
+  return Math.abs(result)<1e-12?0:Number(result.toPrecision(14));
+}
+
+function polynomialFit(xValue,yValue,degreeValue){
+  const x=numericValues(xValue),y=numericValues(yValue),degree=Number(degreeValue);
+  if(x.length!==y.length)throw new Error("VECTOR_LENGTH_MISMATCH");
+  if(!Number.isInteger(degree)||degree<0||degree>=x.length||degree>8)throw new Error("INVALID_POLYNOMIAL_DEGREE");
+  const order=degree+1;
+  const normal=Array.from({length:order},(_,r)=>Array.from({length:order},(_,col)=>x.reduce((sum,v)=>sum+v**(2*degree-r-col),0)));
+  const rhs=Array.from({length:order},(_,r)=>[x.reduce((sum,v,i)=>sum+y[i]*v**(degree-r),0)]);
+  return [solveLinearMatrix(normal,rhs).map(row=>row[0])];
+}
+
+function polynomialValue(coefficients,value){
+  const coeffs=numericValues(coefficients);
+  return mapNumericLike(value,x=>coeffs.reduce((acc,c)=>acc*x+c,0));
+}
+
 function solveLinearMatrix(a,b){
   const [n,cols]=matrixShape(a),[br,bc]=matrixShape(b);
   if(n!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
@@ -770,9 +886,10 @@ export function describeMathLabValue(value){
 }
 
 const MATHLAB_FUNCTIONS=new Set([
-  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","solve","linsolve",
+  "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
-  "var","variance","std","prctile","percentile","quantile","dot","cross","reshape",
+  "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
+  "polyfit","polyval",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
@@ -890,8 +1007,9 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="inv"||fn==="inverse"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return inverse(args[0])}
     if(fn==="matmul"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return matrixMultiply(args[0],args[1])}
     if(fn==="trace"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return trace(args[0])}
-    if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues2(args[0])}
-    if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors2(args[0])}
+    if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues(args[0])}
+    if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors(args[0])}
+    if(fn==="rank"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return matrixRank(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
     if(fn==="eye"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return identity(args[0],args[1]??args[0])}
     if(fn==="zeros"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return zeros(args[0],args[1]??args[0])}
@@ -906,11 +1024,16 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="max"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.max(...numericValues(args[0]))}
     if(fn==="var"||fn==="variance"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return variance(args[0])}
     if(fn==="std"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return Math.sqrt(variance(args[0]))}
+    if(fn==="cov"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return covariance(args[0],args[1]??args[0])}
+    if(fn==="corr"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return correlation(args[0],args[1])}
+    if(fn==="corrcoef"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");const r=correlation(args[0],args[1]);return [[1,r],[r,1]]}
     if(fn==="prctile"||fn==="percentile"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return percentileMidpoint(args[0],args[1])}
     if(fn==="quantile"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return quantileMidpoint(args[0],args[1])}
     if(fn==="dot"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return dot(args[0],args[1])}
     if(fn==="cross"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return cross(args[0],args[1])}
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
+    if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
+    if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
     if(fn==="numel"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return flatten(args[0]).length}
     if(fn==="rows"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?args[0].length:1}
     if(fn==="cols"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return isMatrix(args[0])?(args[0][0]?.length??0):1}
