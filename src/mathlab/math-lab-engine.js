@@ -828,10 +828,13 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
   }
   const indexedAssignment=source.match(/^([A-Za-z][A-Za-z0-9_]*)\s*\((.*)\)\s*=\s*(.+)$/);
   if(indexedAssignment){
-    const name=indexedAssignment[1];
-    if(!Object.prototype.hasOwnProperty.call(workspace,name))throw new Error("UNDEFINED_VARIABLE");
+    const name=indexedAssignment[1],indexSource=indexedAssignment[2];
     const rhs=evalCommand(indexedAssignment[3],workspace,functions);
-    workspace[name]=assignWorkspaceIndex(workspace[name],indexedAssignment[2],rhs,workspace);
+    if(!Object.prototype.hasOwnProperty.call(workspace,name)){
+      if((Array.isArray(rhs)&&rhs.length===0)||indexSource.includes(":"))throw new Error("UNDEFINED_VARIABLE");
+      workspace[name]=[[0]];
+    }
+    workspace[name]=assignWorkspaceIndex(workspace[name],indexSource,rhs,workspace);
     if(!suppressed)outputs.push({line:lineNumber,source:raw,name,value:clone(workspace[name])});
     return;
   }
