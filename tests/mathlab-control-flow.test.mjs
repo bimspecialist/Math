@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { runMathLabScript } from "../src/mathlab/math-lab-engine.js";
 
 test("Math Lab evaluates scalar comparisons and logical operators",()=>{
@@ -113,4 +114,17 @@ test("Math Lab requires matching end for control blocks",()=>{
   const r=runMathLabScript("x=1;\nif x>0\ny=2;");
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"BLOCK_END_REQUIRED");
+});
+
+
+test("Math Lab UI exposes control-flow examples and command reference",()=>{
+  const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+  const strings=readFileSync(new URL("../src/i18n/ui-strings.js",import.meta.url),"utf8");
+  assert.match(index,/data-i18n="conditionals"/);
+  assert.match(index,/data-i18n="forLoops"/);
+  assert.match(index,/data-i18n="whileLoops"/);
+  assert.match(index,/mathLabLogicCommands/);
+  assert.match(index,/mathLabControlCommands/);
+  assert.match(strings,/ml_BLOCK_END_REQUIRED/);
+  assert.match(strings,/ml_LOOP_ITERATION_LIMIT/);
 });
