@@ -1,7 +1,50 @@
 import { evaluateExpression } from "../calculator/math-engine.js";
 
-const clone=v=>Array.isArray(v)?v.map(clone):v;
+const clone=v=>Array.isArray(v)?v.map(clone):(v&&typeof v==="object"?Object.fromEntries(Object.entries(v).map(([k,x])=>[k,clone(x)])):v);
 const isMatrix=v=>Array.isArray(v)&&v.every(Array.isArray);
+const isComplex=v=>Boolean(v&&typeof v==="object"&&v.__mathlabComplex===true);
+const complex=(re=0,im=0)=>({__mathlabComplex:true,re:Number(re),im:Number(im)});
+const toComplex=value=>isComplex(value)?value:complex(Number(value),0);
+function normalizeScalar(value){
+  if(isComplex(value)){
+    const re=Math.abs(value.re)<1e-12?0:Number(value.re.toPrecision(14));
+    const im=Math.abs(value.im)<1e-12?0:Number(value.im.toPrecision(14));
+    return im===0?re:complex(re,im);
+  }
+  return Object.is(value,-0)?0:value;
+}
+function scalarAdd(a,b){a=toComplex(a);b=toComplex(b);return normalizeScalar(complex(a.re+b.re,a.im+b.im))}
+function scalarSub(a,b){a=toComplex(a);b=toComplex(b);return normalizeScalar(complex(a.re-b.re,a.im-b.im))}
+function scalarMul(a,b){a=toComplex(a);b=toComplex(b);return normalizeScalar(complex(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re))}
+function scalarDiv(a,b){
+  a=toComplex(a);b=toComplex(b);const d=b.re*b.re+b.im*b.im;
+  if(d===0)throw new Error("DIVISION_BY_ZERO");
+  return normalizeScalar(complex((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d));
+}
+function scalarAbs(value){const z=toComplex(value);return Math.hypot(z.re,z.im)}
+function scalarConj(value){const z=toComplex(value);return normalizeScalar(complex(z.re,-z.im))}
+function scalarAngle(value){const z=toComplex(value);return Math.atan2(z.im,z.re)}
+function scalarExp(value){const z=toComplex(value),e=Math.exp(z.re);return normalizeScalar(complex(e*Math.cos(z.im),e*Math.sin(z.im)))}
+function scalarLog(value){
+  const z=toComplex(value),m=Math.hypot(z.re,z.im);
+  if(m===0)throw new Error("DOMAIN_ERROR");
+  return normalizeScalar(complex(Math.log(m),Math.atan2(z.im,z.re)));
+}
+function scalarPow(a,b){
+  if(!isComplex(a)&&!isComplex(b)&&a>=0)return a**b;
+  const base=toComplex(a),expn=toComplex(b);
+  const logged=toComplex(scalarLog(base));
+  return scalarExp(complex(expn.re*logged.re-expn.im*logged.im,expn.re*logged.im+expn.im*logged.re));
+}
+function scalarSqrt(value){return scalarPow(value,0.5)}
+function scalarSin(value){
+  const z=toComplex(value);
+  return normalizeScalar(complex(Math.sin(z.re)*Math.cosh(z.im),Math.cos(z.re)*Math.sinh(z.im)));
+}
+function scalarCos(value){
+  const z=toComplex(value);
+  return normalizeScalar(complex(Math.cos(z.re)*Math.cosh(z.im),-Math.sin(z.re)*Math.sinh(z.im)));
+}
 const MAX_RANGE_ITEMS=10000;
 const MAX_LOOP_ITERATIONS=10000;
 const scopeMetadata=new WeakMap();
@@ -176,7 +219,7 @@ function matrixMultiply(a,b){
   const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
   if(ac!==br)throw new Error("MATRIX_DIMENSION_MISMATCH");
   return Array.from({length:ar},(_,i)=>Array.from({length:bc},(_,j)=>{
-    let sum=0;for(let k=0;k<ac;k++)sum+=a[i][k]*b[k][j];return Math.abs(sum)<1e-12?0:sum;
+    let sum=0;for(let k=0;k<ac;k++)sum=scalarAdd(sum,scalarMul(a[i][k],b[k][j]));return normalizeScalar(sum);
   }));
 }
 function sameShape(a,b){
@@ -185,23 +228,24 @@ function sameShape(a,b){
 }
 function mapMatrix(m,fn){return m.map((row,r)=>row.map((value,c)=>fn(value,r,c)))}
 function matrixElementwise(a,b,fn){
-  if(typeof a==="number"&&typeof b==="number")return normalizeNumericResult(fn(a,b));
-  if(typeof a==="number"&&isMatrix(b))return mapMatrix(b,v=>normalizeNumericResult(fn(a,v)));
-  if(isMatrix(a)&&typeof b==="number")return mapMatrix(a,v=>normalizeNumericResult(fn(v,b)));
+  const scalarA=typeof a==="number"||isComplex(a),scalarB=typeof b==="number"||isComplex(b);
+  if(scalarA&&scalarB)return normalizeScalar(fn(a,b));
+  if(scalarA&&isMatrix(b))return mapMatrix(b,v=>normalizeScalar(fn(a,v)));
+  if(isMatrix(a)&&scalarB)return mapMatrix(a,v=>normalizeScalar(fn(v,b)));
   if(isMatrix(a)&&isMatrix(b)){
     const [ar,ac]=matrixShape(a),[br,bc]=matrixShape(b);
     if((ar!==br&&ar!==1&&br!==1)||(ac!==bc&&ac!==1&&bc!==1))throw new Error("MATRIX_DIMENSION_MISMATCH");
     const rows=Math.max(ar,br),cols=Math.max(ac,bc);
     return Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>{
       const av=a[ar===1?0:r][ac===1?0:c],bv=b[br===1?0:r][bc===1?0:c];
-      return normalizeNumericResult(fn(av,bv));
+      return normalizeScalar(fn(av,bv));
     }));
   }
   throw new Error("INVALID_MATRIX_OPERATION");
 }
-function matrixAdd(a,b){return matrixElementwise(a,b,(x,y)=>x+y)}
-function matrixSubtract(a,b){return matrixElementwise(a,b,(x,y)=>x-y)}
-function matrixScale(m,k){return mapMatrix(m,v=>v*k)}
+function matrixAdd(a,b){return matrixElementwise(a,b,scalarAdd)}
+function matrixSubtract(a,b){return matrixElementwise(a,b,scalarSub)}
+function matrixScale(m,k){return mapMatrix(m,v=>scalarMul(v,k))}
 function matrixPower(m,power){
   const [rows,cols]=matrixShape(m);
   if(rows!==cols)throw new Error("SQUARE_MATRIX_REQUIRED");
@@ -217,9 +261,10 @@ function matrixPower(m,power){
   return result;
 }
 function matrixRightDivide(a,b){
-  if(typeof a==="number"&&typeof b==="number")return a/b;
-  if(isMatrix(a)&&typeof b==="number")return matrixScale(a,1/b);
-  if(typeof a==="number"&&isMatrix(b))return matrixScale(inverse(b),a);
+  const scalarA=typeof a==="number"||isComplex(a),scalarB=typeof b==="number"||isComplex(b);
+  if(scalarA&&scalarB)return scalarDiv(a,b);
+  if(isMatrix(a)&&scalarB)return matrixScale(a,scalarDiv(1,b));
+  if(scalarA&&isMatrix(b))return matrixScale(inverse(b),a);
   if(isMatrix(a)&&isMatrix(b))return matrixMultiply(a,inverse(b));
   throw new Error("INVALID_MATRIX_OPERATION");
 }
@@ -247,18 +292,19 @@ function binaryLogicalOperation(op,left,right){
 function binaryArrayOperation(op,left,right){
   if(op==="+")return matrixAdd(left,right);
   if(op==="-")return matrixSubtract(left,right);
-  if(op===".*")return matrixElementwise(left,right,(x,y)=>x*y);
-  if(op==="./")return matrixElementwise(left,right,(x,y)=>x/y);
-  if(op===".^")return matrixElementwise(left,right,(x,y)=>x**y);
+  if(op===".*")return matrixElementwise(left,right,scalarMul);
+  if(op==="./")return matrixElementwise(left,right,scalarDiv);
+  if(op===".^")return matrixElementwise(left,right,scalarPow);
   if(op==="*"){
-    if(typeof left==="number"&&typeof right==="number")return left*right;
-    if(typeof left==="number"&&isMatrix(right))return matrixScale(right,left);
-    if(isMatrix(left)&&typeof right==="number")return matrixScale(left,right);
+    const scalarLeft=typeof left==="number"||isComplex(left),scalarRight=typeof right==="number"||isComplex(right);
+    if(scalarLeft&&scalarRight)return scalarMul(left,right);
+    if(scalarLeft&&isMatrix(right))return matrixScale(right,left);
+    if(isMatrix(left)&&scalarRight)return matrixScale(left,right);
     if(isMatrix(left)&&isMatrix(right))return matrixMultiply(left,right);
   }
   if(op==="/")return matrixRightDivide(left,right);
   if(op==="^"){
-    if(typeof left==="number"&&typeof right==="number")return left**right;
+    if((typeof left==="number"||isComplex(left))&&(typeof right==="number"||isComplex(right)))return scalarPow(left,right);
     if(isMatrix(left)&&typeof right==="number")return matrixPower(left,right);
     throw new Error("INVALID_MATRIX_POWER");
   }
@@ -602,16 +648,44 @@ function rk4Solve(handle,tspan,y0,steps,functions){
   return out;
 }
 
-function quadraticRealRoots(coefficients){
+function polynomialRoots(coefficients){
   const c=numericValues(coefficients);
   while(c.length>1&&Math.abs(c[0])<1e-15)c.shift();
   if(c.length===2)return[[-c[1]/c[0]]];
-  if(c.length!==3)throw new Error("ROOTS_REAL_QUADRATIC_ONLY");
+  if(c.length!==3)throw new Error("ROOTS_QUADRATIC_ONLY");
   const [a,b,d]=c,disc=b*b-4*a*d;
-  if(disc<-1e-12)throw new Error("COMPLEX_ROOTS_NOT_SUPPORTED");
-  const s=Math.sqrt(Math.max(0,disc));
-  const roots=Math.abs(s)<1e-12?[-b/(2*a)]:[(-b-s)/(2*a),(-b+s)/(2*a)];
-  return rowVector(roots.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+  const s=scalarSqrt(disc);
+  const twoA=2*a;
+  const r1=scalarDiv(scalarSub(-b,s),twoA),r2=scalarDiv(scalarAdd(-b,s),twoA);
+  if(!isComplex(r1)&&!isComplex(r2)&&Math.abs(r1-r2)<1e-12)return[[r1]];
+  return[[normalizeScalar(r1),normalizeScalar(r2)]];
+}
+
+function discreteFourierTransform(value,inverse=false){
+  const input=flatten(value);
+  if(!input.length||input.length>1024)throw new Error("INVALID_FFT_SIZE");
+  const n=input.length,sign=inverse?1:-1;
+  const out=Array.from({length:n},(_,k)=>{
+    let sum=complex(0,0);
+    for(let t=0;t<n;t++){
+      const angle=sign*2*Math.PI*k*t/n;
+      sum=toComplex(scalarAdd(sum,scalarMul(input[t],complex(Math.cos(angle),Math.sin(angle)))));
+    }
+    if(inverse)sum=toComplex(scalarDiv(sum,n));
+    return normalizeScalar(sum);
+  });
+  return[out];
+}
+
+function complexParts(value,part){
+  return mapNumericLike(value,z=>{
+    const c=toComplex(z);
+    if(part==="real")return c.re;
+    if(part==="imag")return c.im;
+    if(part==="conj")return scalarConj(c);
+    if(part==="angle")return scalarAngle(c);
+    return scalarAbs(c);
+  });
 }
 
 function solveLinearMatrix(a,b){
@@ -706,10 +780,10 @@ function logicalSelectorIndices(source,workspace,functions,max){
   if(values.length!==max)throw new Error("LOGICAL_INDEX_SIZE_MISMATCH");
   return values.map((value,i)=>Number(value)!==0?i:null).filter(i=>i!==null);
 }
-function normalizeNumericResult(value){return Object.is(value,-0)?0:value}
+function normalizeNumericResult(value){return normalizeScalar(value)}
 function mapNumericLike(value,fn){
-  const apply=x=>normalizeNumericResult(fn(x));
-  if(typeof value==="number")return apply(value);
+  const apply=x=>normalizeScalar(fn(x));
+  if(typeof value==="number"||isComplex(value))return apply(value);
   if(isMatrix(value))return value.map(row=>row.map(apply));
   if(Array.isArray(value))return value.map(apply);
   throw new Error("INVALID_VALUE");
@@ -1022,10 +1096,13 @@ function switchMatches(selector,candidate){
 
 export function describeMathLabValue(value){
   if(isFunctionHandle(value))return{size:"1×1",className:"function_handle",preview:value.named?"@"+value.named:"@("+value.params.join(",")+") "+value.expression};
+  if(isComplex(value))return{size:"1×1",className:"complex",preview:`${value.re}${value.im<0?"":"+"}${value.im}i`};
   if(typeof value==="number")return{size:"1×1",className:"double",preview:String(value)};
   if(isMatrix(value)){
     const rows=value.length,cols=value[0]?.length??0;
-    return{size:`${rows}×${cols}`,className:"double",preview:rows===1?"["+value[0].join(", ")+"]":`[${rows}×${cols} double]`};
+    const hasComplex=value.some(row=>row.some(isComplex));
+    const previewValue=v=>isComplex(v)?`${v.re}${v.im<0?"":"+"}${v.im}i`:String(v);
+    return{size:`${rows}×${cols}`,className:hasComplex?"complex":"double",preview:rows===1?"["+value[0].map(previewValue).join(", ")+"]":`[${rows}×${cols} ${hasComplex?"complex":"double"}]`};
   }
   if(Array.isArray(value)){
     return{size:`1×${value.length}`,className:value.every(x=>x&&typeof x==="object")?"struct":"double",preview:`[1×${value.length}]`};
@@ -1037,7 +1114,7 @@ const MATHLAB_FUNCTIONS=new Set([
   "det","transpose","inv","inverse","matmul","trace","eig","eigvec","rank","solve","linsolve",
   "eye","zeros","ones","linspace","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape",
-  "polyfit","polyval","roots","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
+  "polyfit","polyval","roots","complex","real","imag","conj","angle","fft","ifft","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
   "numel","rows","cols","size","length","abs","sqrt","sin","cos","tan","exp","log",
   "any","all","find","mod","prod","cumsum","cumprod","diff","sort","unique",
   "round","floor","ceil","fix","sign","rem","isfinite","isnan","isempty","feval","arrayfun"
@@ -1182,7 +1259,14 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="reshape"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return reshape(args[0],args[1],args[2])}
     if(fn==="polyfit"){if(args.length!==3)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialFit(args[0],args[1],args[2])}
     if(fn==="polyval"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialValue(args[0],args[1])}
-    if(fn==="roots"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return quadraticRealRoots(args[0])}
+    if(fn==="roots"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return polynomialRoots(args[0])}
+    if(fn==="complex"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return normalizeScalar(complex(args[0],args[1]??0))}
+    if(fn==="real"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"real")}
+    if(fn==="imag"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"imag")}
+    if(fn==="conj"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"conj")}
+    if(fn==="angle"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return complexParts(args[0],"angle")}
+    if(fn==="fft"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return discreteFourierTransform(args[0],false)}
+    if(fn==="ifft"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return discreteFourierTransform(args[0],true)}
     if(fn==="trapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return trapezoidalIntegral(args[0],args[1]??null)}
     if(fn==="cumtrapz"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return cumulativeTrapezoid(args[0],args[1]??null)}
     if(fn==="gradient"){if(args.length<1||args.length>2)throw new Error("INVALID_ARGUMENT_COUNT");return numericalGradient(args[0],args[1]??1)}
@@ -1202,13 +1286,13 @@ function evalCommand(expr,workspace,functions={}){
       return shape[dim-1]??1;
     }
     if(fn==="length"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");const arg=args[0];if(isMatrix(arg))return Math.max(arg.length,arg[0]?.length??0);return Array.isArray(arg)?arg.length:1}
-    if(fn==="abs"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.abs)}
-    if(fn==="sqrt"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>{if(x<0)throw new Error("DOMAIN_ERROR");return Math.sqrt(x)})}
-    if(fn==="sin"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.sin)}
-    if(fn==="cos"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.cos)}
-    if(fn==="tan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.tan)}
-    if(fn==="exp"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],Math.exp)}
-    if(fn==="log"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>{if(x<=0)throw new Error("DOMAIN_ERROR");return Math.log(x)})}
+    if(fn==="abs"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarAbs)}
+    if(fn==="sqrt"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarSqrt)}
+    if(fn==="sin"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarSin)}
+    if(fn==="cos"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarCos)}
+    if(fn==="tan"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],x=>scalarDiv(scalarSin(x),scalarCos(x)))}
+    if(fn==="exp"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarExp)}
+    if(fn==="log"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return mapNumericLike(args[0],scalarLog)}
     if(fn==="any"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).some(x=>x!==0)?1:0}
     if(fn==="all"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return numericValues(args[0]).every(x=>x!==0)?1:0}
     if(fn==="find"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return findLinearIndices(args[0])}
