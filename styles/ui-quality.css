@@ -295,9 +295,8 @@ html[dir="rtl"] .mathlab-example-browser-head{
   }
 
   .tool-sidebar{
-    inset-inline:10px;
-    left:auto;
-    right:auto;
+    left:10px;
+    right:10px;
     width:auto;
   }
 
