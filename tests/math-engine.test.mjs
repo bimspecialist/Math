@@ -26,3 +26,23 @@ test("SHIFT log and ln engine functions are evaluable", () => {
   assert.equal(evalv("pow10(2)").numeric, 100);
   assert.ok(Math.abs(evalv("exp(1)").numeric - Math.E) < 1e-12);
 });
+
+
+test("lecture-style implicit multiplication is accepted", () => {
+  assert.ok(Math.abs(evalv("2π").numeric - 2*Math.PI) < 1e-12);
+  assert.equal(evalv("3(4+5)").numeric, 27);
+  assert.equal(evalv("(2+3)(4+5)").numeric, 45);
+  assert.ok(Math.abs(evalv("2sin(30)","DEG").numeric - 1) < 1e-12);
+});
+
+test("calculator accepts common percent and superscript notation", () => {
+  assert.equal(evalv("50%").numeric, 0.5);
+  assert.equal(evalv("200*10%").numeric, 20);
+  assert.equal(evalv("5²").numeric, 25);
+  assert.equal(evalv("2³").numeric, 8);
+});
+
+test("unary minus follows calculator power precedence", () => {
+  assert.equal(evalv("-2^2").numeric, -4);
+  assert.equal(evalv("(-2)^2").numeric, 4);
+});
