@@ -49,7 +49,8 @@ export function renderCalculatorMarkup(view,locale="en"){
     '<div class="calculator-display"><div class="display-status" dir="ltr">'+
       '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span class="'+(view.memory!==0?"active":"")+'">M</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.displayMode==="EXACT"?"EX":"DEC")+'</span><span>'+esc(view.state.mode)+'</span></div>'+
       '<div class="math-input" dir="ltr" aria-label="'+esc(translate(locale,"expressionLabel"))+'">'+(view.mathHtml||'<span class="math-placeholder">0</span>')+'</div>'+
-      '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(/^[A-Z][A-Z0-9_]+$/.test(String(view.result??""))?translate(locale,String(view.result)):view.result)+'">'+resultMarkup(view.result,locale)+'</output></div>'+
+      '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(/^[A-Z][A-Z0-9_]+$/.test(String(view.result??""))?translate(locale,String(view.result)):view.result)+'">'+resultMarkup(view.result,locale)+'</output>'+
+      '<div class="calculator-direct-entry"><input data-calculator-direct-input dir="ltr" autocomplete="off" spellcheck="false" aria-label="'+esc(translate(locale,"expressionLabel"))+'" value="'+esc(view.canonicalExpression)+'" placeholder="'+esc(translate(locale,"calculatorDirectPlaceholder"))+'"><span>↵</span></div></div>'+
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="'+esc(translate(locale,"replayNavigation"))+'"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
       '<div class="control-side control-right">'+keyMarkup(controlMap.get("MODE"))+'</div></div>'+
@@ -64,10 +65,22 @@ export function mountCalculator(root,controller,locale="en"){
   const render=()=>{
     root.innerHTML=renderCalculatorMarkup(controller.view(),locale);
     root.querySelectorAll("[data-key-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.dispatch(btn.dataset.keyId);render()}));
-    root.querySelectorAll("[data-mode-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.selectMode(btn.dataset.modeId);render()}));
+    root.querySelectorAll("[data-mode-id]").forEach(btn=>btn.addEventListener("click",()=>{
+      const mode=btn.dataset.modeId;
+      const routes={STAT:"mathlab",BASE_N:"programmer",EQN:"advanced",MATRIX:"mathlab",TABLE:"graphing",VECTOR:"mathlab"};
+      controller.selectMode(mode);
+      if(routes[mode])root.dispatchEvent(new CustomEvent("calculator-mode-route",{bubbles:true,detail:{mode,target:routes[mode]}}));
+      render();
+    }));
     root.querySelectorAll("[data-setup-group]").forEach(btn=>btn.addEventListener("click",()=>{controller.selectSetup(btn.dataset.setupGroup,btn.dataset.setupValue);render()}));
     root.querySelector("[data-menu-cancel]")?.addEventListener("click",()=>{controller.cancelMenu();render()});
+    const direct=root.querySelector("[data-calculator-direct-input]");
+    direct?.addEventListener("keydown",event=>{
+      if(event.key==="Enter"){event.preventDefault();controller.setExpression(direct.value);controller.evaluateCurrent();render()}
+      event.stopPropagation();
+    });
+    direct?.addEventListener("change",()=>{controller.setExpression(direct.value);render()});
   };
   render();
-  return {rerender:render,keydown(event){const id=mapKeyboardToKeyId(event.key);if(!id)return false;event.preventDefault?.();controller.dispatch(id);render();return true},setLocale(next){locale=next;render()}};
+  return {rerender:render,keydown(event){const id=mapKeyboardToKeyId(event.key);if(id){event.preventDefault?.();controller.dispatch(id);render();return true}if(event.key?.length===1&&/[A-Za-zπ,%!_]/.test(event.key)){event.preventDefault?.();controller.insertText(event.key);render();return true}return false},setLocale(next){locale=next;render()}};
 }

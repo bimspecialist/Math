@@ -16,12 +16,12 @@ export const ES_PLUS_PROFILE = Object.freeze({
   modes: Object.freeze([
     { id: "COMP", label: "COMP", implemented: true },
     { id: "CMPLX", label: "CMPLX", implemented: false },
-    { id: "STAT", label: "STAT", implemented: false },
-    { id: "BASE_N", label: "BASE-N", implemented: false },
-    { id: "EQN", label: "EQN", implemented: false },
-    { id: "MATRIX", label: "MATRIX", implemented: false },
-    { id: "TABLE", label: "TABLE", implemented: false },
-    { id: "VECTOR", label: "VECTOR", implemented: false }
+    { id: "STAT", label: "STAT", implemented: true },
+    { id: "BASE_N", label: "BASE-N", implemented: true },
+    { id: "EQN", label: "EQN", implemented: true },
+    { id: "MATRIX", label: "MATRIX", implemented: true },
+    { id: "TABLE", label: "TABLE", implemented: true },
+    { id: "VECTOR", label: "VECTOR", implemented: true }
   ]),
   setup: Object.freeze({
     angleModes: ["DEG","RAD","GRAD"],
