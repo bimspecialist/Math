@@ -65,7 +65,13 @@ export function mountCalculator(root,controller,locale="en"){
   const render=()=>{
     root.innerHTML=renderCalculatorMarkup(controller.view(),locale);
     root.querySelectorAll("[data-key-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.dispatch(btn.dataset.keyId);render()}));
-    root.querySelectorAll("[data-mode-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.selectMode(btn.dataset.modeId);render()}));
+    root.querySelectorAll("[data-mode-id]").forEach(btn=>btn.addEventListener("click",()=>{
+      const mode=btn.dataset.modeId;
+      const routes={STAT:"mathlab",BASE_N:"programmer",EQN:"advanced",MATRIX:"mathlab",TABLE:"graphing",VECTOR:"mathlab"};
+      controller.selectMode(mode);
+      if(routes[mode])root.dispatchEvent(new CustomEvent("calculator-mode-route",{bubbles:true,detail:{mode,target:routes[mode]}}));
+      render();
+    }));
     root.querySelectorAll("[data-setup-group]").forEach(btn=>btn.addEventListener("click",()=>{controller.selectSetup(btn.dataset.setupGroup,btn.dataset.setupValue);render()}));
     root.querySelector("[data-menu-cancel]")?.addEventListener("click",()=>{controller.cancelMenu();render()});
     const direct=root.querySelector("[data-calculator-direct-input]");
