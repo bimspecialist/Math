@@ -21,7 +21,7 @@ export class CalculatorController{
     if(wasAlpha && !key.alphaAction){this.state=dispatchCalculatorCommand(this.state,{type:"CONSUME_MODIFIER"});return false;}
     if(action==="INSERT_FRACTION")this.field.insertFraction();else if(action==="INSERT_MIXED_FRACTION")this.field.insertMixedFraction();else if(action==="INSERT_SQRT")this.field.insertSquareRoot();else if(action==="INSERT_SQUARE")this.field.insertText("^2");else if(action==="INSERT_POWER")this.field.insertPower();else if(action==="INSERT_NTH_ROOT")this.field.insertNthRoot();
     else if(action==="INSERT_TOKEN"){const token=primaryToken(keyId);if(token!==null)this.field.insertText(token)}
-    else if(action==="INSERT_FUNCTION"){let fn=functionName(keyId,wasShift);if(this.state.hyp&&["SIN","COS","TAN"].includes(keyId)){fn=({SIN:"sinh",COS:"cosh",TAN:"tanh"})[keyId];this.state={...this.state,hyp:false}}if(fn)this.field.insertText(`${fn}(`)}
+    else if(action==="INSERT_FUNCTION"){let fn=functionName(keyId,wasShift);if(this.state.hyp&&["SIN","COS","TAN"].includes(keyId)){fn=(wasShift?{SIN:"asinh",COS:"acosh",TAN:"atanh"}:{SIN:"sinh",COS:"cosh",TAN:"tanh"})[keyId];this.state={...this.state,hyp:false}}if(fn)this.field.insertText(`${fn}(`)}
     else if(action==="INSERT_VARIABLE")this.field.insertText(key.alphaLabel);
     else if(action==="INSERT_EQUALITY")this.field.insertText("=");
     else if(action==="FACTORIAL")this.field.insertText("!");else if(action==="NCR")this.field.insertText("nCr(");else if(action==="NPR")this.field.insertText("nPr(");else if(action==="NEGATE")this.field.insertText("-");else if(action==="DMS"){if(this.lastResult?.kind==="value"){const wasDms=this.dmsDisplay;this.dmsDisplay=!this.dmsDisplay;if(wasDms)this.displayMode="DECIMAL";this._refreshResult()}else this.field.insertText("°");}else if(action==="HYP")this.state={...this.state,hyp:true};
@@ -106,5 +106,8 @@ export class CalculatorController{
     if(this.field.focusSlot()!=="root"){if(action==="REPLAY_UP")return this.field.moveUp();if(action==="REPLAY_DOWN")return this.field.moveDown()}
     if(action==="REPLAY_UP"&&this.history.length){if(this.historyIndex<0)this.historyDraft=this.field.createSnapshot();this.historyIndex=Math.min(this.historyIndex+1,this.history.length-1);const item=this.history[this.historyIndex];if(item.fieldSnapshot)this.field.restoreSnapshot(item.fieldSnapshot);else this.field.setCanonicalExpression(item.expression);return true}
     if(action==="REPLAY_DOWN"&&this.historyIndex>=0){this.historyIndex--;if(this.historyIndex<0){if(this.historyDraft)this.field.restoreSnapshot(this.historyDraft);else this.field.setCanonicalExpression("")}else{const item=this.history[this.historyIndex];if(item.fieldSnapshot)this.field.restoreSnapshot(item.fieldSnapshot);else this.field.setCanonicalExpression(item.expression)}return true}return false}
+  insertText(text){if(typeof text!=="string"||!text)return false;this.field.insertText(text);return true}
+  setExpression(text){this.field.setCanonicalExpression(String(text??""));this.result="0";this.lastResult=null;return true}
+  evaluateCurrent(){this._evaluate();return this.lastResult?.kind==="value"}
   view(){return{state:this.state,result:this.result,ans:this.ans,memory:this.memory,history:[...this.history],canonicalExpression:this.field.getCanonicalExpression(),mathHtml:this.field.renderHtml(),focusSlot:this.field.focusSlot(),displayMode:this.displayMode,mixedDisplay:this.mixedDisplay,dmsDisplay:this.dmsDisplay,promptBuffer:this.promptBuffer,engineeringExponent:this.engineeringExponent}}
 }
