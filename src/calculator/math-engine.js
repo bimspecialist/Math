@@ -254,9 +254,71 @@ class Parser {
   }
 }
 
+
+function splitTopLevelArgs(source){
+  const out=[];let depth=0,start=0;
+  for(let i=0;i<source.length;i++){
+    const ch=source[i];
+    if(ch==="(")depth++;
+    else if(ch===")")depth--;
+    else if(ch===","&&depth===0){out.push(source.slice(start,i).trim());start=i+1}
+  }
+  out.push(source.slice(start).trim());
+  return out.filter(x=>x.length);
+}
+function specialAnalysis(source,context){
+  const match=String(source).trim().match(/^(deriv|derivative|integral|sigma)\((.*)\)$/i);
+  if(!match)return null;
+  const fn=match[1].toLowerCase(),args=splitTopLevelArgs(match[2]);
+  const evalAt=(expr,x)=>{
+    const r=evaluateExpression(expr,{...context,variables:{...(context.variables??{}),X:x,x}});
+    if(r.kind!=="value")throw new EngineError(r.code||"DOMAIN_ERROR");
+    return r.numeric;
+  };
+  if(fn==="deriv"||fn==="derivative"){
+    if(args.length<2||args.length>3)throw new EngineError("INVALID_EXPRESSION");
+    const xr=evaluateExpression(args[1],context);if(xr.kind!=="value")throw new EngineError(xr.code);
+    const x=xr.numeric,h=args[2]?Math.abs(evaluateExpression(args[2],context).numeric):Math.cbrt(Number.EPSILON)*Math.max(1,Math.abs(x));
+    if(!Number.isFinite(h)||h<=0)throw new EngineError("DOMAIN_ERROR");
+    const f1=evalAt(args[0],x-2*h),f2=evalAt(args[0],x-h),f3=evalAt(args[0],x+h),f4=evalAt(args[0],x+2*h);
+    const value=(f1-8*f2+8*f3-f4)/(12*h);
+    return{kind:"value",numeric:clampTiny(value),exact:undefined};
+  }
+  if(fn==="integral"){
+    if(args.length!==3)throw new EngineError("INVALID_EXPRESSION");
+    const ar=evaluateExpression(args[1],context),br=evaluateExpression(args[2],context);
+    if(ar.kind!=="value"||br.kind!=="value")throw new EngineError("INVALID_EXPRESSION");
+    let a=ar.numeric,b=br.numeric,sign=1;if(a>b){[a,b]=[b,a];sign=-1}
+    const simpson=(lo,hi,fl,fm,fh)=>(hi-lo)*(fl+4*fm+fh)/6;
+    const recurse=(lo,hi,fl,fm,fh,whole,tol,depth)=>{
+      const mid=(lo+hi)/2,lm=(lo+mid)/2,rm=(mid+hi)/2;
+      const flm=evalAt(args[0],lm),frm=evalAt(args[0],rm);
+      const left=simpson(lo,mid,fl,flm,fm),right=simpson(mid,hi,fm,frm,fh);
+      const delta=left+right-whole;
+      if(depth<=0||Math.abs(delta)<=15*tol)return left+right+delta/15;
+      return recurse(lo,mid,fl,flm,fm,left,tol/2,depth-1)+recurse(mid,hi,fm,frm,fh,right,tol/2,depth-1);
+    };
+    if(a===b)return{kind:"value",numeric:0,exact:"0"};
+    const mid=(a+b)/2,fa=evalAt(args[0],a),fm=evalAt(args[0],mid),fb=evalAt(args[0],b);
+    const value=sign*recurse(a,b,fa,fm,fb,simpson(a,b,fa,fm,fb),1e-10,18);
+    return{kind:"value",numeric:clampTiny(value),exact:undefined};
+  }
+  if(fn==="sigma"){
+    if(args.length!==3)throw new EngineError("INVALID_EXPRESSION");
+    const ar=evaluateExpression(args[1],context),br=evaluateExpression(args[2],context);
+    if(ar.kind!=="value"||br.kind!=="value")throw new EngineError("INVALID_EXPRESSION");
+    const a=ar.numeric,b=br.numeric;if(!Number.isInteger(a)||!Number.isInteger(b)||b<a||b-a>100000)throw new EngineError("DOMAIN_ERROR");
+    let total=0;for(let x=a;x<=b;x++)total+=evalAt(args[0],x);
+    return{kind:"value",numeric:clampTiny(total),exact:Number.isSafeInteger(total)?String(total):undefined};
+  }
+  return null;
+}
+
 export function evaluateExpression(source,context={angleMode:"DEG",ans:"0",variables:{}}){
   if(!source?.trim())return{kind:"error",code:"INVALID_EXPRESSION"};
   try{
+    const special=specialAnalysis(source,context);
+    if(special)return special;
     const v=new Parser(source,{
       angleMode:context.angleMode??"DEG",
       ans:context.ans??"0",
