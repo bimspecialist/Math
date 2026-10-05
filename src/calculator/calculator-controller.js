@@ -1,6 +1,7 @@
 import { KEY_CONTRACT } from "./key-contract.js";
 import { MathFieldAdapter } from "./math-field-adapter.js";
 import { evaluateExpression } from "./math-engine.js";
+import { evaluateComplexExpression } from "./complex-engine.js";
 import { formatExactDecimal } from "./result-format.js";
 import { createCalculatorState, dispatchCalculatorCommand } from "./calculator-state.js";
 const byId=new Map(KEY_CONTRACT.map(k=>[k.id,k]));
@@ -9,7 +10,7 @@ const functionName=(id,shifted)=>{const p={LOG:"log",LN:"ln",SIN:"sin",COS:"cos"
 function mixedFromExact(exact){if(!exact?.includes("/"))return exact;const[n0,d0]=exact.split("/").map(Number);if(!Number.isInteger(n0)||!Number.isInteger(d0)||d0===0)return exact;const sign=n0<0?-1:1,n=Math.abs(n0),d=Math.abs(d0),whole=Math.floor(n/d),rem=n%d;if(whole===0||rem===0)return exact;return`${sign<0?"-":""}${whole} ${rem}/${d}`}
 
 export class CalculatorController{
-  constructor(){this.field=new MathFieldAdapter();this.state=createCalculatorState();this.result="0";this.lastResult=null;this.ans="0";this.memory=0;this.history=[];this.historyIndex=-1;this.historyDraft=null;this.displayMode="EXACT";this.mixedDisplay=false;this.dmsDisplay=false;this.promptBuffer="";this.engineeringExponent=null}
+  constructor(){this.field=new MathFieldAdapter();this.state=createCalculatorState();this.result="0";this.lastResult=null;this.ans="0";this.ansComplex={re:0,im:0};this.memory=0;this.history=[];this.historyIndex=-1;this.historyDraft=null;this.displayMode="EXACT";this.mixedDisplay=false;this.dmsDisplay=false;this.promptBuffer="";this.engineeringExponent=null}
   dispatch(keyId){const key=byId.get(keyId);if(!key)return false;if(keyId==="SHIFT"){this.state=dispatchCalculatorCommand(this.state,{type:"SHIFT"});return true}if(keyId==="ALPHA"){this.state=dispatchCalculatorCommand(this.state,{type:"ALPHA"});return true}if(this.state.prompt)return this._dispatchPromptKey(keyId)
     const wasShift=this.state.shift, wasAlpha=this.state.alpha;
     const action=wasAlpha&&key.alphaAction?key.alphaAction:(wasShift&&key.shiftAction?key.shiftAction:key.primaryAction),consume=wasShift||wasAlpha;
@@ -98,8 +99,8 @@ export class CalculatorController{
   selectSetup(group,value){this.state=dispatchCalculatorCommand(this.state,{type:"SELECT_SETUP",group,value});return this.state.error===null}
   cancelMenu(){this.state=dispatchCalculatorCommand(this.state,{type:"CANCEL_MENU"});return true}
   _variables(){const s=this.field.getCanonicalExpression();return[...new Set((s.match(/\b[A-ZXYZM]\b/g)||[]))]}
-  _evaluate(){const source=this.field.getCanonicalExpression(),r=evaluateExpression(source,{angleMode:this.state.angleMode,ans:this.ans});this.lastResult=r;if(r.kind==="value"){this.ans=String(r.numeric);this.engineeringExponent=null;this._refreshResult();if(source.trim())this.history.unshift({expression:source,result:this.result,fieldSnapshot:this.field.createSnapshot()});this.history=this.history.slice(0,30);this.historyIndex=-1;this.historyDraft=null}else this.result=r.code}
-  _refreshResult(){if(!this.lastResult)return;if(this.lastResult.kind!=="value"){this.result=this.lastResult.code;return}const base=formatExactDecimal(this.lastResult,this.displayMode);this.result=this.mixedDisplay?mixedFromExact(this.lastResult.exact)??base:base;if(this.dmsDisplay){const x=this.lastResult.numeric,sign=x<0?"-":"",a=Math.abs(x),deg=Math.floor(a),mFloat=(a-deg)*60,min=Math.floor(mFloat),sec=Number(((mFloat-min)*60).toFixed(10));this.result=`${sign}${deg}°${min}′${sec}″`}}
+  _evaluate(){const source=this.field.getCanonicalExpression(),r=this.state.mode==="CMPLX"?evaluateComplexExpression(source,{ansRe:this.ansComplex.re,ansIm:this.ansComplex.im}):evaluateExpression(source,{angleMode:this.state.angleMode,ans:this.ans});this.lastResult=r;if(r.kind==="value"){this.ans=String(r.numeric);this.ansComplex={re:r.numeric,im:0};this.engineeringExponent=null;this._refreshResult();if(source.trim())this.history.unshift({expression:source,result:this.result,fieldSnapshot:this.field.createSnapshot()});this.history=this.history.slice(0,30);this.historyIndex=-1;this.historyDraft=null}else if(r.kind==="complex"){this.ansComplex={re:r.re,im:r.im};this.ans=r.im===0?String(r.re):this.ans;this.engineeringExponent=null;this._refreshResult();if(source.trim())this.history.unshift({expression:source,result:this.result,fieldSnapshot:this.field.createSnapshot()});this.history=this.history.slice(0,30);this.historyIndex=-1;this.historyDraft=null}else this.result=r.code}
+  _refreshResult(){if(!this.lastResult)return;if(this.lastResult.kind==="complex"){this.result=this.lastResult.display;return}if(this.lastResult.kind!=="value"){this.result=this.lastResult.code;return}const base=formatExactDecimal(this.lastResult,this.displayMode);this.result=this.mixedDisplay?mixedFromExact(this.lastResult.exact)??base:base;if(this.dmsDisplay){const x=this.lastResult.numeric,sign=x<0?"-":"",a=Math.abs(x),deg=Math.floor(a),mFloat=(a-deg)*60,min=Math.floor(mFloat),sec=Number(((mFloat-min)*60).toFixed(10));this.result=`${sign}${deg}°${min}′${sec}″`}}
   _replay(action){
     if(action==="REPLAY_LEFT")return this.field.moveLeft();
     if(action==="REPLAY_RIGHT")return this.field.moveRight();
@@ -108,6 +109,6 @@ export class CalculatorController{
     if(action==="REPLAY_DOWN"&&this.historyIndex>=0){this.historyIndex--;if(this.historyIndex<0){if(this.historyDraft)this.field.restoreSnapshot(this.historyDraft);else this.field.setCanonicalExpression("")}else{const item=this.history[this.historyIndex];if(item.fieldSnapshot)this.field.restoreSnapshot(item.fieldSnapshot);else this.field.setCanonicalExpression(item.expression)}return true}return false}
   insertText(text){if(typeof text!=="string"||!text)return false;this.field.insertText(text);return true}
   setExpression(text){this.field.setCanonicalExpression(String(text??""));this.result="0";this.lastResult=null;return true}
-  evaluateCurrent(){this._evaluate();return this.lastResult?.kind==="value"}
+  evaluateCurrent(){this._evaluate();return this.lastResult?.kind==="value"||this.lastResult?.kind==="complex"}
   view(){return{state:this.state,result:this.result,ans:this.ans,memory:this.memory,history:[...this.history],canonicalExpression:this.field.getCanonicalExpression(),mathHtml:this.field.renderHtml(),focusSlot:this.field.focusSlot(),displayMode:this.displayMode,mixedDisplay:this.mixedDisplay,dmsDisplay:this.dmsDisplay,promptBuffer:this.promptBuffer,engineeringExponent:this.engineeringExponent}}
 }

@@ -148,3 +148,29 @@ test("sigma supports textbook summations", () => {
   assert.equal(evalv("sigma(X,1,100)").numeric,5050);
   assert.equal(evalv("sigma(X^2,1,10)").numeric,385);
 });
+
+
+test("scientific constants are available directly in expressions", () => {
+  assert.equal(evalv("c0").numeric,299792458);
+  assert.equal(evalv("c").numeric,299792458);
+  assert.ok(Math.abs(evalv("hplanck").numeric-6.62607015e-34)<1e-45);
+  assert.ok(Math.abs(evalv("kb").numeric-1.380649e-23)<1e-34);
+  assert.ok(Math.abs(evalv("g0").numeric-9.80665)<1e-12);
+  assert.equal(evalv("atm").numeric,101325);
+});
+
+test("special functions support advanced scientific work", () => {
+  assert.ok(Math.abs(evalv("gamma(6)").numeric-120)<1e-10);
+  assert.ok(Math.abs(evalv("lgamma(6)").numeric-Math.log(120))<1e-10);
+  assert.ok(Math.abs(evalv("erf(1)").numeric-0.84270079)<1e-6);
+  assert.ok(Math.abs(evalv("erfc(1)").numeric-(1-0.84270079))<1e-6);
+});
+
+test("probability distributions cover normal binomial and Poisson workflows", () => {
+  assert.ok(Math.abs(evalv("normalpdf(0)").numeric-1/Math.sqrt(2*Math.PI))<1e-12);
+  assert.ok(Math.abs(evalv("normalcdf(0)").numeric-0.5)<1e-7);
+  assert.ok(Math.abs(evalv("binompdf(3,10,0.5)").numeric-0.1171875)<1e-12);
+  assert.ok(Math.abs(evalv("binomcdf(3,10,0.5)").numeric-0.171875)<1e-12);
+  assert.ok(Math.abs(evalv("poissonpdf(2,3)").numeric-(Math.exp(-3)*9/2))<1e-12);
+  assert.ok(evalv("poissoncdf(4,3)").numeric>0.8&&evalv("poissoncdf(4,3)").numeric<0.82);
+});

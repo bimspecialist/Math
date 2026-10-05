@@ -42,6 +42,6 @@ test("SHIFT plus CALC enters SOLVE only in supported mode", () => {
 });
 test("student modes backed by specialist engines are selectable", () => {
   const menu = buildModeMenu(ES_PLUS_PROFILE);
-  assert.deepEqual(menu.choices.map(x=>x.id), ["COMP","STAT","BASE_N","EQN","MATRIX","TABLE","VECTOR"]);
-  assert.equal(menu.choices.some(x=>x.id==="CMPLX"), false);
+  assert.deepEqual(menu.choices.map(x=>x.id), ["COMP","CMPLX","STAT","BASE_N","EQN","MATRIX","TABLE","VECTOR"]);
+  assert.equal(menu.choices.some(x=>x.id==="CMPLX"), true);
 });

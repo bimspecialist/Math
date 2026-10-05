@@ -48,3 +48,15 @@ test("REPLAY left edits inside a fraction denominator and DEL replaces the selec
   x.dispatch("REPLAY_LEFT");x.dispatch("DEL");x.dispatch("DIGIT_2");
   assert.equal(x.view().canonicalExpression,"(1)/(24)");
 });
+
+
+test("CMPLX mode evaluates complex expressions and reuses complex Ans",()=>{
+  const c=new CalculatorController();
+  assert.equal(c.selectMode("CMPLX"),true);
+  c.setExpression("sqrt(-1)");
+  assert.equal(c.evaluateCurrent(),true);
+  assert.equal(c.view().result,"i");
+  c.setExpression("Ans^2");
+  assert.equal(c.evaluateCurrent(),true);
+  assert.equal(c.view().result,"-1");
+});

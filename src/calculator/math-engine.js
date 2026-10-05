@@ -1,3 +1,4 @@
+import { getScientificConstant } from "../science/scientific-constants.js";
 class EngineError extends Error {
   constructor(code){ super(code); this.code=code; }
 }
@@ -102,6 +103,50 @@ function populationStd(values){
   return Math.sqrt(values.reduce((s,v)=>s+(v-mean)**2,0)/values.length);
 }
 
+function logGamma(z){
+  const p=[
+    0.99999999999980993,676.5203681218851,-1259.1392167224028,
+    771.32342877765313,-176.61502916214059,12.507343278686905,
+    -0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7
+  ];
+  if(z<0.5)return Math.log(Math.PI)-Math.log(Math.sin(Math.PI*z))-logGamma(1-z);
+  z-=1;let x=p[0];
+  for(let i=1;i<p.length;i++)x+=p[i]/(z+i);
+  const t=z+p.length-1.5;
+  return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);
+}
+function gammaFn(z){
+  if(Number.isInteger(z)&&z<=0)throw new EngineError("DOMAIN_ERROR");
+  const lg=logGamma(z),v=Math.exp(lg);
+  if(!Number.isFinite(v))throw new EngineError("DOMAIN_ERROR");
+  return v;
+}
+function erfFn(x){
+  const sign=x<0?-1:1,a=Math.abs(x),t=1/(1+0.3275911*a);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-a*a);
+  return sign*y;
+}
+function normalPdf(x,mu=0,sigma=1){
+  if(!(sigma>0))throw new EngineError("DOMAIN_ERROR");
+  const z=(x-mu)/sigma;
+  return Math.exp(-0.5*z*z)/(sigma*Math.sqrt(2*Math.PI));
+}
+function normalCdf(x,mu=0,sigma=1){
+  if(!(sigma>0))throw new EngineError("DOMAIN_ERROR");
+  return 0.5*(1+erfFn((x-mu)/(sigma*Math.SQRT2)));
+}
+function binomialPmf(k,n,p){
+  assertInteger(k);assertInteger(n);
+  if(n<0||k<0||k>n||p<0||p>1)throw new EngineError("DOMAIN_ERROR");
+  return combination(n,k)*(p**k)*((1-p)**(n-k));
+}
+function poissonPmf(k,lambda){
+  assertInteger(k);
+  if(k<0||lambda<0)throw new EngineError("DOMAIN_ERROR");
+  if(lambda===0)return k===0?1:0;
+  return Math.exp(k*Math.log(lambda)-lambda-logGamma(k+1));
+}
+
 class Parser {
   constructor(source,ctx){this.ts=tokenize(source);this.p=0;this.ctx=ctx}
   peek(){return this.ts[this.p]}
@@ -167,6 +212,7 @@ class Parser {
     const rawId=x.v,id=rawId.toLowerCase();
     if(id==="pi"||id==="π")return V(Math.PI,null);
     if(id==="e")return V(Math.E,null);
+    const constant=getScientificConstant(id);if(constant)return V(constant.value,null);
     if(id==="ans")return V(Number(this.ctx.ans??0),decimalRational(String(this.ctx.ans??0)));
     if(Object.prototype.hasOwnProperty.call(this.ctx.variables??{},rawId))return V(Number(this.ctx.variables[rawId]),null);
     if(Object.prototype.hasOwnProperty.call(this.ctx.variables??{},id))return V(Number(this.ctx.variables[id]),null);
@@ -248,6 +294,39 @@ class Parser {
       case"randint":{
         const[a,b]=two();assertInteger(a);assertInteger(b);if(b<a)throw new EngineError("DOMAIN_ERROR");
         return V(a+Math.floor(Math.random()*(b-a+1)));
+      }
+      case"gamma":return V(gammaFn(one()));
+      case"lgamma":return V(logGamma(one()));
+      case"erf":return V(erfFn(one()));
+      case"erfc":return V(1-erfFn(one()));
+      case"normalpdf":{
+        if(args.length<1||args.length>3)throw new EngineError("INVALID_EXPRESSION");
+        return V(normalPdf(args[0].num,args[1]?.num??0,args[2]?.num??1));
+      }
+      case"normalcdf":{
+        if(args.length<1||args.length>3)throw new EngineError("INVALID_EXPRESSION");
+        return V(normalCdf(args[0].num,args[1]?.num??0,args[2]?.num??1));
+      }
+      case"binompdf":{
+        if(args.length!==3)throw new EngineError("INVALID_EXPRESSION");
+        return V(binomialPmf(args[0].num,args[1].num,args[2].num));
+      }
+      case"binomcdf":{
+        if(args.length!==3)throw new EngineError("INVALID_EXPRESSION");
+        const k=assertInteger(args[0].num),n=assertInteger(args[1].num),p=args[2].num;
+        if(k<0||n<0||p<0||p>1)throw new EngineError("DOMAIN_ERROR");
+        let total=0;for(let i=0;i<=Math.min(k,n);i++)total+=binomialPmf(i,n,p);
+        return V(total);
+      }
+      case"poissonpdf":{
+        if(args.length!==2)throw new EngineError("INVALID_EXPRESSION");
+        return V(poissonPmf(args[0].num,args[1].num));
+      }
+      case"poissoncdf":{
+        if(args.length!==2)throw new EngineError("INVALID_EXPRESSION");
+        const k=assertInteger(args[0].num),lambda=args[1].num;if(k<0||lambda<0)throw new EngineError("DOMAIN_ERROR");
+        let total=0;for(let i=0;i<=k;i++)total+=poissonPmf(i,lambda);
+        return V(total);
       }
       default:throw new EngineError("UNSUPPORTED_OPERATION");
     }
