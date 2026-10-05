@@ -170,6 +170,11 @@ function activateTool(target,{updateHash=true,track=true}={}){
   if(track)trackVirtualPage("/#"+target,document.title);
   if(window.matchMedia?.("(max-width: 900px)").matches)closeToolSidebar();
 }
+calculatorRoot?.addEventListener("calculator-mode-route",event=>{
+  const target=event.detail?.target;
+  if(target&&toolTargets.has(target))activateTool(target);
+});
+
 document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.setAttribute("aria-pressed",String(button.classList.contains("active")));
   button.addEventListener("click",()=>{
