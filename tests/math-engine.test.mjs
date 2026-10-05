@@ -132,3 +132,19 @@ test("domain and input failures stay explicit instead of silently returning wron
   assert.deepEqual(evalv("atanh(1)"),{kind:"error",code:"DOMAIN_ERROR"});
   assert.deepEqual(evalv("mod(2,0)"),{kind:"error",code:"DIVISION_BY_ZERO"});
 });
+
+
+test("numerical derivative supports lecture formulas", () => {
+  assert.ok(Math.abs(evalv("deriv(X^2,3)","RAD").numeric-6)<1e-6);
+  assert.ok(Math.abs(evalv("derivative(sin(X),0)","RAD").numeric-1)<1e-7);
+});
+
+test("numerical integral supports lecture formulas", () => {
+  assert.ok(Math.abs(evalv("integral(X^2,0,3)","RAD").numeric-9)<1e-8);
+  assert.ok(Math.abs(evalv("integral(sin(X),0,pi)","RAD").numeric-2)<1e-8);
+});
+
+test("sigma supports textbook summations", () => {
+  assert.equal(evalv("sigma(X,1,100)").numeric,5050);
+  assert.equal(evalv("sigma(X^2,1,10)").numeric,385);
+});
