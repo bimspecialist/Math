@@ -529,3 +529,33 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 .mathlab-workspace{overflow:auto}.mathlab-workspace-table{width:100%;border-collapse:collapse;font-size:.82rem}.mathlab-workspace-table th,.mathlab-workspace-table td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.mathlab-workspace-table th{position:sticky;top:0;background:var(--panel);font-size:.75rem;color:var(--muted);z-index:1}.mathlab-workspace-table code{white-space:nowrap;display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis}.mathlab-section-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.mathlab-section-heading h3{margin:0}.mathlab-mini-action{border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);padding:4px 7px;font-size:.76rem}.mathlab-history{display:grid;gap:5px;max-height:180px;overflow:auto}.mathlab-history-item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:6px 2px;cursor:pointer}.mathlab-history-item:hover,.mathlab-history-item:focus-visible{background:var(--page)}.mathlab-history-item code{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mathlab-results pre{min-height:210px;max-height:380px}.mathlab-results{grid-template-rows:auto auto auto}@media(max-width:700px){.mathlab-workspace-table{min-width:460px}.mathlab-history{max-height:140px}}
 
 .mathlab-variable-editor{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}.mathlab-variable-editor[hidden]{display:none}.mathlab-variable-editor label{display:grid;gap:5px;margin-top:8px}.mathlab-variable-editor input,.mathlab-variable-editor textarea{width:100%;box-sizing:border-box}.mathlab-editor-actions{display:flex;gap:8px;margin-top:9px}.mathlab-row-action{border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--text);padding:4px 7px;cursor:pointer}.mathlab-row-action:hover,.mathlab-row-action:focus-visible{background:var(--page)}
+
+
+/* Lecture-ready direct expression entry */
+.calculator-direct-entry{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:8px;
+  padding:7px 10px;
+  border:1px solid rgba(89,159,255,.28);
+  border-radius:10px;
+  background:rgba(3,16,32,.58);
+}
+.calculator-direct-entry input{
+  min-width:0;
+  flex:1;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:inherit;
+  font:600 .88rem/1.25 ui-monospace,SFMono-Regular,Consolas,monospace;
+  direction:ltr;
+  text-align:left;
+}
+.calculator-direct-entry input::placeholder{opacity:.55;font-weight:500}
+.calculator-direct-entry span{opacity:.55;font-size:.8rem}
+.calculator-direct-entry:focus-within{
+  border-color:rgba(89,159,255,.72);
+  box-shadow:0 0 0 2px rgba(89,159,255,.12);
+}
