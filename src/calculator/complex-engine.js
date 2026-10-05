@@ -54,7 +54,7 @@ function tokenize(source){
   out.push({t:"eof"});return out;
 }
 class Parser{
-  constructor(source){this.ts=tokenize(source);this.p=0}
+  constructor(source,context={}){this.ts=tokenize(source);this.p=0;this.context=context}
   peek(){return this.ts[this.p]}
   take(){return this.ts[this.p++]}
   parse(){const z=this.add();if(this.peek().t!=="eof")throw new Error("INVALID_EXPRESSION");return z}
@@ -72,6 +72,7 @@ class Parser{
     if(id==="i"||id==="j")return C(0,1);
     if(id==="pi"||id==="π")return C(Math.PI,0);
     if(id==="e")return C(Math.E,0);
+    if(id==="ans")return C(Number(this.context.ansRe??0),Number(this.context.ansIm??0));
     if(this.take().t!=="(")throw new Error("INVALID_EXPRESSION");
     const args=[];if(this.peek().t!==")"){args.push(this.add());while(this.peek().t===","){this.take();args.push(this.add())}}
     if(this.take().t!==")")throw new Error("INVALID_EXPRESSION");
@@ -109,10 +110,10 @@ export function formatComplex(value){
   const mag=Math.abs(im)===1?"i":`${Math.abs(im)}i`;
   return `${re}${sign}${mag}`;
 }
-export function evaluateComplexExpression(source){
+export function evaluateComplexExpression(source,context={}){
   if(!String(source??"").trim())return{kind:"error",code:"INVALID_EXPRESSION"};
   try{
-    const z=new Parser(source).parse();
+    const z=new Parser(source,context).parse();
     if(!Number.isFinite(z.re)||!Number.isFinite(z.im))return{kind:"error",code:"DOMAIN_ERROR"};
     return{kind:"complex",re:clean(z.re),im:clean(z.im),display:formatComplex(z)};
   }catch(e){
