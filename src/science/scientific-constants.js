@@ -15,7 +15,10 @@ export const SCIENTIFIC_CONSTANTS = Object.freeze({
   sigma_sb: Object.freeze({symbol:"σ", name:"Stefan-Boltzmann constant", value:5.670374419e-8, unit:"W/(m^2 K^4)", exact:false}),
   atm: Object.freeze({symbol:"atm", name:"Standard atmosphere", value:101325, unit:"Pa", exact:true}),
   au: Object.freeze({symbol:"au", name:"Astronomical unit", value:149597870700, unit:"m", exact:true}),
-  ly: Object.freeze({symbol:"ly", name:"Light-year", value:9460730472580800, unit:"m", exact:true})
+  ly: Object.freeze({symbol:"ly", name:"Light-year", value:9460730472580800, unit:"m", exact:true}),
+  tau: Object.freeze({symbol:"τ", name:"Tau", value:2*Math.PI, unit:"1", exact:false}),
+  phi: Object.freeze({symbol:"φ", name:"Golden ratio", value:(1+Math.sqrt(5))/2, unit:"1", exact:false}),
+  epsmach: Object.freeze({symbol:"εmach", name:"IEEE-754 machine epsilon", value:Number.EPSILON, unit:"1", exact:true})
 });
 
 export const SCIENTIFIC_CONSTANT_ALIASES = Object.freeze({
@@ -36,7 +39,9 @@ export const SCIENTIFIC_CONSTANT_ALIASES = Object.freeze({
   epsilon0:"eps0",
   vacuumpermittivity:"eps0",
   vacuumpermeability:"mu0",
-  stefanboltzmann:"sigma_sb"
+  stefanboltzmann:"sigma_sb",
+  machineepsilon:"epsmach",
+  eps:"epsmach"
 });
 
 export function getScientificConstant(id){
