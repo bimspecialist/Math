@@ -618,3 +618,13 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 }
 .expert-tool-groups button:hover{background:rgba(89,159,255,.16);border-color:rgba(89,159,255,.48)}
 @media (max-width:680px){.expert-tool-groups{grid-template-columns:1fr}.calculator-expert-tools summary small{display:none}}
+
+.scientific-precision-note{
+  margin:0 10px 10px;
+  padding:7px 9px;
+  border-left:2px solid rgba(89,159,255,.45);
+  background:rgba(89,159,255,.05);
+  opacity:.72;
+  font-size:.7rem;
+  line-height:1.35;
+}
