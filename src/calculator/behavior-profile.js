@@ -15,7 +15,7 @@ export const ES_PLUS_PROFILE = Object.freeze({
   modifierBehavior: Object.freeze({ shift: "one-shot", alpha: "one-shot" }),
   modes: Object.freeze([
     { id: "COMP", label: "COMP", implemented: true },
-    { id: "CMPLX", label: "CMPLX", implemented: false },
+    { id: "CMPLX", label: "CMPLX", implemented: true },
     { id: "STAT", label: "STAT", implemented: true },
     { id: "BASE_N", label: "BASE-N", implemented: true },
     { id: "EQN", label: "EQN", implemented: true },
