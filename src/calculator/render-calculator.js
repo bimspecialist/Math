@@ -58,6 +58,7 @@ export function renderCalculatorMarkup(view,locale="en"){
           '<section><span>Calculus</span><div><button type="button" data-science-insert="deriv(">deriv</button><button type="button" data-science-insert="integral(">integral</button><button type="button" data-science-insert="sigma(">sigma</button></div></section>'+
           '<section><span>Complex</span><div><button type="button" data-science-insert="i">i</button><button type="button" data-science-insert="conj(">conj</button><button type="button" data-science-insert="arg(">arg</button><button type="button" data-science-insert="complex(">complex</button></div></section>'+
         '</div>'+
+        '<div class="scientific-precision-note">'+esc(translate(locale,"scientificPrecisionNote"))+'</div>'+
       '</details></div>'+
     '<div class="control-deck"><div class="control-side control-left">'+keyMarkup(controlMap.get("SHIFT"))+keyMarkup(controlMap.get("ALPHA"))+'</div>'+
       '<div class="replay-pad" aria-label="'+esc(translate(locale,"replayNavigation"))+'"><div class="replay-up">'+keyMarkup(nav[0])+'</div><div class="replay-left">'+keyMarkup(nav[1])+'</div><div class="replay-center">REPLAY</div><div class="replay-right">'+keyMarkup(nav[2])+'</div><div class="replay-down">'+keyMarkup(nav[3])+'</div></div>'+
