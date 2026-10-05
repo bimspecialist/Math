@@ -40,8 +40,8 @@ test("SHIFT plus CALC enters SOLVE only in supported mode", () => {
   unsupported = dispatchCalculatorCommand(unsupported, {type:"CALC", variables:["X"]});
   assert.equal(unsupported.prompt, null); assert.equal(unsupported.error, "SOLVE_UNSUPPORTED_MODE");
 });
-test("unimplemented modes are not emitted as selectable release choices", () => {
+test("student modes backed by specialist engines are selectable", () => {
   const menu = buildModeMenu(ES_PLUS_PROFILE);
-  assert.deepEqual(menu.choices.map(x=>x.id), ["COMP"]);
-  assert.equal(menu.choices.some(x=>x.id==="MATRIX"), false);
+  assert.deepEqual(menu.choices.map(x=>x.id), ["COMP","STAT","BASE_N","EQN","MATRIX","TABLE","VECTOR"]);
+  assert.equal(menu.choices.some(x=>x.id==="CMPLX"), false);
 });
