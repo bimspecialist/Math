@@ -28,3 +28,8 @@ test("general independent propagation uses numerical partial derivatives",()=>{
 test("measurement formatting follows uncertainty precision",()=>{
   assert.equal(formatMeasurement(measurement(12.3456,0.0789),{uncertaintyDigits:2}),"12.346 ± 0.079");
 });
+
+
+test("uncertainty engine rejects negative standard uncertainty",()=>{
+  assert.throws(()=>measurement(10,-0.2),/INVALID_UNCERTAINTY/);
+});
