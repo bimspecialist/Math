@@ -71,10 +71,9 @@ test("app initializes ads, analytics, categories and ramp calculator",()=>{
   assert.match(app,/calculateRamp/);
 });
 
-test("index includes the exact AdSense ownership script in head",()=>{
+test("index does not eagerly load AdSense before consent",()=>{
   const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-  assert.match(index,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js\?client=ca-pub-5386218928692257/);
-  assert.match(index,/crossorigin="anonymous"/);
+  assert.doesNotMatch(index,/pagead2\.googlesyndication\.com\/pagead\/js\/adsbygoogle\.js/);
 });
 
 
@@ -84,13 +83,14 @@ test("AdSense initializer reuses the ownership script instead of loading a dupli
 });
 
 
-test("local consent banner gates optional analytics without blocking AdSense initialization",()=>{
+test("local consent banner gates both advertising and analytics behind opt-in",()=>{
   const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
-  assert.match(app,/const CONSENT_KEY="math\.analytics-consent"/);
-  assert.match(app,/function setupConsent\(\)\{\s*initAdSense\(SITE_CONFIG\.adsense\)/);
-  assert.match(app,/if\(!SITE_CONFIG\.analytics\.measurementId\)return/);
-  assert.match(app,/function enableAnalytics\(\)\{\s*initGoogleAnalytics\(SITE_CONFIG\.analytics\)/);
-  assert.doesNotMatch(app,/function enableExternalServices/);
+  assert.match(app,/const CONSENT_KEY="math\.external-services-consent"/);
+  assert.match(app,/const LEGACY_CONSENT_KEY="math\.analytics-consent"/);
+  assert.match(app,/function enableExternalServices\(\)\{\s*initAdSense\(SITE_CONFIG\.adsense\);\s*initGoogleAnalytics\(SITE_CONFIG\.analytics\)/);
+  const setup=app.slice(app.indexOf("function setupConsent()"),app.indexOf("function researchErrorText"));
+  assert.doesNotMatch(setup,/initAdSense\(SITE_CONFIG\.adsense\)/);
+  assert.match(setup,/choice==="accepted"\)\{enableExternalServices\(\)/);
 });
 
 
