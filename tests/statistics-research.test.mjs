@@ -41,3 +41,18 @@ test("research statistics reject invalid tokens instead of silently dropping the
   assert.deepEqual(linearRegression([1,2,Number.NaN],[2,4,6]),{kind:"error",code:"INVALID_INPUT"});
   assert.deepEqual(chiSquareGoodnessOfFit([10,20,Number.NaN],[10,20,30]),{kind:"error",code:"INVALID_INPUT"});
 });
+
+
+test("research statistics reject invalid inferential parameters",()=>{
+  assert.deepEqual(oneSampleTTest([1,2,3],Number.NaN,0.05),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(oneSampleTTest([1,2,3],0,1.2),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(linearRegression([1,2,3],[2,4,6],0),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(linearRegression([1,2,3],[5,5,5],0.05),{kind:"error",code:"ZERO_RESPONSE_VARIANCE"});
+});
+
+test("chi-square rejects impossible counts, invalid parameter counts, and mismatched totals",()=>{
+  assert.deepEqual(chiSquareGoodnessOfFit([10,-1,11],[10,10,10]),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(chiSquareGoodnessOfFit([10,10,10],[10,10,10],-1),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(chiSquareGoodnessOfFit([10,10,10],[8,8,8]),{kind:"error",code:"EXPECTED_TOTAL_MISMATCH"});
+  assert.deepEqual(chiSquareGoodnessOfFit([10,10,10],[10,10,10],2),{kind:"error",code:"INVALID_DF"});
+});
