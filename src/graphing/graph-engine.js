@@ -47,8 +47,13 @@ export function sampleGraphExpression(source,{minX=-10,maxX=10,points=401}={}){
 }
 
 export function graphBounds(samples,{fallbackMinY=-10,fallbackMaxY=10}={}){
-  const ys=samples.map(p=>p.y).filter(Number.isFinite);
-  if(!ys.length)return{minY:fallbackMinY,maxY:fallbackMaxY};
+  const finite=samples.map((p,i)=>({i,y:p.y})).filter(p=>Number.isFinite(p.y));
+  if(!finite.length)return{minY:fallbackMinY,maxY:fallbackMaxY};
+  const breaks=samples.map((p,i)=>p.breakBefore?i:-1).filter(i=>i>=0);
+  const robust=breaks.length
+    ?finite.filter(p=>!breaks.some(i=>Math.abs(p.i-i)<=2))
+    :finite;
+  const ys=(robust.length>=Math.max(4,Math.floor(finite.length*.5))?robust:finite).map(p=>p.y);
   let minY=Math.min(...ys),maxY=Math.max(...ys);
   if(minY===maxY){minY-=1;maxY+=1}
   const span=maxY-minY;
