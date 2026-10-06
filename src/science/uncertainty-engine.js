@@ -46,7 +46,7 @@ export function unaryMeasurement(a,fn){
     case"exp":value=Math.exp(a.value);derivative=value;break;
     case"ln":if(a.value<=0)throw new Error("DOMAIN_ERROR");value=Math.log(a.value);derivative=1/a.value;break;
     case"log10":if(a.value<=0)throw new Error("DOMAIN_ERROR");value=Math.log10(a.value);derivative=1/(a.value*Math.LN10);break;
-    case"sqrt":if(a.value<0)throw new Error("DOMAIN_ERROR");value=Math.sqrt(a.value);derivative=value===0?Infinity:1/(2*value);break;
+    case"sqrt":if(a.value<0)throw new Error("DOMAIN_ERROR");value=Math.sqrt(a.value);derivative=value===0?(a.uncertainty===0?0:Infinity):1/(2*value);break;
     default:throw new Error("UNSUPPORTED_OPERATION");
   }
   if(!Number.isFinite(value)||!Number.isFinite(derivative))throw new Error("DOMAIN_ERROR");
