@@ -71,3 +71,25 @@ test("Math Lab decomposition functions reject complex matrices explicitly",()=>{
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"REAL_MATRIX_REQUIRED");
 });
+
+
+test("Math Lab SVD reconstructs rectangular matrices and preserves orthogonality",()=>{
+  const r=runMathLabScript("A=[3 1;1 3;1 1]\n[U,S,V]=svd(A)\nB=U*S*V'\nIU=U'*U\nIV=V'*V\nk=cond(A)");
+  assert.equal(r.ok,true);
+  approxMatrix(r.workspace.B,[[3,1],[1,3],[1,1]],1e-7);
+  approxMatrix(r.workspace.IU,[[1,0],[0,1]],1e-7);
+  approxMatrix(r.workspace.IV,[[1,0],[0,1]],1e-7);
+  assert.ok(Number.isFinite(r.workspace.k)&&r.workspace.k>=1);
+});
+
+test("Math Lab condition number flags singular matrices",()=>{
+  const r=runMathLabScript("k=cond([1 2;2 4])");
+  assert.equal(r.ok,true);
+  assert.equal(r.workspace.k,Infinity);
+});
+
+test("Math Lab SVD validates output count",()=>{
+  const r=runMathLabScript("[U,S]=svd([1 0;0 1])");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_OUTPUT_COUNT");
+});
