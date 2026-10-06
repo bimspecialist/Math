@@ -61,7 +61,8 @@ class Parser{
   parse(){const q=this.add();if(this.peek().t!=="eof")throw new Error("INVALID_EXPRESSION");return q}
   add(){let q=this.mul();while(this.peek().t==="op"&&["+","-"].includes(this.peek().v)){const op=this.take().v,r=this.mul();q=addQ(q,r,op==="+"?1:-1)}return q}
   start(t){return t==="num"||t==="id"||t==="("}
-  mul(){let q=this.power();while(true){if(this.peek().t==="op"&&["*","/"].includes(this.peek().v)){const op=this.take().v,r=this.power();q=op==="*"?mulQ(q,r):divQ(q,r);continue}if(this.start(this.peek().t)){q=mulQ(q,this.power());continue}break}return q}
+  implicitProduct(){let q=this.power();while(this.start(this.peek().t))q=mulQ(q,this.power());return q}
+  mul(){let q=this.implicitProduct();while(this.peek().t==="op"&&["*","/"].includes(this.peek().v)){const op=this.take().v,r=this.implicitProduct();q=op==="*"?mulQ(q,r):divQ(q,r)}return q}
   power(){let q=this.unary();if(this.peek().t==="op"&&this.peek().v==="^"){this.take();const p=this.unary();if(p.dims.some(v=>v!==0))throw new Error("DIMENSIONAL_EXPONENT");q=powQ(q,p.value)}return q}
   unary(){if(this.peek().t==="op"&&["+","-"].includes(this.peek().v)){const op=this.take().v,q=this.unary();return op==="-"?Q(-q.value,q.dims):q}return this.primary()}
   primary(){
