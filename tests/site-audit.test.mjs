@@ -119,10 +119,11 @@ test("tool sidebar supports localized search and keyboard shortcut",()=>{
   assert.match(app,/toolSearch\?\.focus\(\)/);
 });
 
-test("tool search hides unmatched items and empty groups without removing navigation",()=>{
+test("tool search hides unmatched items and empty groups without forcing formula modules into startup",()=>{
   assert.match(app,/item\.hidden=!matches/);
   assert.match(app,/group\.hidden=groupVisible===0/);
-  assert.match(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
+  assert.match(app,/filterToolNavigation\(\)/);
+  assert.doesNotMatch(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
 });
 
 
@@ -176,4 +177,21 @@ test("Research Mode initializes on direct navigation before its section is activ
   assert.match(app,/if\(button\.dataset\.toolTarget==="research"\)await initializeResearchMode\(\)/);
   assert.match(app,/if\(target==="research"\)await initializeResearchMode\(\)/);
   assert.match(app,/if\(initialTool==="research"\)await initializeResearchMode\(\)/);
+});
+
+
+test("reference formula data and explanations are lazy-loaded with direct routes preserved",()=>{
+  assert.doesNotMatch(app,/^import .*formula-library\.js/m);
+  assert.doesNotMatch(app,/^import .*formula-explanations\.js/m);
+  assert.match(app,/import\("\.\/formulas\/formula-library\.js"\)/);
+  assert.match(app,/import\("\.\/knowledge\/formula-explanations\.js"\)/);
+  assert.match(app,/async function ensureFormulaSupport\(\)/);
+  assert.match(app,/async function openReferenceFormula\(/);
+  assert.match(app,/await openReferenceFormula\(parts\[2\],\{fromHash:true\}\)/);
+});
+
+test("knowledge and formula sections initialize before direct hash activation",()=>{
+  assert.match(app,/if\(target==="formulas"\)\{await ensureFormulaSupport\(\);renderFormulaCategories\(\);renderFormulaLibrary\(\);\}/);
+  assert.match(app,/if\(target==="knowledge"\)await initializeProfessionalKnowledge\(\)/);
+  assert.match(app,/if\(initialTool==="knowledge"\)await initializeProfessionalKnowledge\(\)/);
 });
