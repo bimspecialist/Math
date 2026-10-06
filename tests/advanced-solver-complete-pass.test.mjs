@@ -83,3 +83,22 @@ test("Advanced Solver automatically solves quartics with real roots",()=>{
   assert.equal(roots.length,4);
   for(const [actual,expected] of roots.map((x,i)=>[x,[-2,-1,1,2][i]]))assert.ok(Math.abs(actual-expected)<1e-8);
 });
+
+
+test("Advanced Solver analyzes cubic expressions without requiring =0",()=>{
+  const r=solveAdvancedInput("x^3-1",{angleMode:"RAD"});
+  assert.equal(r.kind,"expression-analysis");
+  assert.equal(r.degree,3);
+  assert.equal(r.method,"durand-kerner");
+  assert.equal(r.roots.length,3);
+  assert.ok(r.roots.some(x=>typeof x==="number"&&Math.abs(x-1)<1e-9));
+});
+
+test("Advanced Solver analyzes quartic expressions consistently with equation solving",()=>{
+  const r=solveAdvancedInput("x^4-5*x^2+4",{angleMode:"RAD"});
+  assert.equal(r.kind,"expression-analysis");
+  assert.equal(r.degree,4);
+  const roots=r.roots.filter(x=>typeof x==="number").sort((a,b)=>a-b);
+  assert.equal(roots.length,4);
+  for(const [actual,expected] of roots.map((x,i)=>[x,[-2,-1,1,2][i]]))assert.ok(Math.abs(actual-expected)<1e-8);
+});
