@@ -17,7 +17,7 @@ import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calcu
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants } from "./science/research-workbench.js";
+import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "./science/research-workbench.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -1018,6 +1018,18 @@ function bindResearchMode(){
     const out=document.querySelector("#research-uncertainty-result");
     const r=runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
     if(out)out.textContent=r.kind==="measurement"?r.formatted:researchErrorText(r.code);
+  });
+  document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
+    const raw=document.querySelector("#research-stats-data")?.value??"";
+    const data=raw.split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+    const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
+    const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
+    const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
+    if(!out)return;
+    if(r.kind==="t-test"){
+      const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
+      out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
+    }else out.textContent=researchErrorText(r.code);
   });
   renderResearchConstants();
 }
