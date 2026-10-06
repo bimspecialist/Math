@@ -1,7 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
-import { solveAdvancedInput } from "./advanced/advanced-solver.js";
-import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
@@ -15,7 +13,23 @@ import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "./science/research-workbench.js";
+let advancedToolsPromise=null;
+let advancedToolsModule=null;
+async function ensureAdvancedTools(){
+  if(advancedToolsModule)return advancedToolsModule;
+  if(!advancedToolsPromise)advancedToolsPromise=Promise.all([
+    import("./advanced/advanced-solver.js"),
+    import("./advanced/advanced-result-format.js")
+  ]).then(([solver,format])=>{advancedToolsModule={...solver,...format};return advancedToolsModule});
+  return advancedToolsPromise;
+}
+let researchWorkbenchPromise=null;
+let researchWorkbenchModule=null;
+async function ensureResearchWorkbench(){
+  if(researchWorkbenchModule)return researchWorkbenchModule;
+  if(!researchWorkbenchPromise)researchWorkbenchPromise=import("./science/research-workbench.js").then(mod=>{researchWorkbenchModule=mod;return mod});
+  return researchWorkbenchPromise;
+}
 let professionalLibrariesPromise=null;
 let professionalLibrariesModule=null;
 async function ensureProfessionalLibraries(){
@@ -70,13 +84,13 @@ renderMathLabHistory();
   renderCalculatorCategories();
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
-  if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
+  if(lastAdvancedResult&&advancedResult&&advancedToolsModule)advancedResult.textContent=advancedToolsModule.formatAdvancedResult(lastAdvancedResult,locale);
   const activeSection=document.querySelector(".page-section.active");
   const activeTarget=activeSection?.id?.replace(/-section$/,"")||document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
   updateToolHeading(activeTarget);
   syncToolGroupsForContext();
   syncRampDuplicateState();
-  renderResearchConstants();
+  if(researchWorkbenchModule)renderResearchConstants();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -205,6 +219,7 @@ document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.addEventListener("click",async()=>{
     if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
     if(button.dataset.knowledgeLibrary)await selectProfessionalLibrary(button.dataset.knowledgeLibrary);
+    if(button.dataset.toolTarget==="research")await initializeResearchMode();
     activateTool(button.dataset.toolTarget);
   });
 });
@@ -222,6 +237,7 @@ document.addEventListener("keydown",event=>{
 window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
+  if(target==="research")await initializeResearchMode();
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
 let scanPreviewUrl=null;
@@ -243,7 +259,8 @@ const advancedResult=document.querySelector("#advanced-result");
 const advancedAngleMode=document.querySelector("#advanced-angle-mode");
 const advancedResultMeta=document.querySelector("#advanced-result-meta");
 let lastAdvancedResult=null;
-function runAdvancedSolver(){
+async function runAdvancedSolver(){
+  const {solveAdvancedInput,formatAdvancedResult}=await ensureAdvancedTools();
   const angleMode=advancedAngleMode?.value??"RAD";
   const result=solveAdvancedInput(advancedInput?.value??"",{angleMode});
   lastAdvancedResult=result;
@@ -1047,7 +1064,7 @@ function researchErrorText(code){
 function renderResearchConstants(){
   const root=document.querySelector("#research-constants-list");if(!root)return;
   root.replaceChildren();
-  for(const item of researchConstants()){
+  for(const item of researchWorkbenchModule?.researchConstants?.()??[]){
     const row=document.createElement("div");row.className="research-constant-row";
     const left=document.createElement("span");left.className="research-constant-symbol";left.textContent=item.symbol;
     const mid=document.createElement("span");mid.className="research-constant-name";mid.textContent=item.name;
@@ -1061,18 +1078,27 @@ function researchNumber(id){
   const value=Number(raw);
   return Number.isFinite(value)?value:Number.NaN;
 }
+let researchModeBound=false;
+async function initializeResearchMode(){
+  await ensureResearchWorkbench();
+  if(!researchModeBound){
+    bindResearchMode();
+    researchModeBound=true;
+  }
+  renderResearchConstants();
+}
 function bindResearchMode(){
   document.querySelector("#research-exact-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-exact-input")?.value??"";
     const digits=Number(document.querySelector("#research-exact-digits")?.value??80);
-    const out=document.querySelector("#research-exact-result"),r=runExactResearch(expr,digits);
+    const out=document.querySelector("#research-exact-result"),r=researchWorkbenchModule.runExactResearch(expr,digits);
     if(!out)return;
     out.textContent=r.kind==="exact"?`${r.fraction}\n≈ ${r.decimal}`:researchErrorText(r.code);
   });
   document.querySelector("#research-quantity-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-quantity-input")?.value??"";
     const target=document.querySelector("#research-quantity-target")?.value??"";
-    const out=document.querySelector("#research-quantity-result"),r=runQuantityResearch(expr,target);
+    const out=document.querySelector("#research-quantity-result"),r=researchWorkbenchModule.runQuantityResearch(expr,target);
     if(!out)return;
     if(r.kind==="quantity-conversion")out.textContent=`${Number(r.value.toPrecision(14))} ${r.unit}  [${r.dimension}]`;
     else if(r.kind==="quantity")out.textContent=`${Number(r.siValue.toPrecision(14))} SI  [${r.dimension}]`;
@@ -1082,7 +1108,7 @@ function bindResearchMode(){
     const value=id=>researchNumber(id);
     const operation=document.querySelector("#research-operation")?.value??"+";
     const out=document.querySelector("#research-uncertainty-result");
-    const r=runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
+    const r=researchWorkbenchModule.runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
     if(out)out.textContent=r.kind==="measurement"?r.formatted:researchErrorText(r.code);
   });
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
@@ -1090,7 +1116,7 @@ function bindResearchMode(){
     const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
     const mu0=researchNumber("#research-stats-mu0");
     const alpha=researchNumber("#research-stats-alpha");
-    const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
+    const out=document.querySelector("#research-stats-result"),r=researchWorkbenchModule.runTTestResearch(data,mu0,alpha);
     if(!out)return;
     if(r.kind==="t-test"){
       const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
@@ -1101,7 +1127,7 @@ function bindResearchMode(){
   document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
     const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
     const alpha=researchNumber("#research-regression-alpha");
-    const out=document.querySelector("#research-regression-result"),r=runLinearRegressionResearch(x,y,alpha);
+    const out=document.querySelector("#research-regression-result"),r=researchWorkbenchModule.runLinearRegressionResearch(x,y,alpha);
     if(!out)return;
     if(r.kind==="linear-regression"){
       const ci=`[${Number(r.slopeCI[0].toPrecision(10))}, ${Number(r.slopeCI[1].toPrecision(10))}]`;
@@ -1111,7 +1137,7 @@ function bindResearchMode(){
   document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
     const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
     const estimated=researchNumber("#research-chi-estimated");
-    const out=document.querySelector("#research-chi-result"),r=runChiSquareResearch(observed,expected,estimated);
+    const out=document.querySelector("#research-chi-result"),r=researchWorkbenchModule.runChiSquareResearch(observed,expected,estimated);
     if(!out)return;
     out.textContent=r.kind==="chi-square"
       ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
@@ -1119,13 +1145,12 @@ function bindResearchMode(){
   });
   renderResearchConstants();
 }
-bindResearchMode();
-
 setupConsent();
 
 async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(initialTool==="research")await initializeResearchMode();
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
     else activateTool("calculator",{updateHash:false,track:false});
   }
