@@ -457,6 +457,7 @@ export const UI_STRINGS = Object.freeze({
     aboutLanguagesTitle:"English and Arabic",
     aboutLanguagesText:"The interface supports English and Arabic, including RTL layout where appropriate, while mathematical expressions and the physical calculator layout remain left-to-right for consistency.",
     privacyPolicy:"Privacy Policy",
+    privacyChoices:"Privacy choices",
     publisherHome:"Publisher home",
     mathWorkspace:"Math Workspace"
   }),
@@ -918,6 +919,7 @@ export const UI_STRINGS = Object.freeze({
     aboutLanguagesTitle:"العربية والإنجليزية",
     aboutLanguagesText:"تدعم الواجهة العربية والإنجليزية مع اتجاه RTL عند الحاجة، بينما تبقى التعبيرات الرياضية وتخطيط الحاسبة المادية من اليسار إلى اليمين للحفاظ على الاتساق.",
     privacyPolicy:"سياسة الخصوصية",
+    privacyChoices:"خيارات الخصوصية",
     publisherHome:"صفحة الناشر",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
