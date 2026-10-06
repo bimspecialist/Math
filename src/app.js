@@ -983,19 +983,32 @@ for(const el of [rampDesignRise,rampSlopeType,rampSlopeValue,rampDesignUnit])el?
 updateRampCalculator();
 updateRampDesign();
 
-const CONSENT_KEY="math.analytics-consent";
-function enableAnalytics(){
+const CONSENT_KEY="math.external-services-consent";
+const LEGACY_CONSENT_KEY="math.analytics-consent";
+function hasExternalServices(){
+  return Boolean(SITE_CONFIG.adsense.client||SITE_CONFIG.analytics.measurementId);
+}
+function enableExternalServices(){
+  initAdSense(SITE_CONFIG.adsense);
   initGoogleAnalytics(SITE_CONFIG.analytics);
 }
 function setupConsent(){
-  initAdSense(SITE_CONFIG.adsense);
-  const banner=document.querySelector("#consent-banner");if(!banner)return;
-  if(!SITE_CONFIG.analytics.measurementId)return;
-  let choice=null;try{choice=localStorage.getItem(CONSENT_KEY)}catch{}
-  if(choice==="accepted"){enableAnalytics();return}
+  const banner=document.querySelector("#consent-banner");if(!banner||!hasExternalServices())return;
+  let choice=null;
+  try{
+    choice=localStorage.getItem(CONSENT_KEY);
+    if(!choice){
+      const legacy=localStorage.getItem(LEGACY_CONSENT_KEY);
+      if(legacy==="accepted"||legacy==="rejected"){
+        choice=legacy;
+        localStorage.setItem(CONSENT_KEY,legacy);
+      }
+    }
+  }catch{}
+  if(choice==="accepted"){enableExternalServices();return}
   if(choice==="rejected")return;
   banner.hidden=false;
-  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableAnalytics()});
+  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableExternalServices()});
   document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
 
