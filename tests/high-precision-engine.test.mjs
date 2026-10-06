@@ -29,3 +29,10 @@ test("exact engine rejects invalid precision instead of silently clamping it",()
   assert.deepEqual(evaluateExactExpression("1/3",{digits:1001}),{kind:"error",code:"INVALID_PRECISION"});
   assert.deepEqual(evaluateExactExpression("1/3",{digits:12.5}),{kind:"error",code:"INVALID_PRECISION"});
 });
+
+
+test("exact engine rejects pathological exponent workloads before BigInt expansion",()=>{
+  assert.deepEqual(evaluateExactExpression("2^10001"),{kind:"error",code:"POWER_TOO_LARGE"});
+  assert.deepEqual(evaluateExactExpression("1e10001"),{kind:"error",code:"NUMBER_EXPONENT_TOO_LARGE"});
+  assert.deepEqual(evaluateExactExpression("1e-10001"),{kind:"error",code:"NUMBER_EXPONENT_TOO_LARGE"});
+});
