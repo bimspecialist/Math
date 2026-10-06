@@ -985,15 +985,35 @@ updateRampDesign();
 
 const CONSENT_KEY="math.external-services-consent";
 const LEGACY_CONSENT_KEY="math.analytics-consent";
+let externalServicesEnabled=false;
 function hasExternalServices(){
   return Boolean(SITE_CONFIG.adsense.client||SITE_CONFIG.analytics.measurementId);
 }
 function enableExternalServices(){
   initAdSense(SITE_CONFIG.adsense);
   initGoogleAnalytics(SITE_CONFIG.analytics);
+  externalServicesEnabled=true;
 }
 function setupConsent(){
-  const banner=document.querySelector("#consent-banner");if(!banner||!hasExternalServices())return;
+  const banner=document.querySelector("#consent-banner");
+  const choices=document.querySelector("#privacy-choices");
+  if(!hasExternalServices()){
+    if(choices)choices.hidden=true;
+    return;
+  }
+  if(!banner)return;
+  const persist=value=>{try{localStorage.setItem(CONSENT_KEY,value)}catch{}};
+  const showChoices=()=>{banner.hidden=false;document.querySelector("#consent-reject")?.focus()};
+  choices?.addEventListener("click",showChoices);
+  document.querySelector("#consent-accept")?.addEventListener("click",()=>{
+    persist("accepted");banner.hidden=true;
+    if(!externalServicesEnabled)enableExternalServices();
+  });
+  document.querySelector("#consent-reject")?.addEventListener("click",()=>{
+    const requiresReload=externalServicesEnabled;
+    persist("rejected");banner.hidden=true;
+    if(requiresReload)window.location.reload();
+  });
   let choice=null;
   try{
     choice=localStorage.getItem(CONSENT_KEY);
@@ -1008,8 +1028,6 @@ function setupConsent(){
   if(choice==="accepted"){enableExternalServices();return}
   if(choice==="rejected")return;
   banner.hidden=false;
-  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableExternalServices()});
-  document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
 
 function researchErrorText(code){
