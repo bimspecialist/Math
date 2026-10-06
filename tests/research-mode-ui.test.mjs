@@ -12,9 +12,14 @@ test("Professor Research Mode is reachable and exposes all four work areas",()=>
   assert.match(index,/id="research-quantity-input"/);
   assert.match(index,/id="research-uncertainty-run"/);
   assert.match(index,/id="research-constants-list"/);
+  assert.match(index,/id="research-stats-data"/);
+  assert.match(index,/id="research-stats-run"/);
   assert.match(app,/runExactResearch/);
   assert.match(app,/runQuantityResearch/);
   assert.match(app,/runUncertaintyResearch/);
+  assert.match(app,/runTTestResearch/);
   assert.match(strings,/researchTitle:"Research Mode"/);
   assert.match(strings,/researchTitle:"وضع البحث"/);
+  assert.match(strings,/researchStatsTitle:"Statistical Inference"/);
+  assert.match(strings,/researchStatsTitle:"الاستدلال الإحصائي"/);
 });
