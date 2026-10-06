@@ -149,3 +149,13 @@ test("accessibility quality layer protects focus and reduced motion",()=>{
   assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
   assert.match(index,/data-i18n-aria-label="mathTools"/);
 });
+
+
+test("professional knowledge libraries are lazy-loaded with deep-link routing preserved",()=>{
+  assert.doesNotMatch(app,/^import .*professional-libraries\.js/m);
+  assert.match(app,/import\("\.\/knowledge\/professional-libraries\.js"\)/);
+  assert.match(app,/async function ensureProfessionalLibraries\(\)/);
+  assert.match(app,/async function restoreFormulaHashRoute\(\)/);
+  assert.match(app,/await restoreFormulaHashRoute\(\)/);
+  assert.match(app,/await openProfessionalFormula\(/);
+});
