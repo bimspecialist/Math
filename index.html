@@ -79,6 +79,7 @@
         <div class="tool-group">
           <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navToolsGroup">Tools</button>
           <button type="button" class="tool-item" data-tool-target="mathlab"><span class="tool-icon">⌘</span><span data-i18n="navMathLab">Math Lab</span></button>
+          <button type="button" class="tool-item" data-tool-target="research"><span class="tool-icon">⚛</span><span data-i18n="navResearchMode">Research Mode</span></button>
         </div>
         <div class="tool-group">
           <button type="button" class="tool-group-title tool-group-toggle" aria-expanded="true" data-i18n="navConverterGroup">Converter</button>
@@ -119,6 +120,54 @@
 
         <section id="calculator-section" class="page-section active">
           <div class="calculator-stage"><div id="calculator-root"></div></div>
+        </section>
+
+        <section id="research-section" class="page-section">
+          <div class="tool-page research-page">
+            <div class="tool-page-head">
+              <div><small data-i18n="researchKicker">Professor / Research</small><h2 data-i18n="researchTitle">Research Mode</h2><p data-i18n="researchDescription">High-integrity tools for exact arithmetic, physical dimensions, measurement uncertainty, and scientific constants.</p></div>
+            </div>
+            <div class="research-grid">
+              <article class="research-card">
+                <h3 data-i18n="researchExactTitle">Exact & High Precision</h3>
+                <p data-i18n="researchExactDescription">Exact rational arithmetic using BigInt, independent of IEEE-754 rounding.</p>
+                <label><span data-i18n="expressionLabel">Expression</span><input id="research-exact-input" dir="ltr" value="1/7 + 2^100"></label>
+                <label><span data-i18n="researchDigits">Decimal digits</span><input id="research-exact-digits" type="number" min="10" max="1000" value="80"></label>
+                <button id="research-exact-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-exact-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
+              <article class="research-card">
+                <h3 data-i18n="researchQuantityTitle">Dimensional Quantities</h3>
+                <p data-i18n="researchQuantityDescription">Calculate with physical units and reject dimensionally invalid operations.</p>
+                <label><span data-i18n="expressionLabel">Expression</span><input id="research-quantity-input" dir="ltr" value="20 m / 4 s"></label>
+                <label><span data-i18n="researchTargetUnit">Target unit</span><input id="research-quantity-target" dir="ltr" value="mph"></label>
+                <button id="research-quantity-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-quantity-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
+              <article class="research-card">
+                <h3 data-i18n="researchUncertaintyTitle">Measurement Uncertainty</h3>
+                <p data-i18n="researchUncertaintyDescription">Propagate independent or correlated standard uncertainties.</p>
+                <div class="research-measure-grid">
+                  <label>A<input id="research-a" type="number" step="any" value="10"></label>
+                  <label>u(A)<input id="research-ua" type="number" step="any" min="0" value="0.2"></label>
+                  <label>B<input id="research-b" type="number" step="any" value="5"></label>
+                  <label>u(B)<input id="research-ub" type="number" step="any" min="0" value="0.1"></label>
+                </div>
+                <div class="research-measure-grid">
+                  <label><span data-i18n="researchOperation">Operation</span><select id="research-operation"><option>+</option><option>-</option><option selected>*</option><option>/</option></select></label>
+                  <label><span data-i18n="researchCorrelation">Correlation ρ</span><input id="research-correlation" type="number" min="-1" max="1" step="0.01" value="0"></label>
+                </div>
+                <button id="research-uncertainty-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-uncertainty-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
+              <article class="research-card research-constants-card">
+                <h3 data-i18n="researchConstantsTitle">Scientific Constants</h3>
+                <p data-i18n="researchConstantsDescription">Reference constants available directly in the scientific calculator.</p>
+                <div id="research-constants-list" class="research-constants-list"></div>
+              </article>
+            </div>
+            <p class="research-integrity-note" data-i18n="researchIntegrityNote">Research Mode reports its numerical model explicitly. Exact arithmetic is exact for supported rational operations; transcendental and general numerical work uses IEEE-754 double precision unless stated otherwise.</p>
+          </div>
         </section>
 
         <section id="advanced-section" class="page-section">
