@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "../src/science/research-workbench.js";
+import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "../src/science/research-workbench.js";
 
 test("Research Mode exact arithmetic returns exact and decimal forms",()=>{
   const r=runExactResearch("0.1+0.2",80);
@@ -34,4 +34,14 @@ test("Research Mode exposes professor-level Student-t inference",()=>{
   assert.equal(r.df,4);
   assert.ok(r.pValue>=0&&r.pValue<=1);
   assert.equal(r.ci.length,2);
+});
+
+
+test("Research Mode exposes regression and chi-square analysis",()=>{
+  const reg=runLinearRegressionResearch([1,2,3,4,5],[3,5,7,9,11],0.05);
+  assert.equal(reg.kind,"linear-regression");
+  assert.ok(Math.abs(reg.slope-2)<1e-12);
+  const chi=runChiSquareResearch([20,30,50],[25,25,50],0);
+  assert.equal(chi.kind,"chi-square");
+  assert.ok(chi.pValue>=0&&chi.pValue<=1);
 });
