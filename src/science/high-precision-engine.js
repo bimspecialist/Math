@@ -49,6 +49,8 @@ export function rationalToDecimal(r,digits=50){
   return sign+whole.toString()+"."+frac+(rem!==0n?"…":"");
 }
 export function evaluateExactExpression(source,{digits=50}={}){
-  try{const r=new Parser(source).parse();return{kind:"exact",numerator:r.n.toString(),denominator:r.d.toString(),fraction:r.d===1n?r.n.toString():`${r.n}/${r.d}`,decimal:rationalToDecimal(r,digits),digits}}
+  const precision=Number(digits);
+  if(!Number.isInteger(precision)||precision<1||precision>1000)return{kind:"error",code:"INVALID_PRECISION"};
+  try{const r=new Parser(source).parse();return{kind:"exact",numerator:r.n.toString(),denominator:r.d.toString(),fraction:r.d===1n?r.n.toString():`${r.n}/${r.d}`,decimal:rationalToDecimal(r,precision),digits:precision}}
   catch(e){return{kind:"error",code:e?.message||"INVALID_EXPRESSION"}}
 }
