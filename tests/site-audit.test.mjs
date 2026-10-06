@@ -159,3 +159,21 @@ test("professional knowledge libraries are lazy-loaded with deep-link routing pr
   assert.match(app,/await restoreFormulaHashRoute\(\)/);
   assert.match(app,/await openProfessionalFormula\(/);
 });
+
+
+test("Advanced Solver and Research Mode are not part of calculator startup imports",()=>{
+  assert.doesNotMatch(app,/^import .*advanced-solver\.js/m);
+  assert.doesNotMatch(app,/^import .*advanced-result-format\.js/m);
+  assert.doesNotMatch(app,/^import .*research-workbench\.js/m);
+  assert.match(app,/import\("\.\/advanced\/advanced-solver\.js"\)/);
+  assert.match(app,/import\("\.\/advanced\/advanced-result-format\.js"\)/);
+  assert.match(app,/import\("\.\/science\/research-workbench\.js"\)/);
+  assert.match(app,/async function ensureAdvancedTools\(\)/);
+  assert.match(app,/async function ensureResearchWorkbench\(\)/);
+});
+
+test("Research Mode initializes on direct navigation before its section is activated",()=>{
+  assert.match(app,/if\(button\.dataset\.toolTarget==="research"\)await initializeResearchMode\(\)/);
+  assert.match(app,/if\(target==="research"\)await initializeResearchMode\(\)/);
+  assert.match(app,/if\(initialTool==="research"\)await initializeResearchMode\(\)/);
+});
