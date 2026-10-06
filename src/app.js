@@ -3,7 +3,6 @@ import { mountCalculator } from "./calculator/render-calculator.js";
 import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
-import { runMathLabScript, describeMathLabValue } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
@@ -18,6 +17,23 @@ import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula 
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
 import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "./science/research-workbench.js";
+let mathLabEnginePromise=null;
+let mathLabEngine=null;
+async function ensureMathLabEngine(){
+  if(mathLabEngine)return mathLabEngine;
+  if(!mathLabEnginePromise)mathLabEnginePromise=import("./mathlab/math-lab-engine.js").then(mod=>{mathLabEngine=mod;return mod});
+  return mathLabEnginePromise;
+}
+function describeMathLabValueLight(value){
+  if(mathLabEngine?.describeMathLabValue)return mathLabEngine.describeMathLabValue(value);
+  if(typeof value==="number")return{size:"1x1",className:"double",preview:String(value)};
+  if(Array.isArray(value)&&value.every(Array.isArray)){
+    const rows=value.length,cols=value[0]?.length??0;
+    return{size:`${rows}x${cols}`,className:"double",preview:rows===1?"["+value[0].join(", ")+"]":`[${rows}x${cols} double]`};
+  }
+  if(Array.isArray(value))return{size:`1x${value.length}`,className:"double",preview:`[1x${value.length}]`};
+  return{size:"1x1",className:typeof value,preview:String(value)};
+}
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -594,13 +610,15 @@ function renderMathLabWorkspace(){
   if(!mathLabWorkspaceBody)return;
   const entries=Object.entries(mathLabWorkspaceState).sort(([a],[b])=>a.localeCompare(b));
   mathLabWorkspaceBody.innerHTML=entries.length?entries.map(([name,value])=>{
-    const meta=describeMathLabValue(value);
+    const meta=describeMathLabValueLight(value);
     const action=meta.className==="double"?`<button type="button" class="mathlab-row-action" data-mathlab-edit="${escHtml(name)}">${escHtml(translate(locale,"edit"))}</button>`:`<span class="muted">${escHtml(translate(locale,"readOnly"))}</span>`;
     return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td><td>${action}</td></tr>`;
   }).join(""):`<tr><td colspan="5" class="muted">${escHtml(translate(locale,"noVariables"))}</td></tr>`;
 }
-function runMathLab(){
+async function runMathLab(){
   if(!mathLabInput)return;
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"mathLabLoadingEngine");
+  const {runMathLabScript}=await ensureMathLabEngine();
   const script=mathLabInput.value.trim();
   const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState,{runtimeState:mathLabRuntimeState});
   mathLabWorkspaceState={...result.workspace};
@@ -644,7 +662,7 @@ mathLabWorkspaceBody?.addEventListener("click",event=>{
   if(button)openMathLabVariableEditor(button.dataset.mathlabEdit);
 });
 document.querySelector("#mathlab-editor-cancel")?.addEventListener("click",closeMathLabVariableEditor);
-document.querySelector("#mathlab-editor-save")?.addEventListener("click",()=>{
+document.querySelector("#mathlab-editor-save")?.addEventListener("click",async()=>{
   if(!mathLabEditingOriginalName)return;
   const newName=(mathLabEditorName?.value??"").trim();
   if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(newName)){
@@ -655,6 +673,7 @@ document.querySelector("#mathlab-editor-save")?.addEventListener("click",()=>{
     if(mathLabEditorStatus)mathLabEditorStatus.textContent=translate(locale,"variableNameExists");
     return;
   }
+  const {runMathLabScript}=await ensureMathLabEngine();
   const parsed=runMathLabScript("__workspaceEdit = "+(mathLabEditorValue?.value??""),{});
   if(!parsed.ok){
     if(mathLabEditorStatus)mathLabEditorStatus.textContent=formatMathLabError(parsed.error);
