@@ -2,6 +2,7 @@ import { evaluateExactExpression } from "./high-precision-engine.js";
 import { evaluateAndConvertQuantity, evaluateQuantityExpression } from "./quantity-engine.js";
 import { measurement, addMeasurements, subtractMeasurements, multiplyMeasurements, divideMeasurements, formatMeasurement } from "./uncertainty-engine.js";
 import { listScientificConstants } from "./scientific-constants.js";
+import { oneSampleTTest, linearRegression, chiSquareGoodnessOfFit } from "./statistics-research.js";
 
 export function runExactResearch(expression,digits=80){
   return evaluateExactExpression(expression,{digits});
@@ -23,3 +24,7 @@ export function runUncertaintyResearch({a,ua,b,ub,operation="+",correlation=0}){
   }catch(e){return{kind:"error",code:e?.message??"INVALID_INPUT"}}
 }
 export function researchConstants(){return listScientificConstants()}
+
+export function runTTestResearch(data,mu0=0,alpha=0.05){return oneSampleTTest(data,mu0,alpha)}
+export function runLinearRegressionResearch(x,y,alpha=0.05){return linearRegression(x,y,alpha)}
+export function runChiSquareResearch(observed,expected,estimatedParameters=0){return chiSquareGoodnessOfFit(observed,expected,estimatedParameters)}
