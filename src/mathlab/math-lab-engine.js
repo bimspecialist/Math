@@ -534,6 +534,70 @@ function qrDecomposition(value){
   return{Q:clean(Q),R:clean(R)};
 }
 
+function singularValueDecomposition(value){
+  const a=realMatrix(value),[m,n]=matrixShape(a),k=Math.min(m,n);
+  if(Math.max(m,n)>10)throw new Error("SVD_MATRIX_TOO_LARGE");
+  const cleanMatrix=x=>x.map(row=>row.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14))));
+  const orthonormalize=(vectors,length)=>{
+    const out=[];
+    for(const source of vectors){
+      let v=source.slice();
+      for(const q of out){
+        const dot=v.reduce((sum,x,i)=>sum+x*q[i],0);
+        v=v.map((x,i)=>x-dot*q[i]);
+      }
+      let norm=Math.hypot(...v);
+      if(norm<1e-10){
+        for(let basis=0;basis<length&&norm<1e-10;basis++){
+          v=Array.from({length},(_,i)=>i===basis?1:0);
+          for(const q of out){
+            const dot=v.reduce((sum,x,i)=>sum+x*q[i],0);
+            v=v.map((x,i)=>x-dot*q[i]);
+          }
+          norm=Math.hypot(...v);
+        }
+      }
+      if(norm>=1e-10)out.push(v.map(x=>x/norm));
+      if(out.length===k)break;
+    }
+    return out;
+  };
+  let singular,Ucols,Vcols;
+  if(m>=n){
+    const ata=matrixMultiply(transpose(a),a);
+    const pairs=jacobiEigenSymmetric(ata).sort((x,y)=>y.value-x.value).slice(0,k);
+    singular=pairs.map(p=>Math.sqrt(Math.max(0,p.value)));
+    Vcols=orthonormalize(pairs.map(p=>p.vector),n);
+    Ucols=orthonormalize(Vcols.map((v,j)=>{
+      const s=singular[j];
+      if(s<1e-12)return Array(m).fill(0);
+      return a.map(row=>row.reduce((sum,x,i)=>sum+x*v[i],0)/s);
+    }),m);
+  }else{
+    const aat=matrixMultiply(a,transpose(a));
+    const pairs=jacobiEigenSymmetric(aat).sort((x,y)=>y.value-x.value).slice(0,k);
+    singular=pairs.map(p=>Math.sqrt(Math.max(0,p.value)));
+    Ucols=orthonormalize(pairs.map(p=>p.vector),m);
+    Vcols=orthonormalize(Ucols.map((u,j)=>{
+      const s=singular[j];
+      if(s<1e-12)return Array(n).fill(0);
+      return transpose(a).map(row=>row.reduce((sum,x,i)=>sum+x*u[i],0)/s);
+    }),n);
+  }
+  const U=Array.from({length:m},(_,i)=>Array.from({length:k},(_,j)=>Ucols[j]?.[i]??0));
+  const V=Array.from({length:n},(_,i)=>Array.from({length:k},(_,j)=>Vcols[j]?.[i]??0));
+  const S=Array.from({length:k},(_,i)=>Array.from({length:k},(_,j)=>i===j?singular[i]:0));
+  return{U:cleanMatrix(U),S:cleanMatrix(S),V:cleanMatrix(V),singularValues:singular.map(v=>Math.abs(v)<1e-12?0:Number(v.toPrecision(14)))};
+}
+
+function matrixConditionNumber(value){
+  const {singularValues}=singularValueDecomposition(value);
+  if(!singularValues.length)return NaN;
+  const max=Math.max(...singularValues),min=Math.min(...singularValues);
+  if(min<1e-12)return Infinity;
+  return max/min;
+}
+
 function leastSquaresSolve(aValue,bValue){
   const a=realMatrix(aValue),b=realMatrix(bValue);
   const [m,n]=matrixShape(a),[br]=matrixShape(b);
@@ -1524,7 +1588,7 @@ export function describeMathLabValue(value){
 }
 
 const MATHLAB_FUNCTIONS=new Set([
-  "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","chol","rref","solve","linsolve","lstsq",
+  "det","transpose","inv","inverse","pinv","matmul","trace","eig","eigvec","rank","lu","qr","svd","cond","chol","rref","solve","linsolve","lstsq",
   "eye","zeros","ones","linspace","logspace","meshgrid","ndgrid","diag","norm","sum","mean","median","min","max",
   "var","variance","std","cov","corr","corrcoef","prctile","percentile","quantile","dot","cross","reshape","repmat","fliplr","flipud","rot90","kron","blkdiag",
   "polyfit","polyval","polyder","polyint","deconv","roots","complex","real","imag","conj","angle","fft","ifft","fftshift","ifftshift","conv","xcorr","movmean","rms","detrend","trapz","cumtrapz","gradient","interp1","derivative","integral","fzero","rk4","ode4",
@@ -1652,7 +1716,8 @@ function evalCommand(expr,workspace,functions={}){
     if(fn==="eig"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvalues(args[0])}
     if(fn==="eigvec"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return eigenvectors(args[0])}
     if(fn==="rank"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return matrixRank(args[0])}
-    if(fn==="lu"||fn==="qr")throw new Error("MULTIPLE_OUTPUTS_REQUIRED")
+    if(fn==="lu"||fn==="qr"||fn==="svd")throw new Error("MULTIPLE_OUTPUTS_REQUIRED")
+    if(fn==="cond"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return matrixConditionNumber(args[0])}
     if(fn==="chol"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return choleskyDecomposition(args[0])}
     if(fn==="rref"){if(args.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");return reducedRowEchelon(args[0])}
     if(fn==="solve"||fn==="linsolve"){if(args.length!==2)throw new Error("INVALID_ARGUMENT_COUNT");return solveLinearMatrix(args[0],args[1])}
@@ -1888,7 +1953,7 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
     if(!suppressed&&!options.isFunction)outputs.push({line:lineNumber,source:raw,name:targets.join(","),value:targets.map(t=>clone(workspace[t]))});
     return;
   }
-  if(multiAssignment&&["lu","qr"].includes(multiAssignment[2].toLowerCase())){
+  if(multiAssignment&&["lu","qr","svd"].includes(multiAssignment[2].toLowerCase())){
     const name=multiAssignment[2].toLowerCase(),targets=multiAssignment[1].split(",").map(x=>x.trim()).filter(Boolean);
     const argSources=splitArgs(multiAssignment[3]);
     if(argSources.length!==1)throw new Error("INVALID_ARGUMENT_COUNT");
@@ -1898,9 +1963,12 @@ function executeSimpleStatement(source,suppressed,context,lineNumber){
       if(targets.length<2||targets.length>3)throw new Error("INVALID_OUTPUT_COUNT");
       const result=luDecomposition(matrix);
       values=targets.length===2?[matrixMultiply(transpose(result.P),result.L),result.U]:[result.L,result.U,result.P];
-    }else{
+    }else if(name==="qr"){
       if(targets.length!==2)throw new Error("INVALID_OUTPUT_COUNT");
       const result=qrDecomposition(matrix);values=[result.Q,result.R];
+    }else{
+      if(targets.length!==3)throw new Error("INVALID_OUTPUT_COUNT");
+      const result=singularValueDecomposition(matrix);values=[result.U,result.S,result.V];
     }
     targets.forEach((target,i)=>{workspace[target]=clone(values[i])});
     syncScopeState(workspace);

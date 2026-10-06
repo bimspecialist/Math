@@ -17,6 +17,7 @@ import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calcu
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
+import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "./science/research-workbench.js";
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -53,6 +54,7 @@ renderMathLabHistory();
   updateToolHeading(activeTarget);
   syncToolGroupsForContext();
   syncRampDuplicateState();
+  renderResearchConstants();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -130,6 +132,7 @@ const TOOL_TITLE_KEYS=Object.freeze({
   knowledge:"professionalKnowledgeKicker",
   "formula-detail":"formulaCalculatorKicker",
   mathlab:"mathLabTitle",
+  research:"researchTitle",
   converter:"converterTitle",
   graphing:"graphingTitle",
   ramp:"rampTitle",
@@ -976,6 +979,62 @@ function setupConsent(){
   document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableAnalytics()});
   document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
+
+function researchErrorText(code){
+  const translated=translate(locale,String(code??""));
+  return translated===String(code??"")?String(code??"ERROR"):translated;
+}
+function renderResearchConstants(){
+  const root=document.querySelector("#research-constants-list");if(!root)return;
+  root.replaceChildren();
+  for(const item of researchConstants()){
+    const row=document.createElement("div");row.className="research-constant-row";
+    const left=document.createElement("span");left.className="research-constant-symbol";left.textContent=item.symbol;
+    const mid=document.createElement("span");mid.className="research-constant-name";mid.textContent=item.name;
+    const right=document.createElement("code");right.textContent=`${item.value} ${item.unit}`;
+    row.append(left,mid,right);root.append(row);
+  }
+}
+function bindResearchMode(){
+  document.querySelector("#research-exact-run")?.addEventListener("click",()=>{
+    const expr=document.querySelector("#research-exact-input")?.value??"";
+    const digits=Number(document.querySelector("#research-exact-digits")?.value??80);
+    const out=document.querySelector("#research-exact-result"),r=runExactResearch(expr,digits);
+    if(!out)return;
+    out.textContent=r.kind==="exact"?`${r.fraction}\n≈ ${r.decimal}`:researchErrorText(r.code);
+  });
+  document.querySelector("#research-quantity-run")?.addEventListener("click",()=>{
+    const expr=document.querySelector("#research-quantity-input")?.value??"";
+    const target=document.querySelector("#research-quantity-target")?.value??"";
+    const out=document.querySelector("#research-quantity-result"),r=runQuantityResearch(expr,target);
+    if(!out)return;
+    if(r.kind==="quantity-conversion")out.textContent=`${Number(r.value.toPrecision(14))} ${r.unit}  [${r.dimension}]`;
+    else if(r.kind==="quantity")out.textContent=`${Number(r.siValue.toPrecision(14))} SI  [${r.dimension}]`;
+    else out.textContent=researchErrorText(r.code);
+  });
+  document.querySelector("#research-uncertainty-run")?.addEventListener("click",()=>{
+    const value=id=>Number(document.querySelector(id)?.value??0);
+    const operation=document.querySelector("#research-operation")?.value??"+";
+    const out=document.querySelector("#research-uncertainty-result");
+    const r=runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
+    if(out)out.textContent=r.kind==="measurement"?r.formatted:researchErrorText(r.code);
+  });
+  document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
+    const raw=document.querySelector("#research-stats-data")?.value??"";
+    const data=raw.split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+    const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
+    const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
+    const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
+    if(!out)return;
+    if(r.kind==="t-test"){
+      const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
+      out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
+    }else out.textContent=researchErrorText(r.code);
+  });
+  renderResearchConstants();
+}
+bindResearchMode();
+
 setupConsent();
 
 if(!restoreFormulaHashRoute()){
