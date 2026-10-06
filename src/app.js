@@ -1053,7 +1053,7 @@ function bindResearchMode(){
   });
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
     const raw=document.querySelector("#research-stats-data")?.value??"";
-    const data=raw.split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+    const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
     const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
     const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
     const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
@@ -1063,7 +1063,7 @@ function bindResearchMode(){
       out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
     }else out.textContent=researchErrorText(r.code);
   });
-  const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+  const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).filter(Boolean).map(Number);
   document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
     const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
     const alpha=Number(document.querySelector("#research-regression-alpha")?.value??0.05);
