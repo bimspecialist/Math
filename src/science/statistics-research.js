@@ -63,25 +63,36 @@ const cleanData=data=>{
   return values.every(Number.isFinite)?values:null;
 };
 export function oneSampleTTest(data,mu0=0,alpha=0.05){
-  const x=cleanData(data);if(!x||x.length<2||!(alpha>0&&alpha<1))return{kind:"error",code:"INVALID_INPUT"};
+  const x=cleanData(data),nullMean=Number(mu0),level=Number(alpha);
+  if(!x||x.length<2||!Number.isFinite(nullMean)||!(level>0&&level<1))return{kind:"error",code:"INVALID_INPUT"};
   const n=x.length,m=mean(x),variance=sampleVariance(x),sd=Math.sqrt(variance),se=sd/Math.sqrt(n),df=n-1;
   if(se===0)return{kind:"error",code:"ZERO_VARIANCE"};
-  const t=(m-Number(mu0))/se,p=2*(1-studentTCdf(Math.abs(t),df)),critical=studentTInv(1-alpha/2,df),margin=critical*se;
-  return{kind:"t-test",n,mean:m,sd,se,df,t,pValue:p,alpha,confidence:1-alpha,ci:[m-margin,m+margin],reject:p<alpha};
+  const t=(m-nullMean)/se,p=2*(1-studentTCdf(Math.abs(t),df)),critical=studentTInv(1-level/2,df),margin=critical*se;
+  return{kind:"t-test",n,mean:m,sd,se,df,t,pValue:p,alpha:level,confidence:1-level,ci:[m-margin,m+margin],reject:p<level};
 }
 export function linearRegression(xValues,yValues,alpha=0.05){
-  const x=cleanData(xValues),y=cleanData(yValues);if(!x||!y||x.length!==y.length||x.length<3)return{kind:"error",code:"INVALID_INPUT"};
-  const n=x.length,mx=mean(x),my=mean(y),sxx=x.reduce((s,v)=>s+(v-mx)**2,0),sxy=x.reduce((s,v,i)=>s+(v-mx)*(y[i]-my),0);
+  const x=cleanData(xValues),y=cleanData(yValues),level=Number(alpha);
+  if(!x||!y||x.length!==y.length||x.length<3||!(level>0&&level<1))return{kind:"error",code:"INVALID_INPUT"};
+  const n=x.length,mx=mean(x),my=mean(y),sxx=x.reduce((sum,v)=>sum+(v-mx)**2,0),sxy=x.reduce((sum,v,i)=>sum+(v-mx)*(y[i]-my),0);
   if(sxx===0)return{kind:"error",code:"ZERO_VARIANCE"};
   const slope=sxy/sxx,intercept=my-slope*mx,pred=x.map(v=>intercept+slope*v),res=y.map((v,i)=>v-pred[i]);
-  const sse=res.reduce((s,v)=>s+v*v,0),sst=y.reduce((s,v)=>s+(v-my)**2,0),df=n-2,mse=sse/df,r2=sst===0?1:1-sse/sst;
-  const slopeSE=Math.sqrt(mse/sxx),interceptSE=Math.sqrt(mse*(1/n+mx*mx/sxx)),tSlope=slope/slopeSE,pSlope=2*(1-studentTCdf(Math.abs(tSlope),df)),critical=studentTInv(1-alpha/2,df);
-  return{kind:"linear-regression",n,slope,intercept,r2,sse,mse,df,slopeSE,interceptSE,tSlope,pSlope,slopeCI:[slope-critical*slopeSE,slope+critical*slopeSE]};
+  const sse=res.reduce((sum,v)=>sum+v*v,0),sst=y.reduce((sum,v)=>sum+(v-my)**2,0);
+  if(sst===0)return{kind:"error",code:"ZERO_RESPONSE_VARIANCE"};
+  const df=n-2,mse=sse/df,r2=1-sse/sst;
+  const slopeSE=Math.sqrt(mse/sxx),interceptSE=Math.sqrt(mse*(1/n+mx*mx/sxx));
+  const tSlope=slopeSE===0?(slope===0?0:Math.sign(slope)*Infinity):slope/slopeSE;
+  const pSlope=slopeSE===0?(slope===0?1:0):2*(1-studentTCdf(Math.abs(tSlope),df));
+  const critical=studentTInv(1-level/2,df);
+  return{kind:"linear-regression",n,slope,intercept,r2,sse,mse,df,slopeSE,interceptSE,tSlope,pSlope,alpha:level,slopeCI:[slope-critical*slopeSE,slope+critical*slopeSE]};
 }
 export function chiSquareGoodnessOfFit(observed,expected,estimatedParameters=0){
-  const o=cleanData(observed),e=cleanData(expected);if(!o||!e||o.length!==e.length||o.length<2||e.some(v=>v<=0))return{kind:"error",code:"INVALID_INPUT"};
-  const statistic=o.reduce((s,v,i)=>s+(v-e[i])**2/e[i],0),df=o.length-1-Math.max(0,Math.trunc(Number(estimatedParameters)||0));
+  const o=cleanData(observed),e=cleanData(expected),estimated=Number(estimatedParameters);
+  if(!o||!e||o.length!==e.length||o.length<2||o.some(v=>v<0)||e.some(v=>v<=0)||!Number.isInteger(estimated)||estimated<0)return{kind:"error",code:"INVALID_INPUT"};
+  const observedTotal=o.reduce((sum,v)=>sum+v,0),expectedTotal=e.reduce((sum,v)=>sum+v,0);
+  const totalScale=Math.max(1,Math.abs(observedTotal),Math.abs(expectedTotal));
+  if(Math.abs(observedTotal-expectedTotal)>1e-10*totalScale)return{kind:"error",code:"EXPECTED_TOTAL_MISMATCH"};
+  const df=o.length-1-estimated;
   if(df<=0)return{kind:"error",code:"INVALID_DF"};
-  const p=1-chiSquareCdf(statistic,df);
-  return{kind:"chi-square",statistic,df,pValue:p};
+  const statistic=o.reduce((sum,v,i)=>sum+(v-e[i])**2/e[i],0),p=1-chiSquareCdf(statistic,df);
+  return{kind:"chi-square",statistic,df,pValue:p,observedTotal,expectedTotal,estimatedParameters:estimated};
 }
