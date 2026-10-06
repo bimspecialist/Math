@@ -1,39 +1,43 @@
-# Math
+# Math Workspace
 
-Scientific calculator web project with a familiar classic scientific interaction profile and independent branding.
+Browser-based scientific, engineering, and research mathematics workspace with English/Arabic UI. Core calculations run locally in the browser.
 
-## Current calculator work
+## Main workspaces
 
-Development branch: `feature/calculator-behavior-profile`
+- **Scientific Calculator** — natural lecture-style entry, exact fractions, trigonometry, calculus helpers, probability, scientific constants, complex-number mode, and expert functions.
+- **Advanced Solver** — equations, systems, numerical roots, limits, supported symbolic calculus/transforms, and verified polynomial roots through degree 8.
+- **Research Mode** — exact BigInt rational arithmetic, dimension-aware physical quantities, uncertainty propagation, Student-t inference, linear-regression diagnostics, chi-square goodness-of-fit, and scientific constants.
+- **Math Lab** — MATLAB-style numerical workspace with matrices, linear systems, LU/QR/Cholesky/SVD, condition number, pseudoinverse, least squares, FFT, interpolation, polynomial/signal tools, numerical calculus, root finding, and RK4/ODE helpers.
+- **Graphing** — multiple expressions, configurable viewport, discontinuity detection, and robust automatic scaling.
+- **Professional knowledge libraries** — accounting, civil engineering, hydraulics, environmental engineering, design & construction, advanced engineering mathematics, and PMP references.
+- **Utility tools** — unit conversion, programmer calculator, date calculation, and ramp geometry.
 
-Implemented and regression-tested:
-- contract-driven key inventory
-- MODE/SETUP state behavior
-- SHIFT and ALPHA one-shot modifiers
-- vertical Natural Display fractions
-- fraction slot navigation with REPLAY
-- powers, square roots, nth roots
-- CALC/SOLVE state flows
-- exact/fraction ↔ decimal result toggle
-- mixed/improper fraction presentation
-- memory, Ans, DEL, AC, history/replay
-- Arabic RTL shell with LTR mathematics
+## Performance and privacy
 
-Advanced modes such as MATRIX, VECTOR, STAT, TABLE, BASE-N, EQN and CMPLX remain hidden until their complete workflows are implemented and tested.
+Large specialist modules are loaded on demand where practical:
+- Math Lab engine is lazy-loaded on first Math Lab use.
+- Professional knowledge libraries are lazy-loaded on first knowledge-library use, including direct formula deep links.
+
+Google AdSense and optional analytics are gated behind explicit external-services consent. Users can revisit their choice from **Privacy choices** in the footer.
+
+## Accuracy boundaries
+
+- General numerical/transcendental calculations use IEEE-754 double precision unless the UI states otherwise.
+- Research Mode exact rational arithmetic uses BigInt for supported algebraic operations.
+- Research/engineering helpers expose input-domain and dimensional validation but do not replace governing codes, signed engineering design, laboratory procedures, or specialist professional review.
+- Advanced Solver is not a general-purpose CAS equivalent to Mathematica/Maple across all symbolic mathematics.
+- Image/camera input currently provides local preview only; production OCR/math recognition is not connected.
 
 ## Verification
+
+Run the full repository gate:
 
 ```bash
 node scripts/verify-calculator.mjs
 ```
 
-GitHub Pages deployment is gated by this verification command.
+The GitHub Pages workflow runs this command before deployment. The gate executes all `tests/*.test.mjs`, including calculator behavior, lecture regression, scientific accuracy, research statistics, matrix decompositions, engineering/formula libraries, localization, accessibility contracts, privacy controls, startup lazy-loading, and global content integrity.
 
-## Advanced Solver / Math Scan
+## Deployment
 
-The website keeps the UI entry point for image/camera input and advanced solving, but no production OCR/handwriting-recognition or symbolic-solver provider is configured yet. No provider secret is shipped in the static site.
-
-
-## Math Lab
-
-Math Lab is an expanding browser-based numerical workspace, not a MATLAB-compatible runtime. It currently supports persistent session variables, matrix algebra, linear systems, real 2×2 eigen analysis, array constructors, descriptive statistics, vector dot/cross operations, reshape/size helpers, and line-level error diagnostics. Trigonometric functions use radians by default, matching MATLAB-style numerical workflows.
+GitHub Pages deploys from `main` only after the verification job succeeds.
