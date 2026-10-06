@@ -247,6 +247,7 @@ window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
   if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
+  if(target==="knowledge")await initializeProfessionalKnowledge();
   if(target==="research")await initializeResearchMode();
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
@@ -304,6 +305,10 @@ let formulaDetailContext=null;
 let formulaDetailBackTarget="formulas";
 let formulaDetailValues={};
 
+async function initializeProfessionalKnowledge(){
+  await Promise.all([ensureFormulaSupport(),ensureProfessionalLibraries()]);
+  renderProfessionalLibrary();
+}
 async function selectProfessionalLibrary(id){
   await ensureFormulaSupport();
   const {getProfessionalLibrary}=await ensureProfessionalLibraries();
@@ -1161,6 +1166,7 @@ async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
     if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
+    if(initialTool==="knowledge")await initializeProfessionalKnowledge();
     if(initialTool==="research")await initializeResearchMode();
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
     else activateTool("calculator",{updateHash:false,track:false});
