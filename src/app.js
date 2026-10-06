@@ -1143,7 +1143,6 @@ function bindResearchMode(){
       ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
       :researchErrorText(r.code);
   });
-  renderResearchConstants();
 }
 setupConsent();
 
