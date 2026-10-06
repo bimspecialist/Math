@@ -61,3 +61,25 @@ test("Advanced Solver UI exposes one angle mode shared by all solve paths",()=>{
   assert.match(app,/solveAdvancedInput\(advancedInput\?\.value\?\?"",\{angleMode\}\)/);
   assert.match(app,/advancedAngleMode\?\.addEventListener\("change"/);
 });
+
+
+test("Advanced Solver automatically solves cubic equations including complex roots",()=>{
+  const r=solveAdvancedInput("x^3-1=0",{angleMode:"RAD"});
+  assert.equal(r.kind,"solution-set");
+  assert.equal(r.degree,3);
+  assert.equal(r.method,"durand-kerner");
+  assert.equal(r.solutions.length,3);
+  assert.ok(r.solutions.some(x=>typeof x==="number"&&Math.abs(x-1)<1e-9));
+  const complex=r.solutions.filter(x=>typeof x==="string");
+  assert.equal(complex.length,2);
+  assert.ok(complex.every(x=>x.includes("i")));
+});
+
+test("Advanced Solver automatically solves quartics with real roots",()=>{
+  const r=solveAdvancedInput("x^4-5*x^2+4=0",{angleMode:"RAD"});
+  assert.equal(r.kind,"solution-set");
+  assert.equal(r.degree,4);
+  const roots=r.solutions.filter(x=>typeof x==="number").sort((a,b)=>a-b);
+  assert.equal(roots.length,4);
+  for(const [actual,expected] of roots.map((x,i)=>[x,[-2,-1,1,2][i]]))assert.ok(Math.abs(actual-expected)<1e-8);
+});

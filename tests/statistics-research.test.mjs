@@ -34,3 +34,10 @@ test("chi-square distribution and goodness-of-fit are bounded",()=>{
   assert.equal(r.kind,"chi-square");
   assert.ok(r.pValue>=0&&r.pValue<=1);
 });
+
+
+test("research statistics reject invalid tokens instead of silently dropping them",()=>{
+  assert.deepEqual(oneSampleTTest([10,Number.NaN,11],10,0.05),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(linearRegression([1,2,Number.NaN],[2,4,6]),{kind:"error",code:"INVALID_INPUT"});
+  assert.deepEqual(chiSquareGoodnessOfFit([10,20,Number.NaN],[10,20,30]),{kind:"error",code:"INVALID_INPUT"});
+});

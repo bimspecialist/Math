@@ -1,8 +1,6 @@
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5386218928692257"
-     crossorigin="anonymous"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#eef2f5">
@@ -33,7 +31,7 @@
   }
   </script>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
-  <link rel="stylesheet" href="./styles/calculator.css?v=20260929-1600">
+  <link rel="stylesheet" href="./styles/calculator.css?v=20261006-1">
   <link rel="stylesheet" href="./styles/ui-quality.css?v=20261001-3">
 </head>
 <body>
@@ -53,7 +51,7 @@
     </header>
 
     <div class="workspace-shell">
-      <aside id="tool-sidebar" class="tool-sidebar" aria-label="Math tools">
+      <aside id="tool-sidebar" class="tool-sidebar" data-i18n-aria-label="mathTools" aria-label="Math tools">
         <div class="tool-search">
           <label for="tool-search" class="sr-only" data-i18n="toolSearchLabel">Search tools</label>
           <input id="tool-search" type="search" data-i18n-placeholder="toolSearchPlaceholder" placeholder="Search tools..." autocomplete="off">
@@ -170,6 +168,24 @@
                 </div>
                 <button id="research-stats-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
                 <output id="research-stats-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
+              <article class="research-card">
+                <h3 data-i18n="researchRegressionTitle">Linear Regression Diagnostics</h3>
+                <p data-i18n="researchRegressionDescription">Fit y = a + bx and report R², standard error, p-value, and confidence interval for the slope.</p>
+                <label><span data-i18n="researchXData">X data</span><input id="research-regression-x" dir="ltr" value="1,2,3,4,5"></label>
+                <label><span data-i18n="researchYData">Y data</span><input id="research-regression-y" dir="ltr" value="3,5,7,9,11"></label>
+                <label><span data-i18n="researchAlpha">Alpha α</span><input id="research-regression-alpha" type="number" min="0.0001" max="0.5" step="0.001" value="0.05"></label>
+                <button id="research-regression-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-regression-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
+              <article class="research-card">
+                <h3 data-i18n="researchChiSquareTitle">Chi-square Goodness of Fit</h3>
+                <p data-i18n="researchChiSquareDescription">Compare observed and expected counts and report χ², degrees of freedom, and p-value.</p>
+                <label><span data-i18n="researchObservedData">Observed counts</span><input id="research-chi-observed" dir="ltr" value="20,30,50"></label>
+                <label><span data-i18n="researchExpectedData">Expected counts</span><input id="research-chi-expected" dir="ltr" value="25,25,50"></label>
+                <label><span data-i18n="researchEstimatedParameters">Estimated parameters</span><input id="research-chi-estimated" type="number" min="0" step="1" value="0"></label>
+                <button id="research-chi-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-chi-result" class="research-result" dir="ltr" aria-live="polite"></output>
               </article>
               <article class="research-card research-constants-card">
                 <h3 data-i18n="researchConstantsTitle">Scientific Constants</h3>
@@ -552,6 +568,8 @@ b</textarea></label>
     <footer class="site-footer">
       <a href="https://bimspecialist.github.io/privacy.html" data-i18n="privacyPolicy">Privacy Policy</a>
       <span aria-hidden="true">·</span>
+      <button id="privacy-choices" type="button" class="footer-link-button" data-i18n="privacyChoices">Privacy choices</button>
+      <span aria-hidden="true">·</span>
       <a href="https://bimspecialist.github.io/" data-i18n="publisherHome">Publisher home</a>
     </footer>
 
@@ -566,5 +584,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20260929-1600"></script>
+<script type="module" src="./src/app.js?v=20261006-1"></script>
 </body></html>

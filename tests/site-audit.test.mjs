@@ -124,3 +124,38 @@ test("tool search hides unmatched items and empty groups without removing naviga
   assert.match(app,/group\.hidden=groupVisible===0/);
   assert.match(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
 });
+
+
+test("heavy Math Lab engine is lazy-loaded instead of part of startup imports",()=>{
+  assert.doesNotMatch(app,/^import .*math-lab-engine\.js/m);
+  assert.match(app,/import\("\.\/mathlab\/math-lab-engine\.js"\)/);
+  assert.match(app,/async function ensureMathLabEngine\(\)/);
+});
+
+test("dynamic expert calculator headings are localized in both languages",()=>{
+  for(const key of ["expertConstants","expertProbability","expertCalculus","expertComplex","mathLabLoadingEngine","mathTools"]){
+    assert.ok(UI_STRINGS.en[key],"missing English key: "+key);
+    assert.ok(UI_STRINGS.ar[key],"missing Arabic key: "+key);
+  }
+  assert.match(render,/translate\(locale,"expertConstants"\)/);
+  assert.match(render,/translate\(locale,"expertProbability"\)/);
+  assert.match(render,/translate\(locale,"expertCalculus"\)/);
+  assert.match(render,/translate\(locale,"expertComplex"\)/);
+});
+
+test("accessibility quality layer protects focus and reduced motion",()=>{
+  const css=readFileSync(new URL("../styles/ui-quality.css",import.meta.url),"utf8");
+  assert.match(css,/:focus-visible/);
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(index,/data-i18n-aria-label="mathTools"/);
+});
+
+
+test("professional knowledge libraries are lazy-loaded with deep-link routing preserved",()=>{
+  assert.doesNotMatch(app,/^import .*professional-libraries\.js/m);
+  assert.match(app,/import\("\.\/knowledge\/professional-libraries\.js"\)/);
+  assert.match(app,/async function ensureProfessionalLibraries\(\)/);
+  assert.match(app,/async function restoreFormulaHashRoute\(\)/);
+  assert.match(app,/await restoreFormulaHashRoute\(\)/);
+  assert.match(app,/await openProfessionalFormula\(/);
+});

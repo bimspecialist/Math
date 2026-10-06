@@ -66,7 +66,83 @@ function quadraticRoots({a,b,c}){
   return{roots:[`${re}-${imag}`,`${re}+${imag}`],degree:2,complex:true};
 }
 
+function polynomialDifference(left,right,variable){
+  try{
+    const a=parsePolynomial(left,variable),b=parsePolynomial(right,variable),out=new Map(a);
+    for(const [e,v] of b)out.set(e,(out.get(e)??0)-v);
+    for(const [e,v] of [...out])if(Math.abs(v)<1e-12)out.delete(e);
+    return out;
+  }catch{return null}
+}
+const cx=(re=0,im=0)=>({re,im});
+const cxSub=(a,b)=>cx(a.re-b.re,a.im-b.im);
+const cxMul=(a,b)=>cx(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+function cxDiv(a,b){
+  const d=b.re*b.re+b.im*b.im;
+  if(d<1e-30)return null;
+  return cx((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d);
+}
+const cxAbs=z=>Math.hypot(z.re,z.im);
+function evalPolynomialComplex(coeffs,z){
+  let out=cx(coeffs[0],0);
+  for(let i=1;i<coeffs.length;i++)out=cxSub(cxMul(out,z),cx(-coeffs[i],0));
+  return out;
+}
+function formatComplexRoot(z){
+  const re=Math.abs(z.re)<1e-9?0:Number(z.re.toPrecision(12));
+  const im=Math.abs(z.im)<1e-9?0:Number(z.im.toPrecision(12));
+  if(im===0)return re;
+  const mag=Math.abs(im)===1?"i":`${Math.abs(im)}i`;
+  if(re===0)return im<0?"-"+mag:mag;
+  return `${re}${im<0?"-":"+"}${mag}`;
+}
+function solveParsedPolynomial(poly){
+  if(!poly)return null;
+  const degree=Math.max(0,...poly.keys());
+  if(degree===0){
+    const c=poly.get(0)??0;
+    return Math.abs(c)<EPS?{all:true}:{none:true};
+  }
+  if(degree>8)return null;
+  const coeffs=Array.from({length:degree+1},(_,i)=>poly.get(degree-i)??0);
+  const lead=coeffs[0];
+  if(Math.abs(lead)<EPS)return null;
+  for(let i=0;i<coeffs.length;i++)coeffs[i]/=lead;
+  if(degree===1)return{roots:[clean(-coeffs[1])],degree:1};
+  if(degree===2)return quadraticRoots({a:1,b:coeffs[1],c:coeffs[2]});
+  const radius=1+Math.max(...coeffs.slice(1).map(Math.abs));
+  let roots=Array.from({length:degree},(_,k)=>{
+    const theta=2*Math.PI*(k+.35)/degree;
+    return cx(radius*Math.cos(theta),radius*Math.sin(theta));
+  });
+  for(let iter=0;iter<600;iter++){
+    let maxDelta=0;
+    const next=roots.map((root,i)=>{
+      let denom=cx(1,0);
+      for(let j=0;j<roots.length;j++)if(i!==j)denom=cxMul(denom,cxSub(root,roots[j]));
+      if(cxAbs(denom)<1e-18)denom=cxMul(denom,cx(1,1e-6));
+      const delta=cxDiv(evalPolynomialComplex(coeffs,root),denom);
+      if(!delta)return root;
+      maxDelta=Math.max(maxDelta,cxAbs(delta));
+      return cxSub(root,delta);
+    });
+    roots=next;
+    if(maxDelta<1e-12)break;
+  }
+  const scale=1+coeffs.reduce((s,v)=>s+Math.abs(v),0);
+  if(roots.some(z=>cxAbs(evalPolynomialComplex(coeffs,z))>1e-6*scale))return null;
+  roots=roots.map(z=>({re:Math.abs(z.re)<1e-9?0:z.re,im:Math.abs(z.im)<1e-9?0:z.im}))
+    .sort((a,b)=>Math.abs(a.im)-Math.abs(b.im)||a.re-b.re||a.im-b.im);
+  return{roots:roots.map(formatComplexRoot),degree,complex:roots.some(z=>z.im!==0)};
+}
+
 function solveSingleEquation(left,right,variable,angleMode="RAD"){
+  const parsed=solveParsedPolynomial(polynomialDifference(left,right,variable));
+  if(parsed){
+    if(parsed.all)return{kind:"identity",variables:[variable]};
+    if(parsed.none)return{kind:"error",code:"NO_SOLUTION",variables:[variable]};
+    return{kind:"solution-set",variable,solutions:parsed.roots,degree:parsed.degree,complex:Boolean(parsed.complex),method:parsed.degree>2?"durand-kerner":"closed-form"};
+  }
   const f=differenceFunction(left,right,[variable],angleMode);
   const poly=inferQuadratic(x=>f([x]));
   if(poly){

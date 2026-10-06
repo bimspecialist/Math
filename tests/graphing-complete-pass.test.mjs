@@ -37,3 +37,14 @@ test("Graphing UI exposes accessible viewport controls and reset action",()=>{
   assert.match(app,/p\.breakBefore/);
   assert.match(app,/graph-tick-label/);
 });
+
+
+test("Graphing auto bounds are not dominated by finite spikes beside asymptotes",()=>{
+  const r=sampleGraphExpression("tan(x)",{minX:1.4,maxX:1.75,points:401});
+  assert.equal(r.ok,true);
+  const bounds=resolveGraphYBounds(r.samples,{});
+  assert.equal(bounds.ok,true);
+  assert.equal(bounds.auto,true);
+  assert.ok(bounds.maxY<50,"upper auto bound should ignore asymptote-adjacent spikes");
+  assert.ok(bounds.minY>-50,"lower auto bound should ignore asymptote-adjacent spikes");
+});

@@ -377,6 +377,8 @@ html[dir="rtl"] .tool-item.active{box-shadow:inset -3px 0 var(--focus)}
 .workspace-info-grid p{margin:0;color:var(--muted);line-height:1.6}
 .site-footer{max-width:1000px;margin:14px auto 0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
 .site-footer a{color:inherit;text-underline-offset:3px}
+.footer-link-button{border:0;background:transparent;color:inherit;padding:0;font:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.footer-link-button:hover{color:var(--text)}
 .empty-state{grid-column:1/-1;margin:0;padding:24px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);text-align:center}
 @media(max-width:800px){.workspace-info-grid{grid-template-columns:1fr}.workspace-info{padding:14px}}
 

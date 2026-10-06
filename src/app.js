@@ -3,7 +3,6 @@ import { mountCalculator } from "./calculator/render-calculator.js";
 import { solveAdvancedInput } from "./advanced/advanced-solver.js";
 import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
 import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
-import { runMathLabScript, describeMathLabValue } from "./mathlab/math-lab-engine.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
@@ -14,10 +13,33 @@ import { initAdSense } from "./monetization/adsense.js";
 import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
-import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "./science/research-workbench.js";
+import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "./science/research-workbench.js";
+let professionalLibrariesPromise=null;
+let professionalLibrariesModule=null;
+async function ensureProfessionalLibraries(){
+  if(professionalLibrariesModule)return professionalLibrariesModule;
+  if(!professionalLibrariesPromise)professionalLibrariesPromise=import("./knowledge/professional-libraries.js").then(mod=>{professionalLibrariesModule=mod;return mod});
+  return professionalLibrariesPromise;
+}
+let mathLabEnginePromise=null;
+let mathLabEngine=null;
+async function ensureMathLabEngine(){
+  if(mathLabEngine)return mathLabEngine;
+  if(!mathLabEnginePromise)mathLabEnginePromise=import("./mathlab/math-lab-engine.js").then(mod=>{mathLabEngine=mod;return mod});
+  return mathLabEnginePromise;
+}
+function describeMathLabValueLight(value){
+  if(mathLabEngine?.describeMathLabValue)return mathLabEngine.describeMathLabValue(value);
+  if(typeof value==="number")return{size:"1x1",className:"double",preview:String(value)};
+  if(Array.isArray(value)&&value.every(Array.isArray)){
+    const rows=value.length,cols=value[0]?.length??0;
+    return{size:`${rows}x${cols}`,className:"double",preview:rows===1?"["+value[0].join(", ")+"]":`[${rows}x${cols} double]`};
+  }
+  if(Array.isArray(value))return{size:`1x${value.length}`,className:"double",preview:`[1x${value.length}]`};
+  return{size:"1x1",className:typeof value,preview:String(value)};
+}
 const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
@@ -180,9 +202,9 @@ calculatorRoot?.addEventListener("calculator-mode-route",event=>{
 
 document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.setAttribute("aria-pressed",String(button.classList.contains("active")));
-  button.addEventListener("click",()=>{
+  button.addEventListener("click",async()=>{
     if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
-    if(button.dataset.knowledgeLibrary)selectProfessionalLibrary(button.dataset.knowledgeLibrary);
+    if(button.dataset.knowledgeLibrary)await selectProfessionalLibrary(button.dataset.knowledgeLibrary);
     activateTool(button.dataset.toolTarget);
   });
 });
@@ -197,8 +219,8 @@ document.addEventListener("keydown",event=>{
     closeToolSidebar({restoreFocus:true});
   }
 });
-window.addEventListener("hashchange",()=>{
-  if(restoreFormulaHashRoute())return;
+window.addEventListener("hashchange",async()=>{
+  if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
@@ -255,7 +277,8 @@ let formulaDetailContext=null;
 let formulaDetailBackTarget="formulas";
 let formulaDetailValues={};
 
-function selectProfessionalLibrary(id){
+async function selectProfessionalLibrary(id){
+  const {getProfessionalLibrary}=await ensureProfessionalLibraries();
   if(!getProfessionalLibrary(id))return;
   activeKnowledgeLibrary=id;
   activeKnowledgeTopic="";
@@ -264,6 +287,8 @@ function selectProfessionalLibrary(id){
   renderProfessionalLibrary();
 }
 function renderProfessionalLibrary(){
+  if(!professionalLibrariesModule)return;
+  const {getProfessionalLibrary,PROFESSIONAL_LIBRARIES}=professionalLibrariesModule;
   const library=getProfessionalLibrary(activeKnowledgeLibrary)??PROFESSIONAL_LIBRARIES[0];
   const title=document.querySelector("#knowledge-title");
   const description=document.querySelector("#knowledge-description");
@@ -308,7 +333,8 @@ function formulaHashForContext(context=formulaDetailContext){
   if(context.kind==="professional")return`#formula/professional/${encodeURIComponent(context.libraryId)}/${encodeURIComponent(context.formulaId)}`;
   return`#formula/reference/${encodeURIComponent(context.formulaId)}`;
 }
-function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
+async function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
+  const {getProfessionalFormula}=await ensureProfessionalLibraries();
   const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return false;
   activeKnowledgeLibrary=libraryId;
   formulaDetailContext={kind:"professional",libraryId,formulaId};
@@ -330,18 +356,18 @@ function openReferenceFormula(formulaId,{fromHash=false}={}){
   if(!fromHash)history.replaceState(null,"",formulaHashForContext());
   return true;
 }
-function restoreFormulaHashRoute(){
+async function restoreFormulaHashRoute(){
   const raw=decodeURIComponent(window.location.hash.slice(1));
   const parts=raw.split("/");
   if(parts[0]!=="formula")return false;
-  if(parts[1]==="professional"&&parts[2]&&parts[3])return openProfessionalFormula(parts[2],parts[3],{fromHash:true});
+  if(parts[1]==="professional"&&parts[2]&&parts[3])return await openProfessionalFormula(parts[2],parts[3],{fromHash:true});
   if(parts[1]==="reference"&&parts[2])return openReferenceFormula(parts[2],{fromHash:true});
   return false;
 }
 function currentFormulaDetail(){
   if(!formulaDetailContext)return null;
   if(formulaDetailContext.kind==="professional"){
-    const formula=getProfessionalFormula(formulaDetailContext.libraryId,formulaDetailContext.formulaId);
+    const formula=professionalLibrariesModule?.getProfessionalFormula(formulaDetailContext.libraryId,formulaDetailContext.formulaId);
     if(!formula)return null;
     return{
       title:locale==="ar"?formula.titleAr:formula.titleEn,
@@ -521,7 +547,7 @@ document.querySelector("#knowledge-search")?.addEventListener("input",renderProf
 document.querySelector("#knowledge-topic")?.addEventListener("change",event=>{activeKnowledgeTopic=event.currentTarget.value;renderProfessionalLibrary()});
 renderFormulaCategories();
 renderFormulaLibrary();
-renderProfessionalLibrary();
+/* Professional library is loaded on first use. */
 
 const mathLabInput=document.querySelector("#mathlab-input");
 const mathLabOutput=document.querySelector("#mathlab-output");
@@ -594,13 +620,15 @@ function renderMathLabWorkspace(){
   if(!mathLabWorkspaceBody)return;
   const entries=Object.entries(mathLabWorkspaceState).sort(([a],[b])=>a.localeCompare(b));
   mathLabWorkspaceBody.innerHTML=entries.length?entries.map(([name,value])=>{
-    const meta=describeMathLabValue(value);
+    const meta=describeMathLabValueLight(value);
     const action=meta.className==="double"?`<button type="button" class="mathlab-row-action" data-mathlab-edit="${escHtml(name)}">${escHtml(translate(locale,"edit"))}</button>`:`<span class="muted">${escHtml(translate(locale,"readOnly"))}</span>`;
     return `<tr><td><strong>${escHtml(name)}</strong></td><td><code dir="ltr">${escHtml(meta.preview)}</code></td><td dir="ltr">${escHtml(meta.size)}</td><td dir="ltr">${escHtml(meta.className)}</td><td>${action}</td></tr>`;
   }).join(""):`<tr><td colspan="5" class="muted">${escHtml(translate(locale,"noVariables"))}</td></tr>`;
 }
-function runMathLab(){
+async function runMathLab(){
   if(!mathLabInput)return;
+  if(mathLabStatus)mathLabStatus.textContent=translate(locale,"mathLabLoadingEngine");
+  const {runMathLabScript}=await ensureMathLabEngine();
   const script=mathLabInput.value.trim();
   const result=runMathLabScript(mathLabInput.value,mathLabWorkspaceState,{runtimeState:mathLabRuntimeState});
   mathLabWorkspaceState={...result.workspace};
@@ -644,7 +672,7 @@ mathLabWorkspaceBody?.addEventListener("click",event=>{
   if(button)openMathLabVariableEditor(button.dataset.mathlabEdit);
 });
 document.querySelector("#mathlab-editor-cancel")?.addEventListener("click",closeMathLabVariableEditor);
-document.querySelector("#mathlab-editor-save")?.addEventListener("click",()=>{
+document.querySelector("#mathlab-editor-save")?.addEventListener("click",async()=>{
   if(!mathLabEditingOriginalName)return;
   const newName=(mathLabEditorName?.value??"").trim();
   if(!/^[A-Za-z][A-Za-z0-9_]*$/.test(newName)){
@@ -655,6 +683,7 @@ document.querySelector("#mathlab-editor-save")?.addEventListener("click",()=>{
     if(mathLabEditorStatus)mathLabEditorStatus.textContent=translate(locale,"variableNameExists");
     return;
   }
+  const {runMathLabScript}=await ensureMathLabEngine();
   const parsed=runMathLabScript("__workspaceEdit = "+(mathLabEditorValue?.value??""),{});
   if(!parsed.ok){
     if(mathLabEditorStatus)mathLabEditorStatus.textContent=formatMathLabError(parsed.error);
@@ -964,20 +993,51 @@ for(const el of [rampDesignRise,rampSlopeType,rampSlopeValue,rampDesignUnit])el?
 updateRampCalculator();
 updateRampDesign();
 
-const CONSENT_KEY="math.analytics-consent";
-function enableAnalytics(){
+const CONSENT_KEY="math.external-services-consent";
+const LEGACY_CONSENT_KEY="math.analytics-consent";
+let externalServicesEnabled=false;
+function hasExternalServices(){
+  return Boolean(SITE_CONFIG.adsense.client||SITE_CONFIG.analytics.measurementId);
+}
+function enableExternalServices(){
+  initAdSense(SITE_CONFIG.adsense);
   initGoogleAnalytics(SITE_CONFIG.analytics);
+  externalServicesEnabled=true;
 }
 function setupConsent(){
-  initAdSense(SITE_CONFIG.adsense);
-  const banner=document.querySelector("#consent-banner");if(!banner)return;
-  if(!SITE_CONFIG.analytics.measurementId)return;
-  let choice=null;try{choice=localStorage.getItem(CONSENT_KEY)}catch{}
-  if(choice==="accepted"){enableAnalytics();return}
+  const banner=document.querySelector("#consent-banner");
+  const choices=document.querySelector("#privacy-choices");
+  if(!hasExternalServices()){
+    if(choices)choices.hidden=true;
+    return;
+  }
+  if(!banner)return;
+  const persist=value=>{try{localStorage.setItem(CONSENT_KEY,value)}catch{}};
+  const showChoices=()=>{banner.hidden=false;document.querySelector("#consent-reject")?.focus()};
+  choices?.addEventListener("click",showChoices);
+  document.querySelector("#consent-accept")?.addEventListener("click",()=>{
+    persist("accepted");banner.hidden=true;
+    if(!externalServicesEnabled)enableExternalServices();
+  });
+  document.querySelector("#consent-reject")?.addEventListener("click",()=>{
+    const requiresReload=externalServicesEnabled;
+    persist("rejected");banner.hidden=true;
+    if(requiresReload)window.location.reload();
+  });
+  let choice=null;
+  try{
+    choice=localStorage.getItem(CONSENT_KEY);
+    if(!choice){
+      const legacy=localStorage.getItem(LEGACY_CONSENT_KEY);
+      if(legacy==="accepted"||legacy==="rejected"){
+        choice=legacy;
+        localStorage.setItem(CONSENT_KEY,legacy);
+      }
+    }
+  }catch{}
+  if(choice==="accepted"){enableExternalServices();return}
   if(choice==="rejected")return;
   banner.hidden=false;
-  document.querySelector("#consent-accept")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"accepted")}catch{};banner.hidden=true;enableAnalytics()});
-  document.querySelector("#consent-reject")?.addEventListener("click",()=>{try{localStorage.setItem(CONSENT_KEY,"rejected")}catch{};banner.hidden=true});
 }
 
 function researchErrorText(code){
@@ -1021,7 +1081,7 @@ function bindResearchMode(){
   });
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
     const raw=document.querySelector("#research-stats-data")?.value??"";
-    const data=raw.split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+    const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
     const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
     const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
     const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
@@ -1031,14 +1091,37 @@ function bindResearchMode(){
       out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
     }else out.textContent=researchErrorText(r.code);
   });
+  const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).filter(Boolean).map(Number);
+  document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
+    const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
+    const alpha=Number(document.querySelector("#research-regression-alpha")?.value??0.05);
+    const out=document.querySelector("#research-regression-result"),r=runLinearRegressionResearch(x,y,alpha);
+    if(!out)return;
+    if(r.kind==="linear-regression"){
+      const ci=`[${Number(r.slopeCI[0].toPrecision(10))}, ${Number(r.slopeCI[1].toPrecision(10))}]`;
+      out.textContent=`n=${r.n}\ny = ${Number(r.intercept.toPrecision(10))} + ${Number(r.slope.toPrecision(10))}x\nR²=${Number(r.r2.toPrecision(10))}\nslope SE=${Number(r.slopeSE.toPrecision(10))}\nt=${Number(r.tSlope.toPrecision(10))}, df=${r.df}\np=${Number(r.pSlope.toPrecision(10))}\nslope CI=${ci}`;
+    }else out.textContent=researchErrorText(r.code);
+  });
+  document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
+    const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
+    const estimated=Number(document.querySelector("#research-chi-estimated")?.value??0);
+    const out=document.querySelector("#research-chi-result"),r=runChiSquareResearch(observed,expected,estimated);
+    if(!out)return;
+    out.textContent=r.kind==="chi-square"
+      ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
+      :researchErrorText(r.code);
+  });
   renderResearchConstants();
 }
 bindResearchMode();
 
 setupConsent();
 
-if(!restoreFormulaHashRoute()){
-  const initialTool=decodeURIComponent(window.location.hash.slice(1));
-  if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
-  else activateTool("calculator",{updateHash:false,track:false});
+async function initializeRoute(){
+  if(!(await restoreFormulaHashRoute())){
+    const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
+    else activateTool("calculator",{updateHash:false,track:false});
+  }
 }
+initializeRoute();

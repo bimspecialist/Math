@@ -57,16 +57,20 @@ function regularizedGammaP(a,x){
 export function chiSquareCdf(x,df){return x<0||!(df>0)?NaN:regularizedGammaP(df/2,x/2)}
 const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
 const sampleVariance=a=>{if(a.length<2)return NaN;const m=mean(a);return a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)};
-const cleanData=data=>data.map(Number).filter(Number.isFinite);
+const cleanData=data=>{
+  if(!Array.isArray(data))return null;
+  const values=data.map(Number);
+  return values.every(Number.isFinite)?values:null;
+};
 export function oneSampleTTest(data,mu0=0,alpha=0.05){
-  const x=cleanData(data);if(x.length<2||!(alpha>0&&alpha<1))return{kind:"error",code:"INVALID_INPUT"};
+  const x=cleanData(data);if(!x||x.length<2||!(alpha>0&&alpha<1))return{kind:"error",code:"INVALID_INPUT"};
   const n=x.length,m=mean(x),variance=sampleVariance(x),sd=Math.sqrt(variance),se=sd/Math.sqrt(n),df=n-1;
   if(se===0)return{kind:"error",code:"ZERO_VARIANCE"};
   const t=(m-Number(mu0))/se,p=2*(1-studentTCdf(Math.abs(t),df)),critical=studentTInv(1-alpha/2,df),margin=critical*se;
   return{kind:"t-test",n,mean:m,sd,se,df,t,pValue:p,alpha,confidence:1-alpha,ci:[m-margin,m+margin],reject:p<alpha};
 }
 export function linearRegression(xValues,yValues,alpha=0.05){
-  const x=cleanData(xValues),y=cleanData(yValues);if(x.length!==y.length||x.length<3)return{kind:"error",code:"INVALID_INPUT"};
+  const x=cleanData(xValues),y=cleanData(yValues);if(!x||!y||x.length!==y.length||x.length<3)return{kind:"error",code:"INVALID_INPUT"};
   const n=x.length,mx=mean(x),my=mean(y),sxx=x.reduce((s,v)=>s+(v-mx)**2,0),sxy=x.reduce((s,v,i)=>s+(v-mx)*(y[i]-my),0);
   if(sxx===0)return{kind:"error",code:"ZERO_VARIANCE"};
   const slope=sxy/sxx,intercept=my-slope*mx,pred=x.map(v=>intercept+slope*v),res=y.map((v,i)=>v-pred[i]);
@@ -75,7 +79,7 @@ export function linearRegression(xValues,yValues,alpha=0.05){
   return{kind:"linear-regression",n,slope,intercept,r2,sse,mse,df,slopeSE,interceptSE,tSlope,pSlope,slopeCI:[slope-critical*slopeSE,slope+critical*slopeSE]};
 }
 export function chiSquareGoodnessOfFit(observed,expected,estimatedParameters=0){
-  const o=cleanData(observed),e=cleanData(expected);if(o.length!==e.length||o.length<2||e.some(v=>v<=0))return{kind:"error",code:"INVALID_INPUT"};
+  const o=cleanData(observed),e=cleanData(expected);if(!o||!e||o.length!==e.length||o.length<2||e.some(v=>v<=0))return{kind:"error",code:"INVALID_INPUT"};
   const statistic=o.reduce((s,v,i)=>s+(v-e[i])**2/e[i],0),df=o.length-1-Math.max(0,Math.trunc(Number(estimatedParameters)||0));
   if(df<=0)return{kind:"error",code:"INVALID_DF"};
   const p=1-chiSquareCdf(statistic,df);
