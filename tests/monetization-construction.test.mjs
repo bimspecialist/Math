@@ -54,6 +54,7 @@ test("site exposes monetization-ready ad placements, analytics consent, favicon,
   assert.match(index,/data-ad-placement="outer-right"/);
   assert.match(index,/data-ad-placement="bottom-main"/);
   assert.match(index,/id="consent-banner"/);
+  assert.match(index,/id="privacy-choices"/);
   assert.match(index,/data-tool-target="categories"/);
   assert.match(index,/id="categories-section"/);
   assert.match(index,/data-tool-target="ramp"/);
@@ -91,6 +92,8 @@ test("local consent banner gates both advertising and analytics behind opt-in",(
   const setup=app.slice(app.indexOf("function setupConsent()"),app.indexOf("function researchErrorText"));
   assert.doesNotMatch(setup,/initAdSense\(SITE_CONFIG\.adsense\)/);
   assert.match(setup,/choice==="accepted"\)\{enableExternalServices\(\)/);
+  assert.match(setup,/privacy-choices/);
+  assert.match(setup,/window\.location\.reload\(\)/);
 });
 
 
