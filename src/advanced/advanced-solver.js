@@ -524,7 +524,19 @@ export function solveAdvancedInput(source,{angleMode="RAD"}={}){
   if(!hasEquals){
     if(vars.length===0)return evaluateExpression(source,{angleMode,ans:"0"});
     if(vars.length===1){
-      const variable=vars[0],poly=inferQuadratic(x=>{
+      const variable=vars[0];
+      try{
+        const parsed=parsePolynomial(source,variable);
+        const degree=Math.max(0,...parsed.keys());
+        if(degree>2&&degree<=8){
+          const solved=solveParsedPolynomial(parsed);
+          if(solved)return{
+            kind:"expression-analysis",expression:source,variable,degree:solved.degree??degree,
+            roots:solved.roots??[],complex:Boolean(solved.complex),method:"durand-kerner"
+          };
+        }
+      }catch{}
+      const poly=inferQuadratic(x=>{
         const r=evalNumeric(source,[variable],[x],angleMode);return r.kind==="value"?r.numeric:NaN;
       });
       if(!poly)return{kind:"error",code:"SYMBOLIC_ANALYSIS_PENDING",variables:vars};
