@@ -74,7 +74,7 @@ test("Math Lab decomposition functions reject complex matrices explicitly",()=>{
 
 
 test("Math Lab SVD reconstructs rectangular matrices and preserves orthogonality",()=>{
-  const r=runMathLabScript("A=[3 1;1 3;1 1]\n[U,S,V]=svd(A)\nB=U*S*V'\nIU=U'*U\nIV=V'*V\nk=cond(A)");
+  const r=runMathLabScript("A=[3 1;1 3;1 1]\n[U,S,V]=svd(A)\nB=U*S*transpose(V)\nIU=transpose(U)*U\nIV=transpose(V)*V\nk=cond(A)");
   assert.equal(r.ok,true);
   approxMatrix(r.workspace.B,[[3,1],[1,3],[1,1]],1e-7);
   approxMatrix(r.workspace.IU,[[1,0],[0,1]],1e-7);
