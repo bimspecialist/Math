@@ -117,3 +117,14 @@ z = recurse(1)`;
   assert.equal(r.ok,false);
   assert.equal(r.error.message,"FUNCTION_CALL_DEPTH_LIMIT");
 });
+
+
+test("Math Lab keeps bounded allocation and sampling budgets",()=>{
+  let r=runMathLabScript("A=zeros(101,2)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_MATRIX_SIZE");
+
+  r=runMathLabScript("x=linspace(0,1,10001)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_SAMPLE_COUNT");
+});
