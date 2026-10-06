@@ -16,7 +16,7 @@ import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calcu
 import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch } from "./science/research-workbench.js";
+import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "./science/research-workbench.js";
 let mathLabEnginePromise=null;
 let mathLabEngine=null;
 async function ensureMathLabEngine(){
@@ -1062,6 +1062,26 @@ function bindResearchMode(){
       const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
       out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
     }else out.textContent=researchErrorText(r.code);
+  });
+  const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).map(Number).filter(Number.isFinite);
+  document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
+    const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
+    const alpha=Number(document.querySelector("#research-regression-alpha")?.value??0.05);
+    const out=document.querySelector("#research-regression-result"),r=runLinearRegressionResearch(x,y,alpha);
+    if(!out)return;
+    if(r.kind==="linear-regression"){
+      const ci=`[${Number(r.slopeCI[0].toPrecision(10))}, ${Number(r.slopeCI[1].toPrecision(10))}]`;
+      out.textContent=`n=${r.n}\ny = ${Number(r.intercept.toPrecision(10))} + ${Number(r.slope.toPrecision(10))}x\nR²=${Number(r.r2.toPrecision(10))}\nslope SE=${Number(r.slopeSE.toPrecision(10))}\nt=${Number(r.tSlope.toPrecision(10))}, df=${r.df}\np=${Number(r.pSlope.toPrecision(10))}\nslope CI=${ci}`;
+    }else out.textContent=researchErrorText(r.code);
+  });
+  document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
+    const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
+    const estimated=Number(document.querySelector("#research-chi-estimated")?.value??0);
+    const out=document.querySelector("#research-chi-result"),r=runChiSquareResearch(observed,expected,estimated);
+    if(!out)return;
+    out.textContent=r.kind==="chi-square"
+      ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
+      :researchErrorText(r.code);
   });
   renderResearchConstants();
 }
