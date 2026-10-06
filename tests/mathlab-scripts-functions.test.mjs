@@ -106,3 +106,25 @@ test("Math Lab workspace editor exposes edit rename save delete controls",()=>{
   assert.match(app,/data-mathlab-edit/);
   assert.match(app,/workspaceVariableSaved/);
 });
+
+
+test("Math Lab bounds recursive user-function depth with a controlled error",()=>{
+  const script=`function y = recurse(x)
+y = recurse(x);
+end
+z = recurse(1)`;
+  const r=runMathLabScript(script);
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"FUNCTION_CALL_DEPTH_LIMIT");
+});
+
+
+test("Math Lab keeps bounded allocation and sampling budgets",()=>{
+  let r=runMathLabScript("A=zeros(101,2)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_MATRIX_SIZE");
+
+  r=runMathLabScript("x=linspace(0,1,10001)");
+  assert.equal(r.ok,false);
+  assert.equal(r.error.message,"INVALID_SAMPLE_COUNT");
+});

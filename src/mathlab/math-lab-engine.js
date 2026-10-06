@@ -47,6 +47,8 @@ function scalarCos(value){
 }
 const MAX_RANGE_ITEMS=10000;
 const MAX_LOOP_ITERATIONS=10000;
+const MAX_FUNCTION_CALL_DEPTH=100;
+let activeFunctionCallDepth=0;
 const scopeMetadata=new WeakMap();
 function cloneRecord(record={}){
   const out={};for(const [key,value] of Object.entries(record))out[key]=clone(value);return out;
@@ -1626,16 +1628,22 @@ function invokeFunctionHandleValues(handle,args,functions){
 }
 function invokeUserFunction(fn,argSources,callerWorkspace,functions,requestedOutputs=1){
   if(argSources.length!==fn.params.length)throw new Error("INVALID_ARGUMENT_COUNT");
-  const local={nargin:argSources.length,nargout:requestedOutputs};
-  fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
-  const callerMeta=scopeFor(callerWorkspace);
-  const result=runMathLabScript(fn.body,local,{functions,isFunction:true,runtimeState:callerMeta?.runtimeState,currentFunction:fn.name});
-  if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
-  const values=fn.outputs.map(output=>{
-    if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
-    return clone(result.workspace[output]);
-  });
-  return{values,workspace:result.workspace};
+  if(activeFunctionCallDepth>=MAX_FUNCTION_CALL_DEPTH)throw new Error("FUNCTION_CALL_DEPTH_LIMIT");
+  activeFunctionCallDepth++;
+  try{
+    const local={nargin:argSources.length,nargout:requestedOutputs};
+    fn.params.forEach((param,i)=>{local[param]=clone(evalValue(argSources[i],callerWorkspace,functions))});
+    const callerMeta=scopeFor(callerWorkspace);
+    const result=runMathLabScript(fn.body,local,{functions,isFunction:true,runtimeState:callerMeta?.runtimeState,currentFunction:fn.name});
+    if(!result.ok)throw new Error(result.error?.message??"FUNCTION_EXECUTION_ERROR");
+    const values=fn.outputs.map(output=>{
+      if(!Object.prototype.hasOwnProperty.call(result.workspace,output))throw new Error("FUNCTION_OUTPUT_NOT_ASSIGNED");
+      return clone(result.workspace[output]);
+    });
+    return{values,workspace:result.workspace};
+  }finally{
+    activeFunctionCallDepth--;
+  }
 }
 
 function evalValue(source,workspace,functions={}){

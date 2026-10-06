@@ -103,10 +103,16 @@ test("active tool updates the visible and document headings",()=>{
 });
 
 
-test("image preview lifecycle revokes replaced object URLs",()=>{
-  assert.match(app,/let scanPreviewUrl=null/);
+test("image preview lifecycle validates type and size and revokes replaced object URLs",()=>{
+  assert.match(app,/const MAX_SCAN_IMAGE_BYTES=15\*1024\*1024/);
+  assert.match(app,/function clearScanPreview\(\)/);
   assert.match(app,/URL\.revokeObjectURL\(scanPreviewUrl\)/);
   assert.match(app,/String\(file\.type\|\|""\)\.startsWith\("image\/"\)/);
+  assert.match(app,/Number\(file\.size\)>MAX_SCAN_IMAGE_BYTES/);
+  assert.match(app,/scanInvalidType/);
+  assert.match(app,/scanFileTooLarge/);
+  assert.ok(UI_STRINGS.en.scanInvalidType&&UI_STRINGS.ar.scanInvalidType);
+  assert.ok(UI_STRINGS.en.scanFileTooLarge&&UI_STRINGS.ar.scanFileTooLarge);
 });
 
 
@@ -119,10 +125,11 @@ test("tool sidebar supports localized search and keyboard shortcut",()=>{
   assert.match(app,/toolSearch\?\.focus\(\)/);
 });
 
-test("tool search hides unmatched items and empty groups without removing navigation",()=>{
+test("tool search hides unmatched items and empty groups without forcing formula modules into startup",()=>{
   assert.match(app,/item\.hidden=!matches/);
   assert.match(app,/group\.hidden=groupVisible===0/);
-  assert.match(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
+  assert.match(app,/filterToolNavigation\(\)/);
+  assert.doesNotMatch(app,/filterToolNavigation\(\);\s*renderFormulaCategories/);
 });
 
 
@@ -158,4 +165,39 @@ test("professional knowledge libraries are lazy-loaded with deep-link routing pr
   assert.match(app,/async function restoreFormulaHashRoute\(\)/);
   assert.match(app,/await restoreFormulaHashRoute\(\)/);
   assert.match(app,/await openProfessionalFormula\(/);
+});
+
+
+test("Advanced Solver and Research Mode are not part of calculator startup imports",()=>{
+  assert.doesNotMatch(app,/^import .*advanced-solver\.js/m);
+  assert.doesNotMatch(app,/^import .*advanced-result-format\.js/m);
+  assert.doesNotMatch(app,/^import .*research-workbench\.js/m);
+  assert.match(app,/import\("\.\/advanced\/advanced-solver\.js"\)/);
+  assert.match(app,/import\("\.\/advanced\/advanced-result-format\.js"\)/);
+  assert.match(app,/import\("\.\/science\/research-workbench\.js"\)/);
+  assert.match(app,/async function ensureAdvancedTools\(\)/);
+  assert.match(app,/async function ensureResearchWorkbench\(\)/);
+});
+
+test("Research Mode initializes on direct navigation before its section is activated",()=>{
+  assert.match(app,/if\(button\.dataset\.toolTarget==="research"\)await initializeResearchMode\(\)/);
+  assert.match(app,/if\(target==="research"\)await initializeResearchMode\(\)/);
+  assert.match(app,/if\(initialTool==="research"\)await initializeResearchMode\(\)/);
+});
+
+
+test("reference formula data and explanations are lazy-loaded with direct routes preserved",()=>{
+  assert.doesNotMatch(app,/^import .*formula-library\.js/m);
+  assert.doesNotMatch(app,/^import .*formula-explanations\.js/m);
+  assert.match(app,/import\("\.\/formulas\/formula-library\.js"\)/);
+  assert.match(app,/import\("\.\/knowledge\/formula-explanations\.js"\)/);
+  assert.match(app,/async function ensureFormulaSupport\(\)/);
+  assert.match(app,/async function openReferenceFormula\(/);
+  assert.match(app,/await openReferenceFormula\(parts\[2\],\{fromHash:true\}\)/);
+});
+
+test("knowledge and formula sections initialize before direct hash activation",()=>{
+  assert.match(app,/if\(target==="formulas"\)\{await ensureFormulaSupport\(\);renderFormulaCategories\(\);renderFormulaLibrary\(\);\}/);
+  assert.match(app,/if\(target==="knowledge"\)await initializeProfessionalKnowledge\(\)/);
+  assert.match(app,/if\(initialTool==="knowledge"\)await initializeProfessionalKnowledge\(\)/);
 });

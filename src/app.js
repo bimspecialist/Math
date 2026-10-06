@@ -1,8 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
-import { solveAdvancedInput } from "./advanced/advanced-solver.js";
-import { formatAdvancedResult } from "./advanced/advanced-result-format.js";
-import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
@@ -14,8 +11,33 @@ import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analyt
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
-import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
-import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "./science/research-workbench.js";
+let formulaSupportPromise=null;
+let formulaSupportModule=null;
+async function ensureFormulaSupport(){
+  if(formulaSupportModule)return formulaSupportModule;
+  if(!formulaSupportPromise)formulaSupportPromise=Promise.all([
+    import("./formulas/formula-library.js"),
+    import("./knowledge/formula-explanations.js")
+  ]).then(([formulas,explanations])=>{formulaSupportModule={...formulas,...explanations};return formulaSupportModule});
+  return formulaSupportPromise;
+}
+let advancedToolsPromise=null;
+let advancedToolsModule=null;
+async function ensureAdvancedTools(){
+  if(advancedToolsModule)return advancedToolsModule;
+  if(!advancedToolsPromise)advancedToolsPromise=Promise.all([
+    import("./advanced/advanced-solver.js"),
+    import("./advanced/advanced-result-format.js")
+  ]).then(([solver,format])=>{advancedToolsModule={...solver,...format};return advancedToolsModule});
+  return advancedToolsPromise;
+}
+let researchWorkbenchPromise=null;
+let researchWorkbenchModule=null;
+async function ensureResearchWorkbench(){
+  if(researchWorkbenchModule)return researchWorkbenchModule;
+  if(!researchWorkbenchPromise)researchWorkbenchPromise=import("./science/research-workbench.js").then(mod=>{researchWorkbenchModule=mod;return mod});
+  return researchWorkbenchPromise;
+}
 let professionalLibrariesPromise=null;
 let professionalLibrariesModule=null;
 async function ensureProfessionalLibraries(){
@@ -58,8 +80,7 @@ function applyLocale(nextLocale){
   if(langToggle)langToggle.textContent=locale==="en"?"AR":"EN";
   mounted.setLocale(locale);
   filterToolNavigation();
-  renderFormulaCategories();
-  renderFormulaLibrary();
+  if(formulaSupportModule){renderFormulaCategories();renderFormulaLibrary();}
   renderProfessionalLibrary();
   renderMathLabWorkspace();
 renderMathLabHistory();
@@ -70,13 +91,13 @@ renderMathLabHistory();
   renderCalculatorCategories();
   selectConverterCategory(activeConverterCategory);
   updateDateCalculator();
-  if(lastAdvancedResult&&advancedResult)advancedResult.textContent=formatAdvancedResult(lastAdvancedResult,locale);
+  if(lastAdvancedResult&&advancedResult&&advancedToolsModule)advancedResult.textContent=advancedToolsModule.formatAdvancedResult(lastAdvancedResult,locale);
   const activeSection=document.querySelector(".page-section.active");
   const activeTarget=activeSection?.id?.replace(/-section$/,"")||document.querySelector("[data-tool-target].active")?.dataset.toolTarget||"calculator";
   updateToolHeading(activeTarget);
   syncToolGroupsForContext();
   syncRampDuplicateState();
-  renderResearchConstants();
+  if(researchWorkbenchModule)renderResearchConstants();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -205,6 +226,9 @@ document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.addEventListener("click",async()=>{
     if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
     if(button.dataset.knowledgeLibrary)await selectProfessionalLibrary(button.dataset.knowledgeLibrary);
+    if(button.dataset.toolTarget==="formulas")await ensureFormulaSupport();
+    if(button.dataset.toolTarget==="research")await initializeResearchMode();
+    if(button.dataset.toolTarget==="formulas"){renderFormulaCategories();renderFormulaLibrary();}
     activateTool(button.dataset.toolTarget);
   });
 });
@@ -222,19 +246,40 @@ document.addEventListener("keydown",event=>{
 window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
+  if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
+  if(target==="knowledge")await initializeProfessionalKnowledge();
+  if(target==="research")await initializeResearchMode();
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
+const MAX_SCAN_IMAGE_BYTES=15*1024*1024;
 let scanPreviewUrl=null;
-function handleImage(file){
-  if(!file||!String(file.type||"").startsWith("image/"))return;
-  const preview=document.querySelector("#scan-preview");if(!preview)return;
+function clearScanPreview(){
+  const preview=document.querySelector("#scan-preview");
   if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl);
+  scanPreviewUrl=null;
+  if(preview){preview.removeAttribute("src");preview.hidden=true}
+}
+function handleImage(file){
+  if(!file)return;
+  const note=document.querySelector("#scan-note");
+  if(!String(file.type||"").startsWith("image/")){
+    clearScanPreview();
+    if(note)note.textContent=translate(locale,"scanInvalidType");
+    return;
+  }
+  if(Number(file.size)>MAX_SCAN_IMAGE_BYTES){
+    clearScanPreview();
+    if(note)note.textContent=translate(locale,"scanFileTooLarge");
+    return;
+  }
+  const preview=document.querySelector("#scan-preview");if(!preview)return;
+  clearScanPreview();
   scanPreviewUrl=URL.createObjectURL(file);
   preview.src=scanPreviewUrl;
   preview.hidden=false;
-  document.querySelector("#scan-note").textContent=translate(locale,"scanSelected");
+  if(note)note.textContent=translate(locale,"scanSelected");
 }
-window.addEventListener("pagehide",()=>{if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl)},{once:true});
+window.addEventListener("pagehide",clearScanPreview,{once:true});
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 document.querySelector("#camera-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 
@@ -243,7 +288,8 @@ const advancedResult=document.querySelector("#advanced-result");
 const advancedAngleMode=document.querySelector("#advanced-angle-mode");
 const advancedResultMeta=document.querySelector("#advanced-result-meta");
 let lastAdvancedResult=null;
-function runAdvancedSolver(){
+async function runAdvancedSolver(){
+  const {solveAdvancedInput,formatAdvancedResult}=await ensureAdvancedTools();
   const angleMode=advancedAngleMode?.value??"RAD";
   const result=solveAdvancedInput(advancedInput?.value??"",{angleMode});
   lastAdvancedResult=result;
@@ -277,7 +323,12 @@ let formulaDetailContext=null;
 let formulaDetailBackTarget="formulas";
 let formulaDetailValues={};
 
+async function initializeProfessionalKnowledge(){
+  await Promise.all([ensureFormulaSupport(),ensureProfessionalLibraries()]);
+  renderProfessionalLibrary();
+}
 async function selectProfessionalLibrary(id){
+  await ensureFormulaSupport();
   const {getProfessionalLibrary}=await ensureProfessionalLibraries();
   if(!getProfessionalLibrary(id))return;
   activeKnowledgeLibrary=id;
@@ -311,8 +362,8 @@ function renderProfessionalLibrary(){
   const rows=library.formulas.filter(formula=>{
     if(activeKnowledgeTopic&&formula.topicEn!==activeKnowledgeTopic)return false;
     if(!q)return true;
-    const explanationEn=professionalFormulaExplanation(library.id,formula.id,"en");
-    const explanationAr=professionalFormulaExplanation(library.id,formula.id,"ar");
+    const explanationEn=formulaSupportModule?.professionalFormulaExplanation?.(library.id,formula.id,"en")??"";
+    const explanationAr=formulaSupportModule?.professionalFormulaExplanation?.(library.id,formula.id,"ar")??"";
     const hay=[formula.titleEn,formula.titleAr,formula.formulaEn,formula.formulaAr,formula.topicEn,formula.topicAr,explanationEn,explanationAr].join(" ").toLowerCase();
     return hay.includes(q);
   });
@@ -334,6 +385,7 @@ function formulaHashForContext(context=formulaDetailContext){
   return`#formula/reference/${encodeURIComponent(context.formulaId)}`;
 }
 async function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
+  await ensureFormulaSupport();
   const {getProfessionalFormula}=await ensureProfessionalLibraries();
   const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return false;
   activeKnowledgeLibrary=libraryId;
@@ -346,7 +398,8 @@ async function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
   if(!fromHash)history.replaceState(null,"",formulaHashForContext());
   return true;
 }
-function openReferenceFormula(formulaId,{fromHash=false}={}){
+async function openReferenceFormula(formulaId,{fromHash=false}={}){
+  const {FORMULAS}=await ensureFormulaSupport();
   const formula=FORMULAS.find(x=>x.id===formulaId);if(!formula)return false;
   formulaDetailContext={kind:"reference",formulaId};
   formulaDetailBackTarget="formulas";
@@ -361,7 +414,7 @@ async function restoreFormulaHashRoute(){
   const parts=raw.split("/");
   if(parts[0]!=="formula")return false;
   if(parts[1]==="professional"&&parts[2]&&parts[3])return await openProfessionalFormula(parts[2],parts[3],{fromHash:true});
-  if(parts[1]==="reference"&&parts[2])return openReferenceFormula(parts[2],{fromHash:true});
+  if(parts[1]==="reference"&&parts[2])return await openReferenceFormula(parts[2],{fromHash:true});
   return false;
 }
 function currentFormulaDetail(){
@@ -372,19 +425,19 @@ function currentFormulaDetail(){
     return{
       title:locale==="ar"?formula.titleAr:formula.titleEn,
       description:"",
-      explanation:professionalFormulaExplanation(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale),
+      explanation:formulaSupportModule?.professionalFormulaExplanation?.(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale)??"",
       expression:formula.formulaEn,
       variables:formula.variables,
       professional:formula,
       calculator:formula
     };
   }
-  const formula=FORMULAS.find(x=>x.id===formulaDetailContext.formulaId);
+  const formula=formulaSupportModule?.FORMULAS?.find(x=>x.id===formulaDetailContext.formulaId);
   if(!formula)return null;
   return{
     title:locale==="ar"?formula.titleAr:formula.titleEn,
     description:locale==="ar"?formula.descriptionAr:formula.descriptionEn,
-    explanation:referenceFormulaExplanation(formula,locale),
+    explanation:formulaSupportModule?.referenceFormulaExplanation?.(formula,locale)??"",
     expression:formula.formula,
     variables:formula.calculator?.variables??inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
     professional:null,
@@ -515,7 +568,7 @@ function renderFormulaCategories(){
   if(!select)return;
   const selected=select.value||"all";
   select.innerHTML="";
-  for(const category of FORMULA_CATEGORIES){
+  for(const category of formulaSupportModule?.FORMULA_CATEGORIES??[]){
     const option=document.createElement("option");
     option.value=category.id;
     option.textContent=locale==="ar"?category.labelAr:category.labelEn;
@@ -530,7 +583,7 @@ function renderFormulaLibrary(){
   const count=document.querySelector("#formula-count");
   if(!select||!grid)return;
   if(!select.options.length)renderFormulaCategories();
-  const rows=filterFormulas({category:select.value||"all",query:search?.value??""});
+  const rows=formulaSupportModule?.filterFormulas?.({category:select.value||"all",query:search?.value??""})??[];
   grid.innerHTML=rows.length?rows.map(x=>{
     const title=locale==="ar"?x.titleAr:x.titleEn;
     const secondary=locale==="ar"?x.titleEn:x.titleAr;
@@ -545,9 +598,7 @@ document.querySelector("#formula-search")?.addEventListener("input",renderFormul
 document.querySelector("#formula-category")?.addEventListener("change",renderFormulaLibrary);
 document.querySelector("#knowledge-search")?.addEventListener("input",renderProfessionalLibrary);
 document.querySelector("#knowledge-topic")?.addEventListener("change",event=>{activeKnowledgeTopic=event.currentTarget.value;renderProfessionalLibrary()});
-renderFormulaCategories();
-renderFormulaLibrary();
-/* Professional library is loaded on first use. */
+/* Formula and professional libraries are loaded on first use. */
 
 const mathLabInput=document.querySelector("#mathlab-input");
 const mathLabOutput=document.querySelector("#mathlab-output");
@@ -1029,9 +1080,9 @@ function setupConsent(){
     choice=localStorage.getItem(CONSENT_KEY);
     if(!choice){
       const legacy=localStorage.getItem(LEGACY_CONSENT_KEY);
-      if(legacy==="accepted"||legacy==="rejected"){
-        choice=legacy;
-        localStorage.setItem(CONSENT_KEY,legacy);
+      if(legacy==="rejected"){
+        choice="rejected";
+        localStorage.setItem(CONSENT_KEY,"rejected");
       }
     }
   }catch{}
@@ -1047,7 +1098,7 @@ function researchErrorText(code){
 function renderResearchConstants(){
   const root=document.querySelector("#research-constants-list");if(!root)return;
   root.replaceChildren();
-  for(const item of researchConstants()){
+  for(const item of researchWorkbenchModule?.researchConstants?.()??[]){
     const row=document.createElement("div");row.className="research-constant-row";
     const left=document.createElement("span");left.className="research-constant-symbol";left.textContent=item.symbol;
     const mid=document.createElement("span");mid.className="research-constant-name";mid.textContent=item.name;
@@ -1055,36 +1106,51 @@ function renderResearchConstants(){
     row.append(left,mid,right);root.append(row);
   }
 }
+function researchNumber(id){
+  const raw=String(document.querySelector(id)?.value??"").trim();
+  if(!raw)return Number.NaN;
+  const value=Number(raw);
+  return Number.isFinite(value)?value:Number.NaN;
+}
+let researchModeBound=false;
+async function initializeResearchMode(){
+  await ensureResearchWorkbench();
+  if(!researchModeBound){
+    bindResearchMode();
+    researchModeBound=true;
+  }
+  renderResearchConstants();
+}
 function bindResearchMode(){
   document.querySelector("#research-exact-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-exact-input")?.value??"";
     const digits=Number(document.querySelector("#research-exact-digits")?.value??80);
-    const out=document.querySelector("#research-exact-result"),r=runExactResearch(expr,digits);
+    const out=document.querySelector("#research-exact-result"),r=researchWorkbenchModule.runExactResearch(expr,digits);
     if(!out)return;
     out.textContent=r.kind==="exact"?`${r.fraction}\n≈ ${r.decimal}`:researchErrorText(r.code);
   });
   document.querySelector("#research-quantity-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-quantity-input")?.value??"";
     const target=document.querySelector("#research-quantity-target")?.value??"";
-    const out=document.querySelector("#research-quantity-result"),r=runQuantityResearch(expr,target);
+    const out=document.querySelector("#research-quantity-result"),r=researchWorkbenchModule.runQuantityResearch(expr,target);
     if(!out)return;
     if(r.kind==="quantity-conversion")out.textContent=`${Number(r.value.toPrecision(14))} ${r.unit}  [${r.dimension}]`;
     else if(r.kind==="quantity")out.textContent=`${Number(r.siValue.toPrecision(14))} SI  [${r.dimension}]`;
     else out.textContent=researchErrorText(r.code);
   });
   document.querySelector("#research-uncertainty-run")?.addEventListener("click",()=>{
-    const value=id=>Number(document.querySelector(id)?.value??0);
+    const value=id=>researchNumber(id);
     const operation=document.querySelector("#research-operation")?.value??"+";
     const out=document.querySelector("#research-uncertainty-result");
-    const r=runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
+    const r=researchWorkbenchModule.runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
     if(out)out.textContent=r.kind==="measurement"?r.formatted:researchErrorText(r.code);
   });
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
     const raw=document.querySelector("#research-stats-data")?.value??"";
     const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
-    const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
-    const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
-    const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
+    const mu0=researchNumber("#research-stats-mu0");
+    const alpha=researchNumber("#research-stats-alpha");
+    const out=document.querySelector("#research-stats-result"),r=researchWorkbenchModule.runTTestResearch(data,mu0,alpha);
     if(!out)return;
     if(r.kind==="t-test"){
       const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
@@ -1094,8 +1160,8 @@ function bindResearchMode(){
   const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).filter(Boolean).map(Number);
   document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
     const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
-    const alpha=Number(document.querySelector("#research-regression-alpha")?.value??0.05);
-    const out=document.querySelector("#research-regression-result"),r=runLinearRegressionResearch(x,y,alpha);
+    const alpha=researchNumber("#research-regression-alpha");
+    const out=document.querySelector("#research-regression-result"),r=researchWorkbenchModule.runLinearRegressionResearch(x,y,alpha);
     if(!out)return;
     if(r.kind==="linear-regression"){
       const ci=`[${Number(r.slopeCI[0].toPrecision(10))}, ${Number(r.slopeCI[1].toPrecision(10))}]`;
@@ -1104,22 +1170,22 @@ function bindResearchMode(){
   });
   document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
     const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
-    const estimated=Number(document.querySelector("#research-chi-estimated")?.value??0);
-    const out=document.querySelector("#research-chi-result"),r=runChiSquareResearch(observed,expected,estimated);
+    const estimated=researchNumber("#research-chi-estimated");
+    const out=document.querySelector("#research-chi-result"),r=researchWorkbenchModule.runChiSquareResearch(observed,expected,estimated);
     if(!out)return;
     out.textContent=r.kind==="chi-square"
       ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
       :researchErrorText(r.code);
   });
-  renderResearchConstants();
 }
-bindResearchMode();
-
 setupConsent();
 
 async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
+    if(initialTool==="knowledge")await initializeProfessionalKnowledge();
+    if(initialTool==="research")await initializeResearchMode();
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
     else activateTool("calculator",{updateHash:false,track:false});
   }

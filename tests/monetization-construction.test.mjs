@@ -103,3 +103,12 @@ test("manual ad containers can remain as reserved zones until real slot ids are 
   assert.equal(SITE_CONFIG.adsense.showReservedSlots,true);
   assert.match(source,/container\.hidden=false/);
 });
+
+
+test("legacy analytics acceptance does not automatically authorize advertising",()=>{
+  const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
+  const setup=app.slice(app.indexOf("function setupConsent()"),app.indexOf("function researchErrorText"));
+  assert.match(setup,/if\(legacy==="rejected"\)/);
+  assert.doesNotMatch(setup,/legacy==="accepted"\|\|legacy==="rejected"/);
+  assert.doesNotMatch(setup,/localStorage\.setItem\(CONSENT_KEY,legacy\)/);
+});

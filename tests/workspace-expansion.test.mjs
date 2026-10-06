@@ -444,8 +444,8 @@ test("professional knowledge libraries support localized search and empty result
   const app=readFileSync(new URL("../src/app.js",import.meta.url),"utf8");
   assert.match(index,/id="knowledge-search"/);
   assert.match(index,/id="knowledge-count"/);
-  assert.match(app,/professionalFormulaExplanation\(library\.id,formula\.id,"en"\)/);
-  assert.match(app,/professionalFormulaExplanation\(library\.id,formula\.id,"ar"\)/);
+  assert.match(app,/formulaSupportModule\?\.professionalFormulaExplanation\?\.\(library\.id,formula\.id,"en"\)/);
+  assert.match(app,/formulaSupportModule\?\.professionalFormulaExplanation\?\.\(library\.id,formula\.id,"ar"\)/);
   assert.match(app,/knowledgeNoResults/);
   assert.match(app,/knowledge-search[^\n]*addEventListener\("input",renderProfessionalLibrary\)/);
 });

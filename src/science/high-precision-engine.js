@@ -1,3 +1,4 @@
+const MAX_EXACT_EXPONENT=10000;
 const gcd=(a,b)=>{a=a<0n?-a:a;b=b<0n?-b:b;while(b){[a,b]=[b,a%b]}return a||1n};
 const norm=(n,d)=>{if(d===0n)throw new Error("DIVISION_BY_ZERO");if(d<0n){n=-n;d=-d}const g=gcd(n,d);return{n:n/g,d:d/g}};
 const add=(a,b)=>norm(a.n*b.d+b.n*a.d,a.d*b.d);
@@ -9,6 +10,7 @@ function fromDecimal(raw){
   let s=String(raw).trim(),sign=1n;if(s.startsWith("-")){sign=-1n;s=s.slice(1)}else if(s.startsWith("+"))s=s.slice(1);
   const m=s.match(/^(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/);if(!m)throw new Error("INVALID_NUMBER");
   const whole=m[1]||"0",frac=m[2]||"",exp=Number(m[3]||0);
+  if(!Number.isSafeInteger(exp)||Math.abs(exp)>MAX_EXACT_EXPONENT)throw new Error("NUMBER_EXPONENT_TOO_LARGE");
   let digits=(whole+frac).replace(/^0+(?=\d)/,"")||"0",scale=frac.length-exp;
   let n=BigInt(digits)*sign,d=1n;
   if(scale>0)d=10n**BigInt(scale);else if(scale<0)n*=10n**BigInt(-scale);
@@ -37,7 +39,7 @@ class Parser{
   add(){let v=this.mul();while(this.peek().t==="op"&&["+","-"].includes(this.peek().v)){const op=this.take().v,r=this.mul();v=op==="+"?add(v,r):sub(v,r)}return v}
   mul(){let v=this.unary();while(this.peek().t==="op"&&["*","/"].includes(this.peek().v)){const op=this.take().v,r=this.unary();v=op==="*"?mul(v,r):div(v,r)}return v}
   unary(){if(this.peek().t==="op"&&["+","-"].includes(this.peek().v)){const op=this.take().v,v=this.unary();return op==="-"?{n:-v.n,d:v.d}:v}return this.power()}
-  power(){let v=this.primary();if(this.peek().t==="op"&&this.peek().v==="^"){this.take();const p=this.unary();if(p.d!==1n)throw new Error("INTEGER_POWER_REQUIRED");const pn=Number(p.n);if(!Number.isSafeInteger(pn))throw new Error("POWER_TOO_LARGE");v=pow(v,pn)}return v}
+  power(){let v=this.primary();if(this.peek().t==="op"&&this.peek().v==="^"){this.take();const p=this.unary();if(p.d!==1n)throw new Error("INTEGER_POWER_REQUIRED");const pn=Number(p.n);if(!Number.isSafeInteger(pn)||Math.abs(pn)>MAX_EXACT_EXPONENT)throw new Error("POWER_TOO_LARGE");v=pow(v,pn)}return v}
   primary(){const t=this.take();if(t.t==="num")return fromDecimal(t.v);if(t.t==="("){const v=this.add();if(this.take().t!==")")throw new Error("INVALID_EXPRESSION");return v}throw new Error("INVALID_EXPRESSION")}
 }
 export function rationalToDecimal(r,digits=50){
@@ -49,6 +51,8 @@ export function rationalToDecimal(r,digits=50){
   return sign+whole.toString()+"."+frac+(rem!==0n?"…":"");
 }
 export function evaluateExactExpression(source,{digits=50}={}){
-  try{const r=new Parser(source).parse();return{kind:"exact",numerator:r.n.toString(),denominator:r.d.toString(),fraction:r.d===1n?r.n.toString():`${r.n}/${r.d}`,decimal:rationalToDecimal(r,digits),digits}}
+  const precision=Number(digits);
+  if(!Number.isInteger(precision)||precision<1||precision>1000)return{kind:"error",code:"INVALID_PRECISION"};
+  try{const r=new Parser(source).parse();return{kind:"exact",numerator:r.n.toString(),denominator:r.d.toString(),fraction:r.d===1n?r.n.toString():`${r.n}/${r.d}`,decimal:rationalToDecimal(r,precision),digits:precision}}
   catch(e){return{kind:"error",code:e?.message||"INVALID_EXPRESSION"}}
 }
