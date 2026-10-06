@@ -33,3 +33,9 @@ test("measurement formatting follows uncertainty precision",()=>{
 test("uncertainty engine rejects negative standard uncertainty",()=>{
   assert.throws(()=>measurement(10,-0.2),/INVALID_UNCERTAINTY/);
 });
+
+
+test("sqrt uncertainty handles exact zero but rejects nonzero uncertainty at the singular derivative",()=>{
+  assert.deepEqual(unaryMeasurement(measurement(0,0),"sqrt"),{value:0,uncertainty:0});
+  assert.throws(()=>unaryMeasurement(measurement(0,0.1),"sqrt"),/DOMAIN_ERROR/);
+});
