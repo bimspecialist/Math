@@ -13,10 +13,16 @@ import { initAdSense } from "./monetization/adsense.js";
 import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
-import { PROFESSIONAL_LIBRARIES, getProfessionalLibrary, getProfessionalFormula } from "./knowledge/professional-libraries.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
 import { runExactResearch, runQuantityResearch, runUncertaintyResearch, researchConstants, runTTestResearch, runLinearRegressionResearch, runChiSquareResearch } from "./science/research-workbench.js";
+let professionalLibrariesPromise=null;
+let professionalLibrariesModule=null;
+async function ensureProfessionalLibraries(){
+  if(professionalLibrariesModule)return professionalLibrariesModule;
+  if(!professionalLibrariesPromise)professionalLibrariesPromise=import("./knowledge/professional-libraries.js").then(mod=>{professionalLibrariesModule=mod;return mod});
+  return professionalLibrariesPromise;
+}
 let mathLabEnginePromise=null;
 let mathLabEngine=null;
 async function ensureMathLabEngine(){
