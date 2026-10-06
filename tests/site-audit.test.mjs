@@ -103,10 +103,16 @@ test("active tool updates the visible and document headings",()=>{
 });
 
 
-test("image preview lifecycle revokes replaced object URLs",()=>{
-  assert.match(app,/let scanPreviewUrl=null/);
+test("image preview lifecycle validates type and size and revokes replaced object URLs",()=>{
+  assert.match(app,/const MAX_SCAN_IMAGE_BYTES=15\*1024\*1024/);
+  assert.match(app,/function clearScanPreview\(\)/);
   assert.match(app,/URL\.revokeObjectURL\(scanPreviewUrl\)/);
   assert.match(app,/String\(file\.type\|\|""\)\.startsWith\("image\/"\)/);
+  assert.match(app,/Number\(file\.size\)>MAX_SCAN_IMAGE_BYTES/);
+  assert.match(app,/scanInvalidType/);
+  assert.match(app,/scanFileTooLarge/);
+  assert.ok(UI_STRINGS.en.scanInvalidType&&UI_STRINGS.ar.scanInvalidType);
+  assert.ok(UI_STRINGS.en.scanFileTooLarge&&UI_STRINGS.ar.scanFileTooLarge);
 });
 
 
