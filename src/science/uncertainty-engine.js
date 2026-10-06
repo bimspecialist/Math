@@ -1,6 +1,10 @@
 const sq=x=>x*x;
 const finite=(x,code="INVALID_VALUE")=>{x=Number(x);if(!Number.isFinite(x))throw new Error(code);return x};
-const M=(value,uncertainty=0)=>({value:finite(value),uncertainty:Math.abs(finite(uncertainty))});
+const M=(value,uncertainty=0)=>{
+  const v=finite(value),u=finite(uncertainty);
+  if(u<0)throw new Error("INVALID_UNCERTAINTY");
+  return{value:v,uncertainty:u};
+};
 export function measurement(value,uncertainty=0){return M(value,uncertainty)}
 export function addMeasurements(a,b,correlation=0){
   a=M(a.value,a.uncertainty);b=M(b.value,b.uncertainty);correlation=finite(correlation);
