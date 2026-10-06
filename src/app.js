@@ -1,6 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
-import { FORMULA_CATEGORIES, FORMULAS, filterFormulas } from "./formulas/formula-library.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
@@ -12,7 +11,16 @@ import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analyt
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
-import { professionalFormulaExplanation, referenceFormulaExplanation } from "./knowledge/formula-explanations.js";
+let formulaSupportPromise=null;
+let formulaSupportModule=null;
+async function ensureFormulaSupport(){
+  if(formulaSupportModule)return formulaSupportModule;
+  if(!formulaSupportPromise)formulaSupportPromise=Promise.all([
+    import("./formulas/formula-library.js"),
+    import("./knowledge/formula-explanations.js")
+  ]).then(([formulas,explanations])=>{formulaSupportModule={...formulas,...explanations};return formulaSupportModule});
+  return formulaSupportPromise;
+}
 let advancedToolsPromise=null;
 let advancedToolsModule=null;
 async function ensureAdvancedTools(){
@@ -72,8 +80,7 @@ function applyLocale(nextLocale){
   if(langToggle)langToggle.textContent=locale==="en"?"AR":"EN";
   mounted.setLocale(locale);
   filterToolNavigation();
-  renderFormulaCategories();
-  renderFormulaLibrary();
+  if(formulaSupportModule){renderFormulaCategories();renderFormulaLibrary();}
   renderProfessionalLibrary();
   renderMathLabWorkspace();
 renderMathLabHistory();
@@ -219,7 +226,9 @@ document.querySelectorAll("[data-tool-target]").forEach(button=>{
   button.addEventListener("click",async()=>{
     if(button.dataset.converterCategory)selectConverterCategory(button.dataset.converterCategory);
     if(button.dataset.knowledgeLibrary)await selectProfessionalLibrary(button.dataset.knowledgeLibrary);
+    if(button.dataset.toolTarget==="formulas")await ensureFormulaSupport();
     if(button.dataset.toolTarget==="research")await initializeResearchMode();
+    if(button.dataset.toolTarget==="formulas"){renderFormulaCategories();renderFormulaLibrary();}
     activateTool(button.dataset.toolTarget);
   });
 });
@@ -237,6 +246,7 @@ document.addEventListener("keydown",event=>{
 window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
+  if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
   if(target==="research")await initializeResearchMode();
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
@@ -295,6 +305,7 @@ let formulaDetailBackTarget="formulas";
 let formulaDetailValues={};
 
 async function selectProfessionalLibrary(id){
+  await ensureFormulaSupport();
   const {getProfessionalLibrary}=await ensureProfessionalLibraries();
   if(!getProfessionalLibrary(id))return;
   activeKnowledgeLibrary=id;
@@ -328,8 +339,8 @@ function renderProfessionalLibrary(){
   const rows=library.formulas.filter(formula=>{
     if(activeKnowledgeTopic&&formula.topicEn!==activeKnowledgeTopic)return false;
     if(!q)return true;
-    const explanationEn=professionalFormulaExplanation(library.id,formula.id,"en");
-    const explanationAr=professionalFormulaExplanation(library.id,formula.id,"ar");
+    const explanationEn=formulaSupportModule?.professionalFormulaExplanation?.(library.id,formula.id,"en")??"";
+    const explanationAr=formulaSupportModule?.professionalFormulaExplanation?.(library.id,formula.id,"ar")??"";
     const hay=[formula.titleEn,formula.titleAr,formula.formulaEn,formula.formulaAr,formula.topicEn,formula.topicAr,explanationEn,explanationAr].join(" ").toLowerCase();
     return hay.includes(q);
   });
@@ -351,6 +362,7 @@ function formulaHashForContext(context=formulaDetailContext){
   return`#formula/reference/${encodeURIComponent(context.formulaId)}`;
 }
 async function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
+  await ensureFormulaSupport();
   const {getProfessionalFormula}=await ensureProfessionalLibraries();
   const formula=getProfessionalFormula(libraryId,formulaId);if(!formula)return false;
   activeKnowledgeLibrary=libraryId;
@@ -363,7 +375,8 @@ async function openProfessionalFormula(libraryId,formulaId,{fromHash=false}={}){
   if(!fromHash)history.replaceState(null,"",formulaHashForContext());
   return true;
 }
-function openReferenceFormula(formulaId,{fromHash=false}={}){
+async function openReferenceFormula(formulaId,{fromHash=false}={}){
+  const {FORMULAS}=await ensureFormulaSupport();
   const formula=FORMULAS.find(x=>x.id===formulaId);if(!formula)return false;
   formulaDetailContext={kind:"reference",formulaId};
   formulaDetailBackTarget="formulas";
@@ -378,7 +391,7 @@ async function restoreFormulaHashRoute(){
   const parts=raw.split("/");
   if(parts[0]!=="formula")return false;
   if(parts[1]==="professional"&&parts[2]&&parts[3])return await openProfessionalFormula(parts[2],parts[3],{fromHash:true});
-  if(parts[1]==="reference"&&parts[2])return openReferenceFormula(parts[2],{fromHash:true});
+  if(parts[1]==="reference"&&parts[2])return await openReferenceFormula(parts[2],{fromHash:true});
   return false;
 }
 function currentFormulaDetail(){
@@ -389,19 +402,19 @@ function currentFormulaDetail(){
     return{
       title:locale==="ar"?formula.titleAr:formula.titleEn,
       description:"",
-      explanation:professionalFormulaExplanation(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale),
+      explanation:formulaSupportModule?.professionalFormulaExplanation?.(formulaDetailContext.libraryId,formulaDetailContext.formulaId,locale)??"",
       expression:formula.formulaEn,
       variables:formula.variables,
       professional:formula,
       calculator:formula
     };
   }
-  const formula=FORMULAS.find(x=>x.id===formulaDetailContext.formulaId);
+  const formula=formulaSupportModule?.FORMULAS?.find(x=>x.id===formulaDetailContext.formulaId);
   if(!formula)return null;
   return{
     title:locale==="ar"?formula.titleAr:formula.titleEn,
     description:locale==="ar"?formula.descriptionAr:formula.descriptionEn,
-    explanation:referenceFormulaExplanation(formula,locale),
+    explanation:formulaSupportModule?.referenceFormulaExplanation?.(formula,locale)??"",
     expression:formula.formula,
     variables:formula.calculator?.variables??inferReferenceVariables(formula.formula).map(id=>({id,labelEn:id,labelAr:id,defaultValue:""})),
     professional:null,
@@ -532,7 +545,7 @@ function renderFormulaCategories(){
   if(!select)return;
   const selected=select.value||"all";
   select.innerHTML="";
-  for(const category of FORMULA_CATEGORIES){
+  for(const category of formulaSupportModule?.FORMULA_CATEGORIES??[]){
     const option=document.createElement("option");
     option.value=category.id;
     option.textContent=locale==="ar"?category.labelAr:category.labelEn;
@@ -547,7 +560,7 @@ function renderFormulaLibrary(){
   const count=document.querySelector("#formula-count");
   if(!select||!grid)return;
   if(!select.options.length)renderFormulaCategories();
-  const rows=filterFormulas({category:select.value||"all",query:search?.value??""});
+  const rows=formulaSupportModule?.filterFormulas?.({category:select.value||"all",query:search?.value??""})??[];
   grid.innerHTML=rows.length?rows.map(x=>{
     const title=locale==="ar"?x.titleAr:x.titleEn;
     const secondary=locale==="ar"?x.titleEn:x.titleAr;
@@ -562,9 +575,7 @@ document.querySelector("#formula-search")?.addEventListener("input",renderFormul
 document.querySelector("#formula-category")?.addEventListener("change",renderFormulaLibrary);
 document.querySelector("#knowledge-search")?.addEventListener("input",renderProfessionalLibrary);
 document.querySelector("#knowledge-topic")?.addEventListener("change",event=>{activeKnowledgeTopic=event.currentTarget.value;renderProfessionalLibrary()});
-renderFormulaCategories();
-renderFormulaLibrary();
-/* Professional library is loaded on first use. */
+/* Formula and professional libraries are loaded on first use. */
 
 const mathLabInput=document.querySelector("#mathlab-input");
 const mathLabOutput=document.querySelector("#mathlab-output");
@@ -1149,6 +1160,7 @@ setupConsent();
 async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
     if(initialTool==="research")await initializeResearchMode();
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
     else activateTool("calculator",{updateHash:false,track:false});
