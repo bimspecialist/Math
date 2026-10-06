@@ -251,17 +251,35 @@ window.addEventListener("hashchange",async()=>{
   if(target==="research")await initializeResearchMode();
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
+const MAX_SCAN_IMAGE_BYTES=15*1024*1024;
 let scanPreviewUrl=null;
-function handleImage(file){
-  if(!file||!String(file.type||"").startsWith("image/"))return;
-  const preview=document.querySelector("#scan-preview");if(!preview)return;
+function clearScanPreview(){
+  const preview=document.querySelector("#scan-preview");
   if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl);
+  scanPreviewUrl=null;
+  if(preview){preview.removeAttribute("src");preview.hidden=true}
+}
+function handleImage(file){
+  if(!file)return;
+  const note=document.querySelector("#scan-note");
+  if(!String(file.type||"").startsWith("image/")){
+    clearScanPreview();
+    if(note)note.textContent=translate(locale,"scanInvalidType");
+    return;
+  }
+  if(Number(file.size)>MAX_SCAN_IMAGE_BYTES){
+    clearScanPreview();
+    if(note)note.textContent=translate(locale,"scanFileTooLarge");
+    return;
+  }
+  const preview=document.querySelector("#scan-preview");if(!preview)return;
+  clearScanPreview();
   scanPreviewUrl=URL.createObjectURL(file);
   preview.src=scanPreviewUrl;
   preview.hidden=false;
-  document.querySelector("#scan-note").textContent=translate(locale,"scanSelected");
+  if(note)note.textContent=translate(locale,"scanSelected");
 }
-window.addEventListener("pagehide",()=>{if(scanPreviewUrl)URL.revokeObjectURL(scanPreviewUrl)},{once:true});
+window.addEventListener("pagehide",clearScanPreview,{once:true});
 document.querySelector("#image-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 document.querySelector("#camera-upload")?.addEventListener("change",e=>handleImage(e.target.files?.[0]));
 
