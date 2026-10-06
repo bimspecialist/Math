@@ -22,3 +22,10 @@ test("exact engine supports large integer powers without floating overflow",()=>
   const r=evaluateExactExpression("2^200");
   assert.equal(r.fraction,"1606938044258990275541962092341162602522202993782792835301376");
 });
+
+
+test("exact engine rejects invalid precision instead of silently clamping it",()=>{
+  assert.deepEqual(evaluateExactExpression("1/3",{digits:0}),{kind:"error",code:"INVALID_PRECISION"});
+  assert.deepEqual(evaluateExactExpression("1/3",{digits:1001}),{kind:"error",code:"INVALID_PRECISION"});
+  assert.deepEqual(evaluateExactExpression("1/3",{digits:12.5}),{kind:"error",code:"INVALID_PRECISION"});
+});
