@@ -160,6 +160,17 @@
                 <button id="research-uncertainty-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
                 <output id="research-uncertainty-result" class="research-result" dir="ltr" aria-live="polite"></output>
               </article>
+              <article class="research-card">
+                <h3 data-i18n="researchStatsTitle">Statistical Inference</h3>
+                <p data-i18n="researchStatsDescription">One-sample Student-t inference with confidence intervals and p-values.</p>
+                <label><span data-i18n="researchSampleData">Sample data</span><input id="research-stats-data" dir="ltr" value="10.2, 9.9, 10.5, 10.1, 10.3"></label>
+                <div class="research-measure-grid">
+                  <label><span data-i18n="researchNullMean">Null mean μ₀</span><input id="research-stats-mu0" type="number" step="any" value="10"></label>
+                  <label><span data-i18n="researchAlpha">Alpha α</span><input id="research-stats-alpha" type="number" min="0.0001" max="0.5" step="0.001" value="0.05"></label>
+                </div>
+                <button id="research-stats-run" type="button" class="advanced-solve" data-i18n="calculate">Calculate</button>
+                <output id="research-stats-result" class="research-result" dir="ltr" aria-live="polite"></output>
+              </article>
               <article class="research-card research-constants-card">
                 <h3 data-i18n="researchConstantsTitle">Scientific Constants</h3>
                 <p data-i18n="researchConstantsDescription">Reference constants available directly in the scientific calculator.</p>
