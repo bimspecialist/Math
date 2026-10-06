@@ -1062,9 +1062,9 @@ function setupConsent(){
     choice=localStorage.getItem(CONSENT_KEY);
     if(!choice){
       const legacy=localStorage.getItem(LEGACY_CONSENT_KEY);
-      if(legacy==="accepted"||legacy==="rejected"){
-        choice=legacy;
-        localStorage.setItem(CONSENT_KEY,legacy);
+      if(legacy==="rejected"){
+        choice="rejected";
+        localStorage.setItem(CONSENT_KEY,"rejected");
       }
     }
   }catch{}
