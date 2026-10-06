@@ -67,6 +67,23 @@ test("professional formulas have valid variables constraints and calculation sym
           assert.ok(variableIds.has(token)||RESERVED.has(lower),`undeclared symbol ${token} in ${library.id}/${formula.id}`);
         }
       }
+
+      const allowedRuleKinds=new Set(["gt","gte","lt","lte","neq","gtSum","gteExpr"]);
+      for(const rule of formula.rules??[]){
+        assert.ok(allowedRuleKinds.has(rule.kind),`unknown rule kind ${rule.kind} in ${library.id}/${formula.id}`);
+        assert.ok(String(rule.code??"").trim(),`missing rule code in ${library.id}/${formula.id}`);
+        if(["gt","gte","lt","lte","neq","gtSum"].includes(rule.kind)){
+          assert.ok(variableIds.has(rule.left),`unknown rule.left ${rule.left} in ${library.id}/${formula.id}`);
+          assert.ok(variableIds.has(rule.right),`unknown rule.right ${rule.right} in ${library.id}/${formula.id}`);
+        }
+        if(rule.kind==="gteExpr"){
+          assert.ok(Number.isFinite(Number(rule.value)),`invalid gteExpr threshold in ${library.id}/${formula.id}`);
+          const tokens=[...String(rule.expression??"").matchAll(/[A-Za-z_][A-Za-z0-9_]*/g)].map(m=>m[0]);
+          for(const token of tokens){
+            assert.ok(variableIds.has(token)||RESERVED.has(token.toLowerCase()),`undeclared rule expression symbol ${token} in ${library.id}/${formula.id}`);
+          }
+        }
+      }
     }
   }
 });
