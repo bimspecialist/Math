@@ -56,7 +56,7 @@ export function graphBounds(samples,{fallbackMinY=-10,fallbackMaxY=10}={}){
   let ys=(robust.length>=Math.max(4,Math.floor(finite.length*.5))?robust:finite).map(p=>p.y);
   if(breaks.length&&ys.length>=20){
     const sorted=[...ys].sort((a,b)=>a-b);
-    const trim=Math.max(1,Math.floor(sorted.length*.05));
+    const trim=Math.max(1,Math.floor(sorted.length*.10));
     ys=sorted.slice(trim,sorted.length-trim);
   }
   let minY=Math.min(...ys),maxY=Math.max(...ys);
