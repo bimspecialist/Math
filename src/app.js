@@ -1055,6 +1055,12 @@ function renderResearchConstants(){
     row.append(left,mid,right);root.append(row);
   }
 }
+function researchNumber(id){
+  const raw=String(document.querySelector(id)?.value??"").trim();
+  if(!raw)return Number.NaN;
+  const value=Number(raw);
+  return Number.isFinite(value)?value:Number.NaN;
+}
 function bindResearchMode(){
   document.querySelector("#research-exact-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-exact-input")?.value??"";
@@ -1073,7 +1079,7 @@ function bindResearchMode(){
     else out.textContent=researchErrorText(r.code);
   });
   document.querySelector("#research-uncertainty-run")?.addEventListener("click",()=>{
-    const value=id=>Number(document.querySelector(id)?.value??0);
+    const value=id=>researchNumber(id);
     const operation=document.querySelector("#research-operation")?.value??"+";
     const out=document.querySelector("#research-uncertainty-result");
     const r=runUncertaintyResearch({a:value("#research-a"),ua:value("#research-ua"),b:value("#research-b"),ub:value("#research-ub"),operation,correlation:value("#research-correlation")});
@@ -1082,8 +1088,8 @@ function bindResearchMode(){
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
     const raw=document.querySelector("#research-stats-data")?.value??"";
     const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
-    const mu0=Number(document.querySelector("#research-stats-mu0")?.value??0);
-    const alpha=Number(document.querySelector("#research-stats-alpha")?.value??0.05);
+    const mu0=researchNumber("#research-stats-mu0");
+    const alpha=researchNumber("#research-stats-alpha");
     const out=document.querySelector("#research-stats-result"),r=runTTestResearch(data,mu0,alpha);
     if(!out)return;
     if(r.kind==="t-test"){
@@ -1094,7 +1100,7 @@ function bindResearchMode(){
   const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).filter(Boolean).map(Number);
   document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
     const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
-    const alpha=Number(document.querySelector("#research-regression-alpha")?.value??0.05);
+    const alpha=researchNumber("#research-regression-alpha");
     const out=document.querySelector("#research-regression-result"),r=runLinearRegressionResearch(x,y,alpha);
     if(!out)return;
     if(r.kind==="linear-regression"){
@@ -1104,7 +1110,7 @@ function bindResearchMode(){
   });
   document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
     const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
-    const estimated=Number(document.querySelector("#research-chi-estimated")?.value??0);
+    const estimated=researchNumber("#research-chi-estimated");
     const out=document.querySelector("#research-chi-result"),r=runChiSquareResearch(observed,expected,estimated);
     if(!out)return;
     out.textContent=r.kind==="chi-square"
