@@ -141,3 +141,21 @@ test("Arabic specialized guides use RTL, mutual hreflang, visible answers and si
  assert.ok(page.includes('type="application/ld+json"'));
  }
 });
+
+test("every published guide internal relative link resolves to a repository HTML page",()=>{
+ const guides=[...landingPages,...expandedGuideSlugs.map(slug=>slug+"/index.html"),"ar/matrix-calculator/index.html","ar/uncertainty-calculator/index.html","ar/ramp-calculator/index.html"];
+ for(const page of guides){
+  const html=read(page);
+  for(const match of html.matchAll(/href="([^"]+)"/g)){
+   const href=match[1];
+   if(!href.startsWith("./")&&!href.startsWith("../"))continue;
+   const dest=new URL(href,new URL(page,ROOT));
+   if(dest.hash&&dest.pathname.endsWith("/Math/"))continue;
+   const relative=decodeURIComponent(dest.pathname.replace(new URL(ROOT).pathname,""));
+   if(!relative||relative.startsWith(".."))continue;
+   if(relative.endsWith(".svg")||relative.endsWith(".css"))continue;
+   const target=relative.endsWith("/")?relative+"index.html":relative;
+   assert.doesNotThrow(()=>read(target),"broken internal link "+page+" -> "+href);
+  }
+ }
+});
