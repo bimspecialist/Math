@@ -40,3 +40,8 @@ General numerical and transcendental calculations use IEEE-754 double precision 
 - Environmental Engineering Formulas: https://bimspecialist.github.io/Math/environmental-engineering-formulas/
 - Advanced Engineering Math: https://bimspecialist.github.io/Math/advanced-engineering-mathematics-formulas/
 - Complex Number Calculator: https://bimspecialist.github.io/Math/complex-number-calculator/
+
+## أدلة عربية متخصصة
+- حاسبة المصفوفات أونلاين: https://bimspecialist.github.io/Math/ar/matrix-calculator/
+- حاسبة عدم اليقين في القياس: https://bimspecialist.github.io/Math/ar/uncertainty-calculator/
+- حاسبة ميل المنحدر: https://bimspecialist.github.io/Math/ar/ramp-calculator/

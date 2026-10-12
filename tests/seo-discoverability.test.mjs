@@ -129,3 +129,15 @@ test("knowledge library deep links are handled on initial and hash routes",()=>{
  assert.match(app,/initialTool\.startsWith\("knowledge\/"\)/);
  assert.match(app,/target\.startsWith\("knowledge\/"\)/);
 });
+
+test("Arabic specialized guides use RTL, mutual hreflang, visible answers and sitemap",()=>{
+ for(const [slug,en] of [["ar/matrix-calculator","matrix-calculator"],["ar/uncertainty-calculator","uncertainty-calculator"],["ar/ramp-calculator","ramp-calculator"]]){
+ const page=read(slug+"/index.html"),english=read(en+"/index.html");
+ assert.match(page,/<html lang="ar" dir="rtl">/);
+ assert.ok(read("sitemap.xml").includes("<loc>https://bimspecialist.github.io/Math/"+slug+"/</loc>"));
+ assert.ok(read("index.html").includes('href="./'+slug+'/"'));
+ assert.ok(page.includes('hreflang="en" href="https://bimspecialist.github.io/Math/'+en+'/"'));
+ assert.ok(english.includes('href="../'+slug+'/"') || english.includes('href="https://bimspecialist.github.io/Math/'+slug+'/"'));
+ assert.ok(page.includes('type="application/ld+json"'));
+ }
+});
