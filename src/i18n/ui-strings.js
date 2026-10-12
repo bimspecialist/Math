@@ -479,6 +479,8 @@ export const UI_STRINGS = Object.freeze({
     seoCivilFormulas:"Civil Engineering Formulas",
     seoHydraulicsFormulas:"Hydraulics Formulas",
     seoResearchCalculator:"Research Calculator",
+    seoArabicScientific:"Arabic Scientific Calculator",
+    seoArabicEngineering:"Arabic Engineering Calculator",
     publisherHome:"Publisher home",
     mathWorkspace:"Math Workspace"
   }),
@@ -962,6 +964,8 @@ export const UI_STRINGS = Object.freeze({
     seoCivilFormulas:"قوانين الهندسة المدنية",
     seoHydraulicsFormulas:"قوانين الهيدروليك",
     seoResearchCalculator:"حاسبة البحث العلمي",
+    seoArabicScientific:"الحاسبة العلمية بالعربية",
+    seoArabicEngineering:"الحاسبة الهندسية بالعربية",
     publisherHome:"صفحة الناشر",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
