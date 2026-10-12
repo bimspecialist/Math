@@ -249,6 +249,7 @@ window.addEventListener("hashchange",async()=>{
   if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
   if(target==="knowledge")await initializeProfessionalKnowledge();
   if(target==="research")await initializeResearchMode();
+  if(target.startsWith("knowledge/")){await selectProfessionalLibrary(target.slice(10));activateTool("knowledge",{updateHash:false});return;}
   if(toolTargets.has(target))activateTool(target,{updateHash:false});
 });
 const MAX_SCAN_IMAGE_BYTES=15*1024*1024;
@@ -1186,6 +1187,7 @@ async function initializeRoute(){
     if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
     if(initialTool==="knowledge")await initializeProfessionalKnowledge();
     if(initialTool==="research")await initializeResearchMode();
+    if(initialTool.startsWith("knowledge/")){await selectProfessionalLibrary(initialTool.slice(10));activateTool("knowledge",{updateHash:false,track:false});return;}
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
     else activateTool("calculator",{updateHash:false,track:false});
   }

@@ -58,3 +58,7 @@ The GitHub Pages workflow runs this command before deployment. The gate executes
 ## Deployment
 
 GitHub Pages deploys from `main` only after the verification job succeeds.
+
+## Search guides
+
+Nine worked-example specialty pages complement the original SEO landing pages (matrix, polynomial, complex number, regression, chi-square, uncertainty, ramp, environmental engineering and advanced engineering math). Each uses a unique canonical, visible explanations and linked tool. See [SEO audit](docs/SEO_AEO_AUDIT_V2_2026-10-12.md).

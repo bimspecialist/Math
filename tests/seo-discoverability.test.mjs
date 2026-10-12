@@ -98,3 +98,64 @@ test("IndexNow notification is best-effort and wired after Pages deployment",()=
   assert.match(script,/https:\/\/api\.indexnow\.org\/indexnow/);
   assert.match(script,/git/);
 });
+
+const expandedGuideSlugs=["matrix-calculator","polynomial-calculator","uncertainty-calculator","linear-regression-calculator","chi-square-calculator","ramp-calculator","environmental-engineering-formulas","advanced-engineering-mathematics-formulas","complex-number-calculator"];
+test("new guide URLs are indexable, internally linked and describe actual worked examples",()=>{
+ const home=read("index.html"),sitemap=read("sitemap.xml");
+ const titles=new Set(),canonicals=new Set();
+ for(const slug of expandedGuideSlugs){
+  const html=read(slug+"/index.html");
+  const canonical="https://bimspecialist.github.io/Math/"+slug+"/";
+  assert.ok(home.includes('href="./'+slug+'/"'),"missing homepage link "+slug);
+  assert.ok(sitemap.includes("<loc>"+canonical+"</loc>"),"missing sitemap URL "+slug);
+  assert.ok(html.includes('<link rel="canonical" href="'+canonical+'">'),"wrong canonical "+slug);
+  assert.match(html,/<meta name="robots" content="index,follow/);
+  assert.match(html,/<h2>Formula and interpretation<\/h2>/);
+  assert.match(html,/<h2>How to use the workspace<\/h2>/);
+  const title=html.match(/<title>([^<]+)<\/title>/)?.[1];
+  assert.ok(title&&!titles.has(title),"duplicate guide title "+slug);titles.add(title);
+  assert.ok(!canonicals.has(canonical));canonicals.add(canonical);
+  const payload=html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1];
+  assert.ok(payload,"missing JSON-LD "+slug);
+  const graph=JSON.parse(payload)["@graph"];
+  assert.equal(graph[0].url,canonical);
+  assert.equal(graph[1]["@type"],"BreadcrumbList");
+  assert.equal(graph[2]["@type"],"SoftwareApplication");
+  assert.doesNotMatch(html,/<meta\s+name="keywords"/i);
+ }
+});
+test("knowledge library deep links are handled on initial and hash routes",()=>{
+ const app=read("src/app.js");
+ assert.match(app,/initialTool\.startsWith\("knowledge\/"\)/);
+ assert.match(app,/target\.startsWith\("knowledge\/"\)/);
+});
+
+test("Arabic specialized guides use RTL, mutual hreflang, visible answers and sitemap",()=>{
+ for(const [slug,en] of [["ar/matrix-calculator","matrix-calculator"],["ar/uncertainty-calculator","uncertainty-calculator"],["ar/ramp-calculator","ramp-calculator"]]){
+ const page=read(slug+"/index.html"),english=read(en+"/index.html");
+ assert.match(page,/<html lang="ar" dir="rtl">/);
+ assert.ok(read("sitemap.xml").includes("<loc>https://bimspecialist.github.io/Math/"+slug+"/</loc>"));
+ assert.ok(read("index.html").includes('href="./'+slug+'/"'));
+ assert.ok(page.includes('hreflang="en" href="https://bimspecialist.github.io/Math/'+en+'/"'));
+ assert.ok(english.includes('href="../'+slug+'/"') || english.includes('href="https://bimspecialist.github.io/Math/'+slug+'/"'));
+ assert.ok(page.includes('type="application/ld+json"'));
+ }
+});
+
+test("every published guide internal relative link resolves to a repository HTML page",()=>{
+ const guides=[...landingPages,...expandedGuideSlugs.map(slug=>slug+"/index.html"),"ar/matrix-calculator/index.html","ar/uncertainty-calculator/index.html","ar/ramp-calculator/index.html"];
+ for(const page of guides){
+  const html=read(page);
+  for(const match of html.matchAll(/href="([^"]+)"/g)){
+   const href=match[1];
+   if(!href.startsWith("./")&&!href.startsWith("../"))continue;
+   const dest=new URL(href,new URL(page,ROOT));
+   if(dest.hash&&dest.pathname.endsWith("/Math/"))continue;
+   const relative=decodeURIComponent(dest.pathname.replace(new URL(ROOT).pathname,""));
+   if(!relative||relative.startsWith(".."))continue;
+   if(relative.endsWith(".svg")||relative.endsWith(".css"))continue;
+   const target=relative.endsWith("/")?relative+"index.html":relative;
+   assert.doesNotThrow(()=>read(target),"broken internal link "+page+" -> "+href);
+  }
+ }
+});
