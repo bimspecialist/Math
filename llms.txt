@@ -1,0 +1,31 @@
+# Math Workspace
+
+> Free browser-based scientific, engineering, numerical and research mathematics tools in English and Arabic.
+
+Canonical site: https://bimspecialist.github.io/Math/
+Sitemap: https://bimspecialist.github.io/Math/sitemap.xml
+
+## Primary tools
+- Scientific Calculator Online: https://bimspecialist.github.io/Math/scientific-calculator-online/
+- Equation Solver Online: https://bimspecialist.github.io/Math/equation-solver/
+- Engineering Calculator: https://bimspecialist.github.io/Math/engineering-calculator/
+- Graphing Calculator: https://bimspecialist.github.io/Math/graphing-calculator/
+- Engineering Unit Converter: https://bimspecialist.github.io/Math/unit-converter/
+- Research Calculator: https://bimspecialist.github.io/Math/research-calculator/
+
+## Engineering references
+- Civil Engineering Formulas: https://bimspecialist.github.io/Math/civil-engineering-formulas/
+- Hydraulics Formulas: https://bimspecialist.github.io/Math/hydraulics-formulas/
+
+## Arabic
+- حاسبة علمية أونلاين: https://bimspecialist.github.io/Math/ar/scientific-calculator/
+- حل المعادلات أونلاين: https://bimspecialist.github.io/Math/ar/equation-solver/
+- حاسبة هندسية أونلاين: https://bimspecialist.github.io/Math/ar/engineering-calculator/
+- قوانين الهندسة المدنية: https://bimspecialist.github.io/Math/ar/civil-engineering-formulas/
+- قوانين الهيدروليك: https://bimspecialist.github.io/Math/ar/hydraulics-formulas/
+
+## Capabilities
+Scientific calculator, complex numbers, equations and polynomial roots, graphing, unit conversion, matrices and numerical methods, exact rational arithmetic, measurement uncertainty, Student-t inference, linear regression, chi-square analysis, civil engineering formulas, hydraulics formulas, environmental engineering formulas, design and construction references, and advanced engineering mathematics.
+
+## Accuracy and safety notes
+General numerical and transcendental calculations use IEEE-754 double precision unless stated otherwise. Exact rational operations in Research Mode use BigInt within bounded workloads. Engineering references are educational/calculation aids and do not replace current governing codes, laboratory procedures, or signed professional design.
