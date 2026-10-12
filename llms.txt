@@ -29,3 +29,14 @@ Scientific calculator, complex numbers, equations and polynomial roots, graphing
 
 ## Accuracy and safety notes
 General numerical and transcendental calculations use IEEE-754 double precision unless stated otherwise. Exact rational operations in Research Mode use BigInt within bounded workloads. Engineering references are educational/calculation aids and do not replace current governing codes, laboratory procedures, or signed professional design.
+
+## Worked examples and focused guides
+- Matrix Calculator: https://bimspecialist.github.io/Math/matrix-calculator/
+- Polynomial Solver: https://bimspecialist.github.io/Math/polynomial-calculator/
+- Uncertainty Calculator: https://bimspecialist.github.io/Math/uncertainty-calculator/
+- Linear Regression: https://bimspecialist.github.io/Math/linear-regression-calculator/
+- Chi-Square Calculator: https://bimspecialist.github.io/Math/chi-square-calculator/
+- Ramp Calculator: https://bimspecialist.github.io/Math/ramp-calculator/
+- Environmental Engineering Formulas: https://bimspecialist.github.io/Math/environmental-engineering-formulas/
+- Advanced Engineering Math: https://bimspecialist.github.io/Math/advanced-engineering-mathematics-formulas/
+- Complex Number Calculator: https://bimspecialist.github.io/Math/complex-number-calculator/

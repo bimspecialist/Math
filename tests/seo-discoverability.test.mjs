@@ -98,3 +98,34 @@ test("IndexNow notification is best-effort and wired after Pages deployment",()=
   assert.match(script,/https:\/\/api\.indexnow\.org\/indexnow/);
   assert.match(script,/git/);
 });
+
+const expandedGuideSlugs=["matrix-calculator","polynomial-calculator","uncertainty-calculator","linear-regression-calculator","chi-square-calculator","ramp-calculator","environmental-engineering-formulas","advanced-engineering-mathematics-formulas","complex-number-calculator"];
+test("new guide URLs are indexable, internally linked and describe actual worked examples",()=>{
+ const home=read("index.html"),sitemap=read("sitemap.xml");
+ const titles=new Set(),canonicals=new Set();
+ for(const slug of expandedGuideSlugs){
+  const html=read(slug+"/index.html");
+  const canonical="https://bimspecialist.github.io/Math/"+slug+"/";
+  assert.ok(home.includes('href="./'+slug+'/"'),"missing homepage link "+slug);
+  assert.ok(sitemap.includes("<loc>"+canonical+"</loc>"),"missing sitemap URL "+slug);
+  assert.ok(html.includes('<link rel="canonical" href="'+canonical+'">'),"wrong canonical "+slug);
+  assert.match(html,/<meta name="robots" content="index,follow/);
+  assert.match(html,/<h2>Formula and interpretation<\/h2>/);
+  assert.match(html,/<h2>How to use the workspace<\/h2>/);
+  const title=html.match(/<title>([^<]+)<\/title>/)?.[1];
+  assert.ok(title&&!titles.has(title),"duplicate guide title "+slug);titles.add(title);
+  assert.ok(!canonicals.has(canonical));canonicals.add(canonical);
+  const payload=html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)?.[1];
+  assert.ok(payload,"missing JSON-LD "+slug);
+  const graph=JSON.parse(payload)["@graph"];
+  assert.equal(graph[0].url,canonical);
+  assert.equal(graph[1]["@type"],"BreadcrumbList");
+  assert.equal(graph[2]["@type"],"SoftwareApplication");
+  assert.doesNotMatch(html,/<meta\s+name="keywords"/i);
+ }
+});
+test("knowledge library deep links are handled on initial and hash routes",()=>{
+ const app=read("src/app.js");
+ assert.match(app,/initialTool\.startsWith\("knowledge\/"\)/);
+ assert.match(app,/target\.startsWith\("knowledge\/"\)/);
+});
