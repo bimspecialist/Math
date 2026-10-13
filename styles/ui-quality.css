@@ -553,3 +553,12 @@ html[dir="rtl"] .ramp-advanced-disclosure:not([open])>summary::after{transform:r
 .calculator-direct-entry .direct-entry-run:hover{background:#f1f7ff}
 .calculator-direct-entry input:focus-visible,.calculator-direct-entry .direct-entry-run:focus-visible{outline:2px solid #f5f9ff;outline-offset:2px}
 @media(max-width:360px){.calculator-direct-entry .direct-entry-run{padding-inline:7px;font-size:.75rem}}
+
+/* Precision is still configurable but no longer competes with the main unit task. */
+.converter-advanced-options{min-width:0}
+.converter-advanced-options>summary{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;font-weight:700;line-height:1.3}
+.converter-advanced-options>summary::-webkit-details-marker{display:none}
+.converter-advanced-options>summary::after{content:"▾";color:var(--muted);margin-inline-start:8px}
+.converter-advanced-options:not([open])>summary::after{transform:rotate(-90deg)}
+html[dir="rtl"] .converter-advanced-options:not([open])>summary::after{transform:rotate(90deg)}
+.converter-advanced-options>label{margin-block-start:8px}

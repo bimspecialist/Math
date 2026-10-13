@@ -555,7 +555,9 @@ b</textarea></label>
               <label><span data-i18n="converterCategory">Category</span><select id="converter-category">
                 <option value="length" data-i18n="converterLength">Length</option><option value="area" data-i18n="converterArea">Area</option><option value="volume" data-i18n="converterVolume">Volume</option><option value="mass" data-i18n="converterMass">Weight and mass</option><option value="speed" data-i18n="converterSpeed">Speed</option><option value="time" data-i18n="converterTime">Time</option><option value="temperature" data-i18n="converterTemperature">Temperature</option><option value="energy" data-i18n="converterEnergy">Energy</option><option value="power" data-i18n="converterPower">Power</option><option value="pressure" data-i18n="converterPressure">Pressure</option><option value="angle" data-i18n="converterAngle">Angle</option><option value="force" data-i18n="converterForce">Force</option><option value="torque" data-i18n="converterTorque">Torque</option><option value="frequency" data-i18n="converterFrequency">Frequency</option><option value="density" data-i18n="converterDensity">Density</option><option value="data" data-i18n="converterData">Data</option>
               </select></label>
-              <label><span data-i18n="precision">Precision</span><select id="converter-precision"><option value="6">6</option><option value="10">10</option><option value="12" selected>12</option><option value="15">15</option></select></label>
+              <details class="converter-advanced-options"><summary data-i18n="precision">Precision</summary>
+                <label><span class="sr-only" data-i18n="precision">Precision</span><select id="converter-precision"><option value="6">6</option><option value="10">10</option><option value="12" selected>12</option><option value="15">15</option></select></label>
+              </details>
             </div>
             <div class="converter-card">
               <label><span data-i18n="value">Value</span><input id="converter-input" type="number" inputmode="decimal" value="1" step="any"></label>

@@ -42,7 +42,7 @@ function kToTemp(value,unit){
 export function convertUnit(category,value,from,to){
   const c=CONVERTER_CATEGORIES[category];
   if(!c)throw new Error("UNKNOWN_CATEGORY");
-  const numeric=Number(value);
+  const numeric=typeof value==="string"&&!value.trim()?NaN:Number(value);
   if(!Number.isFinite(numeric))throw new Error("INVALID_VALUE");
   if(!(from in c.units)||!(to in c.units))throw new Error("UNKNOWN_UNIT");
   if(c.kind==="temperature"){
