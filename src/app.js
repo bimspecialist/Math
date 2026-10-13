@@ -12,6 +12,8 @@ import { initAdSense } from "./monetization/adsense.js";
 import { initGoogleAnalytics, trackVirtualPage } from "./analytics/google-analytics.js";
 import { CALCULATOR_CATEGORIES } from "./catalog/calculator-categories.js";
 import { calculateRamp, calculateRampFromSlope } from "./construction/ramp-calculator.js";
+import { rampSvgMarkup } from "./dashboard/ramp-diagram.js";
+import { mountDashboard } from "./dashboard/dashboard.js";
 import { inferReferenceVariables, substituteFormula, evaluateFormulaDefinition, evaluateProfessionalFormula } from "./knowledge/formula-workbench.js";
 let formulaSupportPromise=null;
 let formulaSupportModule=null;
@@ -68,6 +70,19 @@ const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
 const mounted=mountCalculator(calculatorRoot,controller,locale);
+const dashboardUI=mountDashboard({
+  getLocale:()=>locale,translate,ensureAdvancedTools,
+  onSearch:()=>activateTool("home",{track:false})
+});
+const dashboardThemeToggle=document.querySelector("#dashboard-theme-toggle");
+dashboardThemeToggle?.addEventListener("click",()=>{
+  const shell=document.querySelector("#main-content");
+  if(!shell)return;
+  const dark=shell.dataset.dashboardTheme!=="dark";
+  shell.dataset.dashboardTheme=dark?"dark":"light";
+  dashboardThemeToggle.setAttribute("aria-pressed",String(dark));
+});
+
 document.addEventListener("keydown",event=>{
   const interactive=event.target instanceof Element&&Boolean(event.target.closest("a,button,input,textarea,select,summary,[contenteditable],[role='textbox']"));
   if(!shouldHandleCalculatorShortcut({
@@ -109,6 +124,8 @@ renderMathLabHistory();
   syncToolGroupsForContext();
   syncRampDuplicateState();
   if(researchWorkbenchModule)renderResearchConstants();
+  dashboardUI.refreshLocale();
+  updateRampCalculator();
 }
 document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale(locale==="en"?"ar":"en"));
 
@@ -146,8 +163,9 @@ toolSearch?.addEventListener("keydown",event=>{
 document.addEventListener("keydown",event=>{
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
     event.preventDefault();
-    toolSearch?.focus();
-    toolSearch?.select();
+    const input=document.querySelector("#home-section.active")?document.querySelector("#dashboard-search"):toolSearch;
+    input?.focus();
+    input?.select();
   }
 });
 filterToolNavigation();
@@ -189,6 +207,7 @@ const sidebarToggle=document.querySelector("#sidebar-toggle");
 const toolTargets=new Set([...document.querySelectorAll("[data-tool-target]")].map(x=>x.dataset.toolTarget).filter(Boolean));
 toolTargets.add("formula-detail");
 const TOOL_TITLE_KEYS=Object.freeze({
+  home:"dashboardTitle",
   categories:"categoriesTitle",
   calculator:"pageTitle",
   advanced:"advancedTitle",
@@ -208,7 +227,7 @@ function updateToolHeading(target){
   const title=translate(locale,key);
   const heading=document.querySelector("#page-title");
   if(heading)heading.textContent=title;
-  document.title=target==="calculator"?translate(locale,"siteTitle"):`${title} — Math`;
+  document.title=target==="home"?translate(locale,"dashboardPageTitle"):(target==="calculator"?translate(locale,"siteTitle"):`${title} — Math`);
 }
 function closeToolSidebar({restoreFocus=false}={}){
   const wasOpen=toolSidebar?.classList.contains("open")??false;
@@ -217,7 +236,8 @@ function closeToolSidebar({restoreFocus=false}={}){
   if(restoreFocus&&wasOpen)sidebarToggle?.focus();
 }
 function activateTool(target,{updateHash=true,track=true}={}){
-  if(!toolTargets.has(target))target="calculator";
+  if(!toolTargets.has(target))target="home";
+  document.querySelector("#main-content")?.classList.toggle("dashboard-active",target==="home");
   document.querySelectorAll("[data-tool-target]").forEach(x=>{
     let selected=x.dataset.toolTarget===target;
     if(selected&&x.dataset.converterCategory)selected=x.dataset.converterCategory===activeConverterCategory;
@@ -254,6 +274,7 @@ document.querySelectorAll("[data-tool-target]").forEach(button=>{
   });
 });
 sidebarToggle?.addEventListener("click",event=>{
+  if(document.querySelector("#home-section")?.classList.contains("active"))activateTool("categories");
   const open=toolSidebar?.classList.toggle("open")??false;
   event.currentTarget.setAttribute("aria-expanded",String(open));
   if(open)toolSidebar?.querySelector("[data-tool-target]")?.focus();
@@ -1006,8 +1027,6 @@ for(const el of [dateStart,dateEnd,dateBase,dateOffset,dateUnit])el?.addEventLis
 document.querySelector("#date-swap")?.addEventListener("click",()=>{if(!dateStart||!dateEnd)return;const v=dateStart.value;dateStart.value=dateEnd.value;dateEnd.value=v;updateDateCalculator()});
 updateDateCalculator();
 
-applyLocale(locale);
-
 function renderCalculatorCategories(){
   const root=document.querySelector("#calculator-categories");if(!root)return;
   root.innerHTML=CALCULATOR_CATEGORIES.map(category=>{
@@ -1052,6 +1071,8 @@ function updateRampCalculator(){
     lastRampGeometry=result;
     const unit=rampUnit?.value??"";
     rampResult.innerHTML=rampResultHtml(result,unit);
+    const diagram=document.querySelector("#ramp-live-visual");
+    if(diagram)diagram.innerHTML=rampSvgMarkup(result,{unit,locale});
     if(rampDerivedNote){
       const key=result.derivedField==="verified"?"rampValuesVerified":result.derivedField==="rise"?"rampDerivedRise":result.derivedField==="run"?"rampDerivedRun":"rampDerivedLength";
       rampDerivedNote.textContent=translate(locale,key);
@@ -1060,6 +1081,7 @@ function updateRampCalculator(){
   }catch(error){
     lastRampGeometry=null;
     rampResult.textContent=translate(locale,error.message)||error.message;
+    document.querySelector("#ramp-live-visual")?.replaceChildren();
     if(rampDerivedNote)rampDerivedNote.textContent="";
     syncRampDuplicateState();
   }
@@ -1080,12 +1102,23 @@ function updateRampDesign(){
   }
 }
 
+document.querySelector("#dashboard-open-ramp")?.addEventListener("click",()=>{
+  const homeRise=document.querySelector("#home-ramp-rise");
+  const homeRun=document.querySelector("#home-ramp-run");
+  const homeUnit=document.querySelector("#home-ramp-unit");
+  if(homeRise&&rampRise)rampRise.value=homeRise.value;
+  if(homeRun&&rampRun)rampRun.value=homeRun.value;
+  if(rampLength)rampLength.value="";
+  if(homeUnit&&rampUnit)rampUnit.value=homeUnit.value;
+  updateRampCalculator();
+});
 document.querySelector("#ramp-calculate")?.addEventListener("click",updateRampCalculator);
 document.querySelector("#ramp-design-calculate")?.addEventListener("click",updateRampDesign);
 for(const el of [rampRise,rampRun,rampLength,rampUnit])el?.addEventListener("input",updateRampCalculator);
 for(const el of [rampDesignRise,rampSlopeType,rampSlopeValue,rampDesignUnit])el?.addEventListener("input",updateRampDesign);
 updateRampCalculator();
 updateRampDesign();
+applyLocale(locale);
 
 const CONSENT_KEY="math.external-services-consent";
 const LEGACY_CONSENT_KEY="math.analytics-consent";
@@ -1268,7 +1301,7 @@ async function initializeRoute(){
     if(initialTool==="research")await initializeResearchMode();
     if(initialTool.startsWith("knowledge/")){await selectProfessionalLibrary(initialTool.slice(10));activateTool("knowledge",{updateHash:false,track:false});return;}
     if(toolTargets.has(initialTool))activateTool(initialTool,{updateHash:false,track:false});
-    else activateTool("calculator",{updateHash:false,track:false});
+    else activateTool("home",{updateHash:false,track:false});
   }
 }
 initializeRoute();
