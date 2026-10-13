@@ -1,6 +1,7 @@
 /* Math Workspace — interactive dashboard
    Intent: preserve the calculator engines and existing task screens while giving
    the home screen a polished, accessible, lightweight blue/white entry point. */
+.site-shell.dashboard-active,
 .mw-header,
 .mw-dashboard{
   --mw-back:#f5f9ff;
@@ -246,3 +247,22 @@
   .mw-header,.mw-tool-card,.mw-featured-ramp,.mw-metric{border-width:2px}
   .mw-header button:focus-visible,.mw-dashboard button:focus-visible,.mw-dashboard input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 }
+
+/* Semantic tokens must reach child components: component defaults are local. */
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-header,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-dashboard{
+  --mw-back:#101a2b;--mw-surface:#182940;--mw-soft:#243955;--mw-border:#355073;
+  --mw-ink:#eef5ff;--mw-muted:#b6c9e5;--mw-accent:#7bafff;--mw-shadow:0 12px 36px rgba(0,0,0,.12)
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-card-head button,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-top-nav button,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-brand-label strong{color:var(--mw-ink)}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-hero-intro,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-tool-card,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-metric{color:var(--mw-ink)}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-view-tools,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-inline-link{color:var(--mw-accent)}
+body:has(.site-shell.dashboard-active){background:#f5f9ff}
+body:has(.site-shell.dashboard-active[data-dashboard-theme="dark"]){background:#101a2b}
+.mw-ramp-inputs input,.mw-convert-form input,.mw-input-action input{direction:ltr}
+@media(max-width:570px){.mw-showcase-heading h2{font-size:.98rem}}

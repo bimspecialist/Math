@@ -17,7 +17,7 @@ export function mountDashboard({getLocale,translate,ensureAdvancedTools,onSearch
   if(!rise||!run||!unit)return{refreshLocale:()=>{},refreshRamp:()=>{}};
   const length=get("home-ramp-length"),visual=get("home-ramp-visual"),grade=get("home-ramp-grade"),
         angle=get("home-ramp-angle"),ratio=get("home-ramp-ratio"),message=get("home-ramp-message");
-  let lastRamp=null,previousUnit="m",lastSci=null,hasSolverResult=false;
+  let lastRamp=null,previousUnit="m",lastSci=null,lastSolved=null;
 
   function renderRamp(){
     try{
@@ -84,7 +84,10 @@ export function mountDashboard({getLocale,translate,ensureAdvancedTools,onSearch
   }
   for(const el of [convInput,from,to])el?.addEventListener("input",runConversion);
   get("home-convert-swap")?.addEventListener("click",()=>{
-    const before=from.value;from.value=to.value;to.value=before;runConversion();
+    const previousResult=converted.dataset.kind==="value"?Number(converted.textContent):NaN;
+    const before=from.value;from.value=to.value;to.value=before;
+    if(Number.isFinite(previousResult))convInput.value=numberText(previousResult);
+    runConversion();
   });
   inputEnter("home-convert-value",runConversion);
 
@@ -96,10 +99,11 @@ export function mountDashboard({getLocale,translate,ensureAdvancedTools,onSearch
     try{
       const {solveAdvancedInput,formatAdvancedResult}=await ensureAdvancedTools();
       const solved=solveAdvancedInput(solveInput.value,{angleMode:"RAD"});
-      hasSolverResult=true;
+      lastSolved={solved,formatAdvancedResult};
       solveResult.textContent=formatAdvancedResult(solved,getLocale());
       solveResult.dataset.kind=solved.kind;
     }catch{
+      lastSolved=null;
       solveResult.textContent=translate(getLocale(),"SOLVE_ERROR");
     }finally{solveButton.disabled=false}
   }
@@ -140,7 +144,7 @@ export function mountDashboard({getLocale,translate,ensureAdvancedTools,onSearch
   function refreshLocale(){
     renderRamp();
     if(lastSci&&sciResult&&lastSci.kind!=="value")sciResult.textContent=translate(getLocale(),lastSci.code||"INVALID_EXPRESSION");
-    if(hasSolverResult)solveResult.textContent=translate(getLocale(),"dashboardSolveAgain");
+    if(lastSolved)solveResult.textContent=lastSolved.formatAdvancedResult(lastSolved.solved,getLocale());
     runConversion();
     filterCards();
   }
