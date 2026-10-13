@@ -27,6 +27,11 @@ function resultFromGeometry(r,h,l,derivedField){
   const angleRad=Math.atan2(r,h);
   const gradePercent=r/h*100;
   const ratioRun=h/r;
+  // A finite input does not guarantee representable derived geometry.
+  // Never display Infinity or a rounded-to-zero slope as an engineering answer.
+  if(![r,h,l,angleRad,gradePercent,ratioRun].every(Number.isFinite)||gradePercent<=0||ratioRun<=0){
+    throw new Error("INVALID_RAMP_GEOMETRY");
+  }
   return{
     rise:clean(r),
     run:clean(h),
