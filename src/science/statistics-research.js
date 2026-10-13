@@ -77,7 +77,12 @@ const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
 const sampleVariance=a=>{if(a.length<2)return NaN;const m=mean(a);return a.reduce((s,v)=>s+(v-m)**2,0)/(a.length-1)};
 const cleanData=data=>{
   if(!Array.isArray(data))return null;
-  const values=data.map(Number);
+  // Do not let Number(null), Number("") or Number(false) invent zero observations.
+  const values=data.map(value=>{
+    if(typeof value==="number")return value;
+    if(typeof value!=="string"||!value.trim())return NaN;
+    return Number(value);
+  });
   return values.every(Number.isFinite)?values:null;
 };
 export function oneSampleTTest(data,mu0=0,alpha=0.05){
