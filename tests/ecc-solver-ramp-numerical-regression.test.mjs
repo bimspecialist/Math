@@ -61,3 +61,30 @@ test("ramp inputs must be positive measurements, not coerced booleans",()=>{
   assert.equal(valid.length,5);
   assert.equal(calculateRampFromSlope({rise:1,slopeType:"ratio",slopeValue:12}).run,12);
 });
+
+test("very small but nonzero linear and quadratic roots remain visible",()=>{
+  const linear=solveAdvancedInput("x-0.0000000001=0");
+  assert.equal(linear.kind,"solution-set");
+  assert.equal(linear.solutions.length,1);
+  nearRelative(linear.solutions[0],1e-10,1e-10);
+  const quadratic=solveAdvancedInput("x^2-10000000000*x+1=0");
+  assert.equal(quadratic.kind,"solution-set");
+  assert.equal(quadratic.solutions.length,2);
+  nearRelative(quadratic.solutions[0],1e-10,1e-10);
+  nearRelative(quadratic.solutions[1],1e10,1e-12);
+});
+
+test("very small but valid ramp measurements are not displayed as zero",()=>{
+  const result=calculateRamp({rise:1e-10,run:2e-10});
+  assert.equal(result.rise,1e-10);
+  assert.equal(result.run,2e-10);
+  assert.ok(result.length>2e-10);
+  nearRelative(result.gradePercent,50);
+});
+
+test("ramp three-side consistency uses relative tolerance even below a millimeter",()=>{
+  assert.throws(()=>calculateRamp({rise:1e-10,run:1e-10,length:1e-10}),/RAMP_INCONSISTENT_VALUES/);
+  const matching=calculateRamp({rise:1e-10,run:1e-10,length:Math.hypot(1e-10,1e-10)});
+  assert.equal(matching.derivedField,"verified");
+  assert.ok(matching.length>1e-10);
+});
