@@ -993,7 +993,7 @@ function updateDateCalculator(){
   }
   try{
     if(dateBase&&dateOffset&&dateOffsetResult){
-      const result=addDateUnits(dateBase.value,Number(dateOffset.value),dateUnit?.value??"days");
+      const result=addDateUnits(dateBase.value,dateOffset.value,dateUnit?.value??"days");
       dateOffsetResult.textContent=result;
       if(dateResultWeekday)dateResultWeekday.textContent=`${translate(locale,"weekday")}: ${formatIsoWeekday(result)}`;
     }
