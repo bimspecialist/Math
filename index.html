@@ -135,7 +135,7 @@
             </div>
             <div class="research-grid">
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools" open><summary class="research-disclosure-summary"><h3 data-i18n="researchExactTitle">Exact & High Precision</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="exact" open><summary class="research-disclosure-summary"><h3 data-i18n="researchExactTitle">Exact & High Precision</h3></summary>
                 <p data-i18n="researchExactDescription">Exact rational arithmetic using BigInt, independent of IEEE-754 rounding.</p>
                 <label><span data-i18n="expressionLabel">Expression</span><input id="research-exact-input" dir="ltr" value="1/7 + 2^100"></label>
                 <label><span data-i18n="researchDigits">Decimal digits</span><input id="research-exact-digits" type="number" min="10" max="1000" value="80"></label>
@@ -145,7 +145,7 @@
                 </details>
               </article>
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchQuantityTitle">Dimensional Quantities</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="quantity"><summary class="research-disclosure-summary"><h3 data-i18n="researchQuantityTitle">Dimensional Quantities</h3></summary>
                 <p data-i18n="researchQuantityDescription">Calculate with physical units and reject dimensionally invalid operations.</p>
                 <label><span data-i18n="expressionLabel">Expression</span><input id="research-quantity-input" dir="ltr" value="20 m / 4 s"></label>
                 <label><span data-i18n="researchTargetUnit">Target unit</span><input id="research-quantity-target" dir="ltr" value="mph"></label>
@@ -155,7 +155,7 @@
                 </details>
               </article>
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchUncertaintyTitle">Measurement Uncertainty</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="uncertainty"><summary class="research-disclosure-summary"><h3 data-i18n="researchUncertaintyTitle">Measurement Uncertainty</h3></summary>
                 <p data-i18n="researchUncertaintyDescription">Propagate independent or correlated standard uncertainties.</p>
                 <div class="research-measure-grid">
                   <label>A<input id="research-a" type="number" step="any" value="10"></label>
@@ -173,7 +173,7 @@
                 </details>
               </article>
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchStatsTitle">Statistical Inference</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="statistics"><summary class="research-disclosure-summary"><h3 data-i18n="researchStatsTitle">Statistical Inference</h3></summary>
                 <p data-i18n="researchStatsDescription">One-sample Student-t inference with confidence intervals and p-values.</p>
                 <label><span data-i18n="researchSampleData">Sample data</span><input id="research-stats-data" dir="ltr" value="10.2, 9.9, 10.5, 10.1, 10.3"></label>
                 <div class="research-measure-grid">
@@ -186,7 +186,7 @@
                 </details>
               </article>
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchRegressionTitle">Linear Regression Diagnostics</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="regression"><summary class="research-disclosure-summary"><h3 data-i18n="researchRegressionTitle">Linear Regression Diagnostics</h3></summary>
                 <p data-i18n="researchRegressionDescription">Fit y = a + bx and report R², standard error, p-value, and confidence interval for the slope.</p>
                 <label><span data-i18n="researchXData">X data</span><input id="research-regression-x" dir="ltr" value="1,2,3,4,5"></label>
                 <label><span data-i18n="researchYData">Y data</span><input id="research-regression-y" dir="ltr" value="3,5,7,9,11"></label>
@@ -197,7 +197,7 @@
                 </details>
               </article>
               <article class="research-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchChiSquareTitle">Chi-square Goodness of Fit</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="chi-square"><summary class="research-disclosure-summary"><h3 data-i18n="researchChiSquareTitle">Chi-square Goodness of Fit</h3></summary>
                 <p data-i18n="researchChiSquareDescription">Compare observed and expected counts and report χ², degrees of freedom, and p-value.</p>
                 <label><span data-i18n="researchObservedData">Observed counts</span><input id="research-chi-observed" dir="ltr" value="20,30,50"></label>
                 <label><span data-i18n="researchExpectedData">Expected counts</span><input id="research-chi-expected" dir="ltr" value="25,25,50"></label>
@@ -208,7 +208,7 @@
                 </details>
               </article>
               <article class="research-card research-constants-card">
-                <details class="research-disclosure" name="research-tools"><summary class="research-disclosure-summary"><h3 data-i18n="researchConstantsTitle">Scientific Constants</h3></summary>
+                <details class="research-disclosure" name="research-tools" data-research-tool="constants"><summary class="research-disclosure-summary"><h3 data-i18n="researchConstantsTitle">Scientific Constants</h3></summary>
                 <p data-i18n="researchConstantsDescription">Reference constants available directly in the scientific calculator.</p>
                 <div id="research-constants-list" class="research-constants-list"></div>
               

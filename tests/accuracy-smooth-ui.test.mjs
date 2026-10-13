@@ -49,7 +49,7 @@ test("quick links stay concise and all localization keys exist",()=>{
 
 test("research workflows use seven mutually exclusive native disclosures",()=>{
   const fragment=html.slice(html.indexOf('<section id="research-section"'),html.indexOf('<section id="advanced-section"'));
-  const disclosures=[...fragment.matchAll(/<details class="research-disclosure" name="research-tools"( open)?>/g)];
+  const disclosures=[...fragment.matchAll(/<details class="research-disclosure" name="research-tools" data-research-tool="[^"]+"( open)?>/g)];
   assert.equal(disclosures.length,7);
   assert.equal(disclosures.filter(m=>m[1]).length,1);
   assert.equal((fragment.match(/<summary class="research-disclosure-summary">/g)||[]).length,7);
@@ -85,4 +85,19 @@ test("consent and startup lazy-loading contracts remain present",()=>{
   assert.match(app,/if\(!researchWorkbenchPromise\)researchWorkbenchPromise=import/);
   assert.match(app,/if\(!mathLabEnginePromise\)mathLabEnginePromise=import/);
   assert.match(html,/id="privacy-choices"/);
+});
+
+test("research SEO links land on the correct analytics tool instead of a generic first card",()=>{
+ for(const [path,hash] of [
+  ["uncertainty-calculator/index.html","../#research/uncertainty"],
+  ["linear-regression-calculator/index.html","../#research/regression"],
+  ["chi-square-calculator/index.html","../#research/chi-square"],
+  ["ar/uncertainty-calculator/index.html","../../#research/uncertainty"]
+ ])assert.ok(file(path).includes('href="'+hash+'"'),path);
+ const fragments=html.slice(html.indexOf('<section id="research-section"'),html.indexOf('<section id="advanced-section"'));
+ for(const name of ["exact","quantity","uncertainty","statistics","regression","chi-square","constants"])
+  assert.ok(fragments.includes('data-research-tool="'+name+'"'),name);
+ assert.match(app,/async function restoreResearchSubtoolHash\(raw,\{track=true\}=\{\}\)/);
+ assert.match(app,/if\(await restoreResearchSubtoolHash\(target\)\)return/);
+ assert.match(app,/if\(await restoreResearchSubtoolHash\(initialTool,\{track:false\}\)\)return/);
 });

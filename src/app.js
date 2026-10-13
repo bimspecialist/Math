@@ -253,9 +253,30 @@ document.addEventListener("keydown",event=>{
     closeToolSidebar({restoreFocus:true});
   }
 });
+function selectResearchSubtool(name){
+  const choice=[...document.querySelectorAll("[data-research-tool]")].find(el=>el.dataset.researchTool===name);
+  if(!choice)return false;
+  choice.open=true;
+  return true;
+}
+async function restoreResearchSubtoolHash(raw,{track=true}={}){
+  if(!raw.startsWith("research/"))return false;
+  const name=raw.slice("research/".length);
+  const exists=[...document.querySelectorAll("[data-research-tool]")].some(el=>el.dataset.researchTool===name);
+  if(!exists)return false;
+  await initializeResearchMode();
+  activateTool("research",{updateHash:false,track});
+  return selectResearchSubtool(name);
+}
+document.querySelectorAll("[data-research-tool]").forEach(panel=>panel.addEventListener("toggle",()=>{
+  if(!panel.open||!document.querySelector("#research-section")?.classList.contains("active"))return;
+  const hash="#research/"+panel.dataset.researchTool;
+  if(window.location.hash!==hash)history.replaceState(null,"",hash);
+}));
 window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
+  if(await restoreResearchSubtoolHash(target))return;
   if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
   if(target==="knowledge")await initializeProfessionalKnowledge();
   if(target==="research")await initializeResearchMode();
@@ -1194,6 +1215,7 @@ setupConsent();
 async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(await restoreResearchSubtoolHash(initialTool,{track:false}))return;
     if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
     if(initialTool==="knowledge")await initializeProfessionalKnowledge();
     if(initialTool==="research")await initializeResearchMode();
