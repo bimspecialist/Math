@@ -34,21 +34,36 @@
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
   <link rel="stylesheet" href="./styles/calculator.css?v=20261013-precision1">
   <link rel="stylesheet" href="./styles/ui-quality.css?v=20261013-ux1">
+  <link rel="stylesheet" href="./styles/dashboard.css?v=20261013-dashboard1">
 </head>
 <body>
 <a class="skip-link" href="#main-content" data-i18n="skipToContent">Skip to main content</a>
-<main id="main-content" class="site-shell" tabindex="-1">
+<main id="main-content" class="site-shell dashboard-active" tabindex="-1" data-dashboard-theme="light">
 <div class="desktop-layout">
   <aside class="ad-slot ad-outer-left" data-ad-placement="outer-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
   <aside class="ad-slot ad-left" data-ad-placement="side-left" data-i18n-aria-label="advertisement" aria-label="Advertisement"><span data-i18n="advertisement">Advertisement</span></aside>
 
   <div class="center-column">
-    <header class="site-header">
-      <div class="site-brand">
+    <header class="site-header mw-header">
+      <div class="site-brand mw-brand">
         <button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-controls="tool-sidebar" aria-expanded="false" data-i18n-aria-label="menu">☰</button>
-        <div><small data-i18n="mathWorkspace">Math Workspace</small><h1 id="page-title" data-i18n="pageTitle">Scientific Calculator</h1></div>
+        <a class="mw-brand-logo" href="./#home" data-i18n-aria-label="dashboardHome" aria-label="Home">
+          <svg viewBox="0 0 52 48" aria-hidden="true" focusable="false"><path d="M26 5 4 43h44L26 5ZM26 18l14 23H12l14-23Z" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round"/><path d="M27 8 43 37M11 41h31" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+        </a>
+        <div class="mw-brand-label"><strong data-i18n="mathWorkspace">Math Workspace</strong><small data-i18n="dashboardTagline">Advanced Math &amp; Engineering Tools</small><h1 id="page-title" class="sr-only" data-i18n="pageTitle">Scientific Calculator</h1></div>
       </div>
-      <div class="site-actions"><button id="lang-toggle" type="button">AR</button></div>
+      <nav class="mw-top-nav" data-i18n-aria-label="dashboardPrimaryNav" aria-label="Primary navigation">
+        <button type="button" class="active" data-tool-target="home"><span aria-hidden="true">⌂</span><span data-i18n="dashboardHome">Home</span></button>
+        <button type="button" data-tool-target="categories" data-i18n="navCategories">Calculators</button>
+        <button type="button" data-tool-target="mathlab" data-i18n="navMathLab">Math Lab</button>
+        <button type="button" data-tool-target="formulas" data-i18n="navFormulaLibrary">Formula Library</button>
+        <button type="button" data-tool-target="knowledge" data-knowledge-library="civil" data-i18n="dashboardEngineering">Engineering</button>
+      </nav>
+      <div class="site-actions mw-header-actions">
+        <div class="mw-header-search"><label for="dashboard-search" class="sr-only" data-i18n="dashboardSearchLabel">Search tools</label><span aria-hidden="true">⌕</span><input id="dashboard-search" type="search" data-i18n-placeholder="dashboardSearchPlaceholder" placeholder="Search tools, formulas..." autocomplete="off"></div>
+        <button id="lang-toggle" type="button" data-i18n-aria-label="dashboardToggleLanguage" aria-label="Change language">AR</button>
+        <button id="dashboard-theme-toggle" type="button" aria-pressed="false" data-i18n-aria-label="dashboardThemeToggle" aria-label="Switch dashboard theme" title="Theme"><span aria-hidden="true">◐</span></button>
+      </div>
     </header>
 
     <nav class="quick-actions" data-i18n-aria-label="quickActionsLabel" aria-label="Quick tools">
@@ -121,11 +136,72 @@
       </aside>
 
       <div class="workspace-content">
+        <section id="home-section" class="page-section active" aria-label="Math Workspace dashboard" data-i18n-aria-label="dashboardTitle">
+          <div class="mw-dashboard">
+            <div class="mw-hero-layout">
+              <section class="mw-hero-intro" aria-labelledby="mw-intro-title">
+                <p class="mw-eyebrow" data-i18n="dashboardEyebrow">YOUR ENGINEERING WORKSPACE</p>
+                <h2 id="mw-intro-title" data-i18n="dashboardHeadline">Solve. Visualize. Learn.</h2>
+                <p data-i18n="dashboardIntroduction">All your math, engineering, and research tools in one workspace.</p>
+                <div class="mw-benefit-grid">
+                  <span><span class="mw-benefit-icon" aria-hidden="true">◎</span><span data-i18n="dashboardBenefitAccuracy">Calculation tools</span></span>
+                  <span><span class="mw-benefit-icon" aria-hidden="true">▥</span><span data-i18n="dashboardBenefitVisual">Interactive diagrams</span></span>
+                  <span><span class="mw-benefit-icon" aria-hidden="true">▤</span><span data-i18n="dashboardBenefitLibrary">Formula references</span></span>
+                  <span><span class="mw-benefit-icon" aria-hidden="true">⌘</span><span data-i18n="dashboardBenefitAudience">For students and engineers</span></span>
+                </div>
+                <button class="mw-view-tools" type="button" data-tool-target="categories"><span data-i18n="dashboardExplore">Explore all tools</span> <span aria-hidden="true">↗</span></button>
+              </section>
+
+              <section class="mw-featured-ramp" aria-labelledby="mw-ramp-title">
+                <div class="mw-ramp-head">
+                  <div><span class="mw-section-kicker" data-i18n="dashboardFeatured">FEATURED INTERACTIVE TOOL</span><h3 id="mw-ramp-title" data-i18n="rampTitle">Ramp Calculator</h3><p data-i18n="dashboardRampSubtitle">Change the dimensions to update the diagram and results.</p></div>
+                  <label class="mw-unit-switch"><span class="sr-only" data-i18n="unit">Unit</span><select id="home-ramp-unit" aria-label="Ramp measurement unit" data-i18n-aria-label="dashboardRampUnits"><option value="m" data-i18n="dashboardMetric">Metric (m)</option><option value="ft" data-i18n="dashboardImperial">Imperial (ft)</option></select></label>
+                </div>
+                <div class="mw-ramp-content">
+                  <div class="mw-ramp-inputs">
+                    <label for="home-ramp-rise"><span data-i18n="rampRise">Rise</span><input id="home-ramp-rise" type="number" min="0" step="any" inputmode="decimal" value="0.75" aria-describedby="home-ramp-hint"></label>
+                    <label for="home-ramp-run"><span data-i18n="rampRun">Run</span><input id="home-ramp-run" type="number" min="0" step="any" inputmode="decimal" value="3" aria-describedby="home-ramp-hint"></label>
+                    <label for="home-ramp-length"><span data-i18n="rampLength">Ramp length</span><input id="home-ramp-length" type="text" value="" readonly aria-describedby="home-ramp-hint"></label>
+                    <p id="home-ramp-hint" class="mw-field-hint" data-i18n="dashboardRampHint">Enter positive rise and run values in the selected unit.</p>
+                    <div class="mw-ramp-actions"><button id="home-ramp-calculate" type="button" class="mw-primary-action" data-i18n="calculate">Calculate</button><button id="home-ramp-reset" type="button" class="mw-secondary-action" data-i18n="dashboardReset">Reset</button></div>
+                    <button id="dashboard-open-ramp" data-tool-target="ramp" type="button" class="mw-inline-link" data-i18n="dashboardOpenFullRamp">Open full ramp calculator →</button>
+                  </div>
+                  <figure class="mw-ramp-figure"><div id="home-ramp-visual" class="mw-ramp-visual"></div><figcaption data-i18n="dashboardRampDisclaimer">Geometry only. Check the relevant accessibility or building code.</figcaption></figure>
+                  <div class="mw-ramp-metrics">
+                    <div class="mw-metric"><span data-i18n="rampGrade">Slope (%)</span><output id="home-ramp-grade" class="mw-metric-value mw-green">25%</output></div>
+                    <div class="mw-metric"><span data-i18n="rampAngle">Angle</span><output id="home-ramp-angle" class="mw-metric-value mw-orange">14.04°</output></div>
+                    <div class="mw-metric"><span data-i18n="rampRatio">Slope ratio</span><output id="home-ramp-ratio" class="mw-metric-value mw-purple">1:4</output></div>
+                  </div>
+                </div>
+                <p id="home-ramp-message" class="mw-ramp-message" role="status" aria-live="polite"></p>
+              </section>
+            </div>
+
+            <div class="mw-showcase-heading"><h2 data-i18n="dashboardPopular">Popular math &amp; engineering tools</h2><button type="button" data-tool-target="categories" class="mw-inline-link" data-i18n="dashboardViewAll">View all tools →</button></div>
+            <p id="dashboard-search-count" class="mw-search-count" role="status" aria-live="polite"></p>
+            <div id="home-tool-grid" class="mw-tool-grid">
+              <article class="mw-tool-card" data-search="calculator علمية آلة حاسبة scientific"><div class="mw-card-head"><span class="mw-card-icon mw-blue" aria-hidden="true">▦</span><button type="button" data-tool-target="calculator" data-i18n="navScientific">Scientific Calculator</button></div><div class="mw-card-preview"><label class="sr-only" for="home-sci-expression" data-i18n="expressionLabel">Expression</label><div class="mw-input-action"><input id="home-sci-expression" type="text" dir="ltr" value="sin(30) + 2^3" spellcheck="false"><button id="home-sci-run" type="button" data-i18n="calculate">Calculate</button></div><output id="home-sci-result" class="mw-inline-result" aria-live="polite">8.5</output><div class="mw-key-preview" aria-hidden="true"><span>sin</span><span>cos</span><span>tan</span><span>log</span><span>π</span><span>x²</span></div></div></article>
+              <article class="mw-tool-card" data-search="solve algebra equations المعادلات محلل"><div class="mw-card-head"><span class="mw-card-icon mw-violet" aria-hidden="true">∑</span><button type="button" data-tool-target="advanced" data-i18n="navAdvancedSolver">Advanced Solver</button></div><div class="mw-card-preview"><label class="sr-only" for="home-solver-equation" data-i18n="advancedEquationLabel">Equation</label><div class="mw-input-action"><input id="home-solver-equation" type="text" dir="ltr" value="x^2 - 5*x + 6 = 0" spellcheck="false"><button id="home-solver-run" type="button" data-i18n="dashboardSolve">Solve</button></div><output id="home-solver-result" class="mw-inline-result" aria-live="polite" data-i18n="dashboardSolverExample">Example: x = 2 or x = 3</output></div></article>
+              <article class="mw-tool-card" data-search="graph plot function plotting الرسم البياني"><div class="mw-card-head"><span class="mw-card-icon mw-teal" aria-hidden="true">⌁</span><button type="button" data-tool-target="graphing" data-i18n="navGraphing">Graphing Calculator</button></div><div class="mw-card-preview mw-graph-preview"><div class="mw-graph-chip" dir="ltr">f(x) = x² − 4</div><svg viewBox="0 0 320 130" aria-hidden="true" focusable="false"><path d="M0 20H320M0 50H320M0 80H320M0 110H320M40 0V130M90 0V130M140 0V130M190 0V130M240 0V130M290 0V130" stroke="currentColor" opacity=".14" fill="none"/><path d="M0 88H320M160 0V130" stroke="#7286a8" stroke-width="1.4"/><path d="M54 -4 Q160 212 266 -4" fill="none" stroke="#1063f4" stroke-width="2.8"/></svg><button type="button" data-tool-target="graphing" class="mw-preview-action" data-i18n="dashboardOpenGraph">Explore graph ↗</button></div></article>
+              <article class="mw-tool-card" data-search="unit conversion length mass pressure محول وحدات"><div class="mw-card-head"><span class="mw-card-icon mw-orange-icon" aria-hidden="true">⇄</span><button type="button" data-tool-target="converter" data-i18n="converterTitle">Unit Converter</button></div><div class="mw-card-preview"><span class="mw-preview-tag" data-i18n="converterLength">Length</span><div class="mw-convert-form"><label for="home-convert-value" class="sr-only" data-i18n="value">Value</label><input id="home-convert-value" type="number" value="5" step="any" dir="ltr"><select id="home-convert-from" aria-label="From unit" data-i18n-aria-label="dashboardFromUnit"><option value="m">m</option><option value="ft">ft</option></select><button id="home-convert-swap" type="button" aria-label="Swap units" data-i18n-aria-label="dashboardSwapUnits">⇄</button><select id="home-convert-to" aria-label="To unit" data-i18n-aria-label="dashboardToUnit"><option value="ft">ft</option><option value="m">m</option></select></div><output id="home-convert-result" class="mw-inline-result" aria-live="polite">16.4042</output></div></article>
+              <article class="mw-tool-card" data-search="formula library equations reference قوانين معادلات"><div class="mw-card-head"><span class="mw-card-icon mw-red" aria-hidden="true">▤</span><button type="button" data-tool-target="formulas" data-i18n="navFormulaLibrary">Formula Library</button></div><p data-i18n="dashboardFormulaDescription">Browse searchable formulas and their explanations.</p><div class="mw-chip-row"><button type="button" data-tool-target="formulas" data-i18n="dashboardAlgebra">Algebra</button><button type="button" data-tool-target="formulas" data-i18n="dashboardGeometry">Geometry</button><button type="button" data-tool-target="formulas" data-i18n="dashboardCalculus">Calculus</button></div></article>
+              <article class="mw-tool-card" data-search="matrix mathlab numerical matrices مختبر مصفوفات"><div class="mw-card-head"><span class="mw-card-icon mw-violet" aria-hidden="true">⌘</span><button type="button" data-tool-target="mathlab" data-i18n="navMathLab">Math Lab</button></div><p data-i18n="dashboardLabDescription">Explore numerical matrices, scripts and engineering maths.</p><div class="mw-mathlab-art" aria-hidden="true"><span>sin(x) · cos(y)</span><svg viewBox="0 0 260 70"><path d="M0 55 C35 -8 60 8 90 48 S155 5 190 29 S225 70 260 12" fill="none" stroke="#0969db" stroke-width="3"/><path d="M0 58 C40 10 65 60 90 30 S145 60 195 22 S235 43 260 15" fill="none" stroke="#eb6f77" stroke-width="2.4"/></svg></div></article>
+              <article class="mw-tool-card" data-search="geometry triangles circle shapes الهندسة مثلث دائرة"><div class="mw-card-head"><span class="mw-card-icon mw-teal" aria-hidden="true">△</span><button type="button" data-tool-target="formulas" data-i18n="dashboardGeometryTools">Geometry tools</button></div><p data-i18n="dashboardGeometryDescription">Geometry references, shapes, angles and formulas.</p><div class="mw-symbol-row" aria-hidden="true"><span>△</span><span>◯</span><span>⬡</span><span>◇</span></div></article>
+              <article class="mw-tool-card" data-search="civil engineering design construction hydraulics مدنية انشائية"><div class="mw-card-head"><span class="mw-card-icon mw-slate" aria-hidden="true">⚙</span><button type="button" data-tool-target="knowledge" data-knowledge-library="civil" data-i18n="dashboardEngineeringTools">Engineering tools</button></div><p data-i18n="dashboardEngineeringDescription">Civil, construction and hydraulics calculations.</p><div class="mw-symbol-row mw-engineering-symbols" aria-hidden="true"><span>▤</span><span>∠</span><span>⌗</span><span>⌁</span></div></article>
+              <article class="mw-tool-card" data-search="statistics regression probability research إحصاء تحليل بيانات"><div class="mw-card-head"><span class="mw-card-icon mw-pink" aria-hidden="true">▥</span><button type="button" data-tool-target="research" data-i18n="dashboardStatistics">Statistics &amp; data analysis</button></div><p data-i18n="dashboardStatisticsDescription">Regression, hypothesis tests and measurement uncertainty.</p><div class="mw-mini-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+              <article class="mw-tool-card" data-search="matrix determinant linear algebra مصفوفات محدد"><div class="mw-card-head"><span class="mw-card-icon mw-indigo" aria-hidden="true">▦</span><button type="button" data-tool-target="mathlab" data-i18n="dashboardMatrices">Matrix tools</button></div><p data-i18n="dashboardMatrixDescription">Solve linear systems, inspect arrays and determinants.</p><div class="mw-matrix-preview" dir="ltr">A = [ 1 &nbsp; 2 &nbsp; 3 ]<span>[ 0 &nbsp; 1 &nbsp; 4 ]</span><span>[ 5 &nbsp; 6 &nbsp; 0 ]</span></div></article>
+              <article class="mw-tool-card" data-search="research high precision uncertainty science بحث بحث علمي"><div class="mw-card-head"><span class="mw-card-icon mw-pink" aria-hidden="true">⚛</span><button type="button" data-tool-target="research" data-i18n="navResearchMode">Research Mode</button></div><p data-i18n="dashboardResearchDescription">Exact arithmetic, uncertainty and statistical checks.</p><div class="mw-research-graph" aria-hidden="true"><span>d²y/dx² + y = 0</span><svg viewBox="0 0 230 55"><path d="M0 28H230" stroke="#aac2db"/><path d="M0 28 C18 -5 40 -5 58 28 S99 61 117 28 S158 -5 175 28 S212 61 230 28" fill="none" stroke="#2273f4" stroke-width="2.5"/></svg></div></article>
+              <article class="mw-tool-card" data-search="hydraulics water fluids pressure hydraulic هيدروليك مياه موائع"><div class="mw-card-head"><span class="mw-card-icon mw-teal" aria-hidden="true">≈</span><button type="button" data-tool-target="knowledge" data-knowledge-library="hydraulics" data-i18n="navHydraulicsLibrary">Hydraulics Library</button></div><p data-i18n="dashboardHydraulicsDescription">Flow, pressure, pipes and fluid mechanics formulas.</p><div class="mw-hydraulic-art" aria-hidden="true">Q = A × v</div></article>
+            </div>
+            <div id="dashboard-search-empty" class="mw-search-empty" hidden><p data-i18n="dashboardNoResults">No matching tools. Try another keyword.</p><button type="button" data-tool-target="categories" data-i18n="dashboardExplore">Explore all tools</button></div>
+          </div>
+        </section>
+
         <section id="categories-section" class="page-section">
           <div class="tool-page categories-page"><div class="tool-page-head"><div><small data-i18n="categoriesKicker">Explore</small><h2 data-i18n="categoriesTitle">Calculator Categories</h2><p data-i18n="categoriesDescription">Browse available calculators by topic. More tools will be added progressively.</p></div></div><div id="calculator-categories" class="category-grid"></div></div>
         </section>
 
-        <section id="calculator-section" class="page-section active">
+        <section id="calculator-section" class="page-section">
           <div class="calculator-stage"><div id="calculator-root"></div></div>
         </section>
 
@@ -506,6 +582,7 @@ b</textarea></label>
                 <label><span data-i18n="unit">Unit</span><select id="ramp-unit"><option>m</option><option>cm</option><option>mm</option><option>ft</option><option>in</option></select></label>
                 <button id="ramp-calculate" class="advanced-solve" type="button" data-i18n="calculate">Calculate</button>
               </div>
+              <figure class="mw-full-ramp-figure"><div id="ramp-live-visual" class="mw-ramp-visual"></div><figcaption data-i18n="dashboardRampDisclaimer">Geometry only. Check the relevant accessibility or building code.</figcaption></figure>
               <output id="ramp-result" class="ramp-result" aria-live="polite"></output>
               <p id="ramp-derived-note" class="ramp-derived-note"></p>
             </section>
@@ -642,5 +719,5 @@ b</textarea></label>
 </div>
 </main>
 <div id="consent-banner" class="consent-banner" hidden><div><strong data-i18n="consentTitle">Analytics choices</strong><p data-i18n="consentText">Optional visitor analytics stay off until you choose to enable them.</p></div><div class="consent-actions"><button id="consent-reject" type="button" data-i18n="reject">Reject</button><button id="consent-accept" type="button" class="advanced-solve" data-i18n="accept">Accept</button></div></div>
-<script type="module" src="./src/app.js?v=20261013-statprob1"></script>
+<script type="module" src="./src/app.js?v=20261013-dashboard1"></script>
 </body></html>
