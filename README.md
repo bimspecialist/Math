@@ -62,3 +62,16 @@ GitHub Pages deploys from `main` only after the verification job succeeds.
 ## Search guides
 
 Nine worked-example specialty pages complement the original SEO landing pages (matrix, polynomial, complex number, regression, chi-square, uncertainty, ramp, environmental engineering and advanced engineering math). Each uses a unique canonical, visible explanations and linked tool. See [SEO audit](docs/SEO_AEO_AUDIT_V2_2026-10-12.md).
+
+## Accuracy and simple-use update (2026-10-13)
+
+- Scientific calculator: an explicit, keyboard-accessible **Calculate** action for full expression entry; focus remains stable when the calculator display re-renders. Global keypad shortcuts operate only on the active calculator and do not intercept controls or other workspaces.
+- Research Mode: native, localized disclosure controls show one research workflow at a time while keeping all seven analytical tasks available.
+- Ramp Calculator: basic rise/run geometry first; slope-derived design is accessible in a collapsed additional section.
+- Unit Converter: empty input is rejected rather than silently interpreted as zero; precision settings are optional and collapsed.
+- Statistical accuracy: two-sided Student-t and chi-square upper-tail p-values use numerically stable complementary distribution functions. Observed chi-square frequencies must be whole-number counts; expected counts may be fractional.
+- Civil/hydraulics English and Arabic landing pages now open the corresponding library instead of defaulting to Accounting.
+
+Run `node scripts/verify-calculator.mjs` for the complete mathematical, bilingual UI, SEO and consent regression gate. See [accuracy and UX review](docs/ACCURACY_UX_AUDIT_2026-10-13.md).
+
+Source-backed tests are necessary but not sufficient for final visual QA: review mobile, desktop, keyboard tab order, 200% zoom, Arabic RTL and the calculator's physical key layout in a live browser.

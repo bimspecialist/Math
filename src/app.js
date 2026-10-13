@@ -1,4 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
+import { shouldHandleCalculatorShortcut } from "./calculator/keyboard-scope.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
@@ -66,7 +67,16 @@ const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
 const mounted=mountCalculator(calculatorRoot,controller,locale);
-document.addEventListener("keydown",event=>{if(event.target instanceof HTMLTextAreaElement||event.target instanceof HTMLInputElement)return;mounted.keydown(event)});
+document.addEventListener("keydown",event=>{
+  const interactive=event.target instanceof Element&&Boolean(event.target.closest("a,button,input,textarea,select,summary,[contenteditable],[role='textbox']"));
+  if(!shouldHandleCalculatorShortcut({
+    calculatorActive:document.querySelector("#calculator-section")?.classList.contains("active"),
+    interactiveTarget:interactive,
+    ctrlKey:event.ctrlKey,metaKey:event.metaKey,altKey:event.altKey,
+    defaultPrevented:event.defaultPrevented
+  }))return;
+  mounted.keydown(event);
+});
 function applyLocale(nextLocale){
   locale=nextLocale==="ar"?"ar":"en";
   document.documentElement.lang=locale;
@@ -103,6 +113,7 @@ document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale
 
 const toolSearch=document.querySelector("#tool-search");
 const toolSearchStatus=document.querySelector("#tool-search-status");
+const toolSearchEmpty=document.querySelector("#tool-search-empty");
 function filterToolNavigation(){
   const query=(toolSearch?.value??"").trim().toLocaleLowerCase(locale==="ar"?"ar":"en");
   let visibleCount=0;
@@ -117,6 +128,7 @@ function filterToolNavigation(){
     group.hidden=groupVisible===0;
   });
   if(toolSearchStatus)toolSearchStatus.textContent=`${translate(locale,"toolSearchResults")}: ${visibleCount}`;
+  if(toolSearchEmpty)toolSearchEmpty.hidden=!query||visibleCount>0;
 }
 toolSearch?.addEventListener("input",filterToolNavigation);
 toolSearch?.addEventListener("keydown",event=>{
@@ -154,12 +166,20 @@ for(const toggle of toolGroupToggles){
     setToolGroupCollapsed(group,!group?.classList.contains("is-collapsed"));
   });
 }
+let searchExpansionSnapshot=null;
 function syncToolGroupsForContext(){
   const query=(toolSearch?.value??"").trim();
-  document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+  const groups=[...document.querySelectorAll("#tool-sidebar .tool-group")];
+  if(query&&!searchExpansionSnapshot){
+    searchExpansionSnapshot=new Map(groups.map(group=>[group,group.classList.contains("is-collapsed")]));
+  }
+  const restore=!query&&searchExpansionSnapshot;
+  groups.forEach(group=>{
     const containsActive=Boolean(group.querySelector(".tool-item.active"));
     if(query||containsActive)setToolGroupCollapsed(group,false);
+    else if(restore)setToolGroupCollapsed(group,searchExpansionSnapshot.get(group)??true);
   });
+  if(restore)searchExpansionSnapshot=null;
 }
 toolSearch?.addEventListener("input",syncToolGroupsForContext);
 
@@ -243,9 +263,30 @@ document.addEventListener("keydown",event=>{
     closeToolSidebar({restoreFocus:true});
   }
 });
+function selectResearchSubtool(name){
+  const choice=[...document.querySelectorAll("[data-research-tool]")].find(el=>el.dataset.researchTool===name);
+  if(!choice)return false;
+  choice.open=true;
+  return true;
+}
+async function restoreResearchSubtoolHash(raw,{track=true}={}){
+  if(!raw.startsWith("research/"))return false;
+  const name=raw.slice("research/".length);
+  const exists=[...document.querySelectorAll("[data-research-tool]")].some(el=>el.dataset.researchTool===name);
+  if(!exists)return false;
+  await initializeResearchMode();
+  activateTool("research",{updateHash:false,track});
+  return selectResearchSubtool(name);
+}
+document.querySelectorAll("[data-research-tool]").forEach(panel=>panel.addEventListener("toggle",()=>{
+  if(!panel.open||!document.querySelector("#research-section")?.classList.contains("active"))return;
+  const hash="#research/"+panel.dataset.researchTool;
+  if(window.location.hash!==hash)history.replaceState(null,"",hash);
+}));
 window.addEventListener("hashchange",async()=>{
   if(await restoreFormulaHashRoute())return;
   const target=decodeURIComponent(window.location.hash.slice(1));
+  if(await restoreResearchSubtoolHash(target))return;
   if(target==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
   if(target==="knowledge")await initializeProfessionalKnowledge();
   if(target==="research")await initializeResearchMode();
@@ -1184,6 +1225,7 @@ setupConsent();
 async function initializeRoute(){
   if(!(await restoreFormulaHashRoute())){
     const initialTool=decodeURIComponent(window.location.hash.slice(1));
+    if(await restoreResearchSubtoolHash(initialTool,{track:false}))return;
     if(initialTool==="formulas"){await ensureFormulaSupport();renderFormulaCategories();renderFormulaLibrary();}
     if(initialTool==="knowledge")await initializeProfessionalKnowledge();
     if(initialTool==="research")await initializeResearchMode();

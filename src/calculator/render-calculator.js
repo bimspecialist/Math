@@ -50,7 +50,7 @@ export function renderCalculatorMarkup(view,locale="en"){
       '<span class="'+(view.state.shift?"active":"")+'">S</span><span class="'+(view.state.alpha?"active":"")+'">A</span><span class="'+(view.memory!==0?"active":"")+'">M</span><span>'+esc(view.state.angleMode)+'</span><span>'+esc(view.displayMode==="EXACT"?"EX":"DEC")+'</span><span>'+esc(view.state.mode)+'</span></div>'+
       '<div class="math-input" dir="ltr" aria-label="'+esc(translate(locale,"expressionLabel"))+'">'+(view.mathHtml||'<span class="math-placeholder">0</span>')+'</div>'+
       '<output class="math-result" dir="ltr" aria-live="polite" aria-label="'+esc(/^[A-Z][A-Z0-9_]+$/.test(String(view.result??""))?translate(locale,String(view.result)):view.result)+'">'+resultMarkup(view.result,locale)+'</output>'+
-      '<div class="calculator-direct-entry"><input data-calculator-direct-input dir="ltr" autocomplete="off" spellcheck="false" aria-label="'+esc(translate(locale,"expressionLabel"))+'" value="'+esc(view.canonicalExpression)+'" placeholder="'+esc(translate(locale,"calculatorDirectPlaceholder"))+'"><span>↵</span></div>'+
+      '<div class="calculator-direct-entry"><label class="direct-entry-label" for="calculator-direct-input">'+esc(translate(locale,"quickExpressionLabel"))+'</label><div class="direct-entry-controls"><input id="calculator-direct-input" data-calculator-direct-input dir="ltr" autocomplete="off" spellcheck="false" aria-label="'+esc(translate(locale,"expressionLabel"))+'" value="'+esc(view.canonicalExpression)+'" placeholder="'+esc(translate(locale,"calculatorDirectPlaceholder"))+'"><button type="button" class="direct-entry-run" data-calculator-direct-run>'+esc(translate(locale,"calculate"))+'</button></div></div>'+
       '<details class="calculator-expert-tools"><summary><strong>'+esc(translate(locale,"expertFunctions"))+'</strong><small>'+esc(translate(locale,"expertFunctionsHint"))+'</small></summary>'+
         '<div class="expert-tool-groups">'+
           '<section><span>'+esc(translate(locale,"expertConstants"))+'</span><div><button type="button" data-science-insert="c0">c</button><button type="button" data-science-insert="hplanck">h</button><button type="button" data-science-insert="kb">kB</button><button type="button" data-science-insert="na">NA</button><button type="button" data-science-insert="g0">g0</button></div></section>'+
@@ -72,6 +72,11 @@ export function mapKeyboardToKeyId(key){
 }
 export function mountCalculator(root,controller,locale="en"){
   const render=()=>{
+    const active=root.contains(document.activeElement)?document.activeElement:null;
+    const focusAttrs=["data-calculator-direct-input","data-calculator-direct-run","data-key-id","data-science-insert","data-mode-id","data-menu-cancel"];
+    const focusAttr=focusAttrs.find(name=>active?.hasAttribute?.(name));
+    const focusValue=focusAttr?active.getAttribute(focusAttr):null;
+    const caret=focusAttr==="data-calculator-direct-input"?[active.selectionStart,active.selectionEnd]:null;
     root.innerHTML=renderCalculatorMarkup(controller.view(),locale);
     root.querySelectorAll("[data-key-id]").forEach(btn=>btn.addEventListener("click",()=>{controller.dispatch(btn.dataset.keyId);render()}));
     root.querySelectorAll("[data-mode-id]").forEach(btn=>btn.addEventListener("click",()=>{
@@ -88,11 +93,28 @@ export function mountCalculator(root,controller,locale="en"){
       render();
     }));
     const direct=root.querySelector("[data-calculator-direct-input]");
+    const runDirect=()=>{
+      controller.setExpression(direct?.value??"");
+      controller.evaluateCurrent();
+      render();
+    };
     direct?.addEventListener("keydown",event=>{
-      if(event.key==="Enter"){event.preventDefault();controller.setExpression(direct.value);controller.evaluateCurrent();render()}
+      if(event.key==="Enter"&&!event.isComposing){event.preventDefault();runDirect()}
       event.stopPropagation();
     });
-    direct?.addEventListener("change",()=>{controller.setExpression(direct.value);render()});
+    // Updating the entire keypad on blur would destroy a pending click on Calculate.
+    direct?.addEventListener("change",()=>controller.setExpression(direct.value));
+    root.querySelector("[data-calculator-direct-run]")?.addEventListener("click",runDirect);
+    if(focusAttr){
+      const replacement=[...root.querySelectorAll("["+focusAttr+"]")].find(el=>el.getAttribute(focusAttr)===focusValue);
+      if(replacement){
+        replacement.focus({preventScroll:true});
+        if(caret&&typeof replacement.setSelectionRange==="function"){
+          const len=replacement.value.length;
+          replacement.setSelectionRange(Math.min(caret[0]??len,len),Math.min(caret[1]??len,len));
+        }
+      }
+    }
   };
   render();
   return {rerender:render,keydown(event){const id=mapKeyboardToKeyId(event.key);if(id){event.preventDefault?.();controller.dispatch(id);render();return true}if(event.key?.length===1&&/[A-Za-zπ,%!_]/.test(event.key)){event.preventDefault?.();controller.insertText(event.key);render();return true}return false},setLocale(next){locale=next;render()}};
