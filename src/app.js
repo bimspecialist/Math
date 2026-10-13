@@ -163,9 +163,14 @@ toolSearch?.addEventListener("keydown",event=>{
 document.addEventListener("keydown",event=>{
   if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
     event.preventDefault();
-    const input=document.querySelector("#home-section.active")?document.querySelector("#dashboard-search"):toolSearch;
-    input?.focus();
-    input?.select();
+    if(document.querySelector("#home-section.active")){
+      const dashboardSearch=document.querySelector("#dashboard-search");
+      dashboardSearch?.focus();
+      dashboardSearch?.select();
+    }else{
+      toolSearch?.focus();
+      toolSearch?.select();
+    }
   }
 });
 filterToolNavigation();
@@ -227,7 +232,7 @@ function updateToolHeading(target){
   const title=translate(locale,key);
   const heading=document.querySelector("#page-title");
   if(heading)heading.textContent=title;
-  document.title=target==="home"?translate(locale,"dashboardPageTitle"):(target==="calculator"?translate(locale,"siteTitle"):`${title} — Math`);
+  document.title=target==="calculator"?translate(locale,"siteTitle"):(target==="home"?translate(locale,"dashboardPageTitle"):`${title} — Math`);
 }
 function closeToolSidebar({restoreFocus=false}={}){
   const wasOpen=toolSidebar?.classList.contains("open")??false;
