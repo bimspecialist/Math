@@ -41,12 +41,31 @@ export function studentTTwoSidedPValue(t,df){
   return regularizedBeta(df/(df+t*t),df/2,0.5);
 }
 export function studentTInv(p,df){
-  if(!(p>0&&p<1&&df>0))return NaN;
+  if(!Number.isFinite(p)||!Number.isFinite(df)||!(p>0&&p<1&&df>0))return NaN;
   if(p===0.5)return 0;
   const sign=p<0.5?-1:1,target=p<0.5?p:1-p;
+  // df=1 has the exact Cauchy quantile: cot(pi * upper-tail probability).
+  // Using the small tail avoids cancellation in tan(pi*(p - 0.5)).
+  if(df===1){
+    const result=1/Math.tan(Math.PI*target);
+    return Number.isFinite(result)?sign*result:NaN;
+  }
   let lo=0,hi=1;
-  while(studentTUpperTail(hi,df)>target&&hi<1e6)hi*=2;
-  for(let i=0;i<120;i++){const mid=(lo+hi)/2,tail=studentTUpperTail(mid,df);if(tail>target)lo=mid;else hi=mid}
+  // Do not cap at an arbitrary critical value; bracket the requested tail.
+  // If the floating-point tail underflows or the root is not representable,
+  // return NaN instead of a plausible-looking but incorrect quantile.
+  while(true){
+    const tail=studentTUpperTail(hi,df);
+    if(!Number.isFinite(tail)||tail===0)return NaN;
+    if(tail<=target)break;
+    if(hi>Number.MAX_VALUE/2)return NaN;
+    hi*=2;
+  }
+  for(let i=0;i<120;i++){
+    const mid=(lo+hi)/2,tail=studentTUpperTail(mid,df);
+    if(!Number.isFinite(tail))return NaN;
+    if(tail>target)lo=mid;else hi=mid;
+  }
   return sign*(lo+hi)/2;
 }
 function regularizedGammaTail(a,x,upper=false){
