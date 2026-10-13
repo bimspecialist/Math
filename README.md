@@ -116,3 +116,13 @@ Verification: [ECC solver & ramp precision audit](docs/ECC_SOLVER_RAMP_PRECISION
 - All corrections are internal to the **existing** scientific calculator: no new menus, fields, analytics, cookies, dependencies, network calls or consent changes.
 
 Validated against independent arbitrary-precision combinatorial and normal-reference calculations. See [the scientific probability precision audit](docs/ECC_SCIENTIFIC_PROBABILITY_AUDIT_2026-10-13.md). The application remains subject to IEEE-754 representational limits; critical research decisions require independent methodological review.
+
+## Interactive Dashboard UI (2026-10-13)
+
+The home route (`/#home`, now the default when no hash is provided) implements the approved minimal white/blue **Math Workspace** UI direction: streamlined top navigation, tool search, bilingual Arabic/English layout, a featured ramp calculator with a live SVG triangle and dimensions, and twelve real tool cards. The existing Scientific Calculator, Math Lab, Advanced Solver, Graphing, Engineering Libraries and more remain available through the cards, top navigation or existing sidebar.
+
+**Interactive previews are genuine calculations, not a static picture:** the ramp uses the existing `calculateRamp` engine; changing rise/run redraws the annotated geometry and numerical slope/angle/ratio, unit changes convert the entered dimensions, and the full ramp tool receives those inputs when opened. The Scientific preview calls the existing expression engine, Advanced Solver runs on demand through the current lazy loader, and the length converter uses `convertUnit`. Card previews without an inline editor open the working full tool.
+
+The SVG is illustrative when physical proportions become extreme; its text labels reflect calculated values, and no accessibility code compliance is implied. No new framework, AI API, account system, tracking provider or cookie was introduced. The original consent flow remains unchanged.
+
+**Engineering notes:** [Interactive Dashboard implementation / QA audit](docs/INTERACTIVE_DASHBOARD_2026-10-13.md). Run `node scripts/verify-calculator.mjs`; new tests validate visualization math, navigation, localization and JavaScript syntax. Cross-device browser, light/dark, RTL, screen-reader and zoom checks still require a visual/manual browser pass.
