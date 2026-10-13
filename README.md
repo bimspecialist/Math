@@ -92,3 +92,11 @@ See [the evidence-based ECC-style RED → GREEN audit](docs/ECC_RESEARCH_DATA_IN
 - **Simple UI is preserved:** no extra buttons, setup screens, cookies, tracking scripts, or changes to existing math-tool lazy loading were added.
 
 A full RED → GREEN test ledger, preserved behavior and manual-review caveats are in [the numerical accuracy audit](docs/ECC_NUMERICAL_SEMANTICS_2026-10-13.md). Use `node scripts/verify-calculator.mjs` to run the complete verification suite.
+
+## Date & statistical input integrity — ECC-style verification (2026-10-13)
+
+The date calculator now uses precise ISO calendar years, including `0000–0099`; JavaScript's `Date.UTC(y,...)` incorrectly mapped those early years to `1900–1999`. Month/year adjustments preserve leap-day clamping and reject results outside the supported four-digit ISO range `0000–9999`. Clearing a date offset no longer silently performs a zero-day calculation. **An explicit 0 remains valid.**
+
+Research statistics similarly distinguish truly omitted optional parameters (default mean = 0, estimated parameter count = 0) from explicitly invalid `null`, boolean or empty values. Existing numerical results for valid inputs are unchanged.
+
+No additional visual controls, tracking, cookies, analytics or external APIs were introduced. The update includes cache-busted static app assets and 8 new regression tests; see [the ECC date/inference review](docs/ECC_DATE_INFERENCE_AUDIT_2026-10-13.md). Browser-level keyboard, mobile and RTL testing still requires manual validation.

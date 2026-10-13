@@ -5,7 +5,7 @@ import { mountCalculator } from "./calculator/render-calculator.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
 import { parseInteger, describeInteger, bitwise } from "./programmer/programmer-engine.js";
-import { daysBetween, addDateUnits, dateDifferenceDetails } from "./date/date-calculator.js";
+import { daysBetween, addDateUnits, dateDifferenceDetails } from "./date/date-calculator.js?v=20261013-date1";
 import { translate } from "./i18n/ui-strings.js";
 import { SITE_CONFIG } from "./config/site-config.js";
 import { initAdSense } from "./monetization/adsense.js";
