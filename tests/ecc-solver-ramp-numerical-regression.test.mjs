@@ -90,8 +90,11 @@ test("ramp three-side consistency uses relative tolerance even below a millimete
 });
 
 test("unrepresentable ramp geometry fails explicitly instead of reporting Infinity",()=>{
-  assert.throws(()=>calculateRamp({rise:1e308,run:1e308}),/INVALID_RAMP_GEOMETRY/);
-  assert.throws(()=>calculateRamp({rise:1e308,run:1e308,length:1e308}),/INVALID_RAMP_GEOMETRY/);
+  // sqrt(2)*1e308 is finite; sqrt(2)*1.5e308 exceeds Number.MAX_VALUE.
+  const representable=calculateRamp({rise:1e308,run:1e308});
+  nearRelative(representable.length,Math.SQRT2*1e308);
+  assert.throws(()=>calculateRamp({rise:1.5e308,run:1.5e308}),/INVALID_RAMP_GEOMETRY/);
+  assert.throws(()=>calculateRamp({rise:1.5e308,run:1.5e308,length:1.5e308}),/INVALID_RAMP_GEOMETRY/);
   const valid=calculateRamp({rise:3e200,run:4e200,length:5e200});
   assert.equal(valid.derivedField,"verified");
   nearRelative(valid.length,5e200);
