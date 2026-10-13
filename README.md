@@ -108,3 +108,11 @@ The Advanced Solver now uses a **numerically stable quadratic formula** that pre
 Ramp Calculator derives a missing side with a **scaled difference-of-squares** formula. This avoids overflow and catastrophic cancellation for very large or nearly equal valid dimensions. Its three-side consistency tolerance is relative to the actual input scale, booleans are not accepted as lengths, and unrepresentable outputs are rejected instead of being displayed as `Infinity`. Existing ordinary rise/run calculations, ratio/grade/angle workflows and both languages are preserved.
 
 Verification: [ECC solver & ramp precision audit](docs/ECC_SOLVER_RAMP_PRECISION_2026-10-13.md). No new buttons, dependencies, third-party scripts, cookies or changes to consent. For critical engineering applications, results and applicable design requirements still require independent review.
+
+## High-precision scientific probabilities (ECC-style regression pass, 2026-10-13)
+
+- **Binomial PDF and CDF** now handle larger sample counts without overflowing intermediate combinatorial factors. The PMF uses log-space arithmetic when needed, and a Kullback–Leibler / Stirling form for high-trial experiments where subtracting huge `logGamma` terms loses significant figures. The cumulative probability sums a decreasing lower or upper tail using stable recurrence and compensated summation, returning an explicit domain error rather than an unverified partial result if the work budget is reached.
+- **Normal CDF and erfc** use a small-argument series and a complementary-error-function continued fraction. Representable tails such as `normalcdf(-10)` are no longer incorrectly rounded to zero, and near-origin values also retain accuracy.
+- All corrections are internal to the **existing** scientific calculator: no new menus, fields, analytics, cookies, dependencies, network calls or consent changes.
+
+Validated against independent arbitrary-precision combinatorial and normal-reference calculations. See [the scientific probability precision audit](docs/ECC_SCIENTIFIC_PROBABILITY_AUDIT_2026-10-13.md). The application remains subject to IEEE-754 representational limits; critical research decisions require independent methodological review.
