@@ -158,6 +158,31 @@ function normalCdf(x,mu=0,sigma=1){
   const z=(x-mu)/(sigma*Math.SQRT2);
   return z<=0?0.5*erfcPositive(-z):1-0.5*erfcPositive(z);
 }
+// For huge n, subtracting three logGamma values loses meaningful digits.
+// Stirling's short correction to the KL-divergence form avoids this
+// cancellation. Near an endpoint, expand the smaller binomial factorial
+// ratio in at most 49 log terms instead of subtracting giant factorials.
+function stirlingLogCorrection(n){
+  const v=1/n,v2=v*v;
+  return v*(1/12+v2*(-1/360+v2/1260));
+}
+function stableLogBinomialPmf(k,n,p){
+  if(n>=100000){
+    const r=Math.min(k,n-k);
+    if(r<50){
+      let logCombination=0;
+      for(let i=1;i<=r;i++)logCombination+=Math.log((n-r+i)/i);
+      return logCombination+k*Math.log(p)+(n-k)*Math.log1p(-p);
+    }
+    const fraction=k/n,delta=fraction-p,remaining=1-p;
+    const divergence=fraction*Math.log1p(delta/p)+(1-fraction)*Math.log1p(-delta/remaining);
+    const correction=stirlingLogCorrection(n)-stirlingLogCorrection(k)-stirlingLogCorrection(n-k);
+    return -n*Math.max(0,divergence)-0.5*Math.log(2*Math.PI*n*fraction*(1-fraction))+correction;
+  }
+  return logGamma(n+1)-logGamma(k+1)-logGamma(n-k+1)
+    +k*Math.log(p)+(n-k)*Math.log1p(-p);
+}
+
 function binomialPmf(k,n,p){
   if(!Number.isSafeInteger(k)||!Number.isSafeInteger(n)||
      n<0||k<0||k>n||!Number.isFinite(p)||p<0||p>1){
@@ -173,8 +198,7 @@ function binomialPmf(k,n,p){
   }
   // Computing nCk or p^k separately can overflow/underflow even when the
   // probability itself is finite. Combine the terms in log space instead.
-  const logProbability=logGamma(n+1)-logGamma(k+1)-logGamma(n-k+1)
-    +k*Math.log(p)+(n-k)*Math.log1p(-p);
+  const logProbability=stableLogBinomialPmf(k,n,p);
   const value=Math.exp(logProbability);
   if(!Number.isFinite(value))throw new EngineError("DOMAIN_ERROR");
   return Math.max(0,Math.min(1,value));
