@@ -100,3 +100,11 @@ The date calculator now uses precise ISO calendar years, including `0000–0099`
 Research statistics similarly distinguish truly omitted optional parameters (default mean = 0, estimated parameter count = 0) from explicitly invalid `null`, boolean or empty values. Existing numerical results for valid inputs are unchanged.
 
 No additional visual controls, tracking, cookies, analytics or external APIs were introduced. The update includes cache-busted static app assets and 9 new regression tests; see [the ECC date/inference review](docs/ECC_DATE_INFERENCE_AUDIT_2026-10-13.md). Browser-level keyboard, mobile and RTL testing still requires manual validation.
+
+## Reliable roots & ramp geometry (ECC-style RED → GREEN, 2026-10-13)
+
+The Advanced Solver now uses a **numerically stable quadratic formula** that preserves small real roots when equation coefficients differ greatly in magnitude. Close but distinct real roots are no longer incorrectly reported as one repeated root merely because their discriminant is small. Real roots are rounded without silently replacing valid tiny values with zero.
+
+Ramp Calculator derives a missing side with a **scaled difference-of-squares** formula. This avoids overflow and catastrophic cancellation for very large or nearly equal valid dimensions. Its three-side consistency tolerance is relative to the actual input scale, and boolean values are not accepted as lengths. Existing ordinary rise/run calculations, ratio/grade/angle workflows and both languages are preserved.
+
+Verification: [ECC solver & ramp precision audit](docs/ECC_SOLVER_RAMP_PRECISION_2026-10-13.md). No new buttons, dependencies, third-party scripts, cookies or changes to consent. For critical engineering applications, results and applicable design requirements still require independent review.
