@@ -121,11 +121,33 @@ function gammaFn(z){
   if(!Number.isFinite(v))throw new EngineError("DOMAIN_ERROR");
   return v;
 }
-function erfFn(x){
-  const sign=x<0?-1:1,a=Math.abs(x),t=1/(1+0.3275911*a);
-  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-a*a);
-  return sign*y;
+// A quickly converging alternating series is accurate around the origin.
+function erfSeries(x){
+  let term=x,sum=x;
+  for(let n=1;n<=60;n++){
+    term*=(-x*x)/n;
+    const delta=term/(2*n+1);
+    sum+=delta;
+    if(Math.abs(delta)<Number.EPSILON*Math.max(1,Math.abs(sum)))break;
+  }
+  return 2/Math.sqrt(Math.PI)*sum;
 }
+// Continued fraction for erfc(x), x>=1.5:
+// erfc(x) = exp(-x²)/(sqrt(pi)*(x+0.5/(x+1/(x+1.5/(...))))).
+// Working on the small complement directly avoids subtractive cancellation
+// in normal lower tails and for erfc(large x).
+function erfcPositive(x){
+  if(x<1.5)return 1-erfSeries(x);
+  let denominator=x;
+  for(let i=120;i>=1;i--)denominator=x+(i/2)/denominator;
+  return Math.exp(-x*x)/(Math.sqrt(Math.PI)*denominator);
+}
+function erfFn(x){
+  if(Math.abs(x)<1.5)return erfSeries(x);
+  const body=1-erfcPositive(Math.abs(x));
+  return x<0?-body:body;
+}
+function erfcFn(x){return x<0?2-erfcPositive(-x):erfcPositive(x)}
 function normalPdf(x,mu=0,sigma=1){
   if(!(sigma>0))throw new EngineError("DOMAIN_ERROR");
   const z=(x-mu)/sigma;
@@ -133,7 +155,8 @@ function normalPdf(x,mu=0,sigma=1){
 }
 function normalCdf(x,mu=0,sigma=1){
   if(!(sigma>0))throw new EngineError("DOMAIN_ERROR");
-  return 0.5*(1+erfFn((x-mu)/(sigma*Math.SQRT2)));
+  const z=(x-mu)/(sigma*Math.SQRT2);
+  return z<=0?0.5*erfcPositive(-z):1-0.5*erfcPositive(z);
 }
 function binomialPmf(k,n,p){
   if(!Number.isSafeInteger(k)||!Number.isSafeInteger(n)||
@@ -349,7 +372,7 @@ class Parser {
       case"gamma":return V(gammaFn(one()));
       case"lgamma":return V(logGamma(one()));
       case"erf":return V(erfFn(one()));
-      case"erfc":return V(1-erfFn(one()));
+      case"erfc":return V(erfcFn(one()));
       case"normalpdf":{
         if(args.length<1||args.length>3)throw new EngineError("INVALID_EXPRESSION");
         return V(normalPdf(args[0].num,args[1]?.num??0,args[2]?.num??1));
