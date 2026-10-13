@@ -75,3 +75,11 @@ Nine worked-example specialty pages complement the original SEO landing pages (m
 Run `node scripts/verify-calculator.mjs` for the complete mathematical, bilingual UI, SEO and consent regression gate. See [accuracy and UX review](docs/ACCURACY_UX_AUDIT_2026-10-13.md).
 
 Source-backed tests are necessary but not sufficient for final visual QA: review mobile, desktop, keyboard tab order, 200% zoom, Arabic RTL and the calculator's physical key layout in a live browser.
+
+## Research data-entry integrity (ECC-inspired quality pass, 2026-10-13)
+
+Research Mode accepts numerical observations separated by commas, semicolons, spaces, tabs or new lines. Arabic-Indic and Persian digits are supported. For decimal fractions, use a dot or the Arabic decimal separator (٫); **commas separate observations**.
+
+Missing observations are **never replaced by 0**. Empty comma/semicolon fields, blank pasted spreadsheet rows, repeated tabular separators, malformed exponents and non-finite values now produce a localized validation message. If regression or chi-square input columns have different counts, the interface identifies the issue instead of attempting to calculate.
+
+See [the evidence-based ECC-style RED → GREEN audit](docs/ECC_RESEARCH_DATA_INTEGRITY_2026-10-13.md). This repository does not install the separate Everything Claude Code runtime. Existing calculator, Math Lab, privacy/consent, SEO and GitHub Pages workflows are not intentionally modified.

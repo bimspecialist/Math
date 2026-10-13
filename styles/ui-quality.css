@@ -570,3 +570,9 @@ html[dir="rtl"] .converter-advanced-options:not([open])>summary::after{transform
 /* Visible, bilingual recovery when the sidebar tool search has no matches. */
 .tool-search-empty{margin:8px 2px 3px;font-size:.82rem;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
 .tool-search-empty[hidden]{display:none}
+
+/* Research CSV input errors are explicit in both English and Arabic; no silent row loss. */
+:root{--ui-input-error:#b42318}
+@media(prefers-color-scheme:dark){:root{--ui-input-error:#fb7185}}
+.research-series-hint{margin:2px 0 10px;font-size:.82rem;line-height:1.5;color:var(--muted)}
+.research-card input[aria-invalid="true"]{border-color:var(--ui-input-error);outline:2px solid var(--ui-input-error);outline-offset:1px}

@@ -1,4 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
+import { parseResearchSeries } from "./science/research-series-input.js";
 import { shouldHandleCalculatorShortcut } from "./calculator/keyboard-scope.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
@@ -1163,6 +1164,30 @@ async function initializeResearchMode(){
   }
   renderResearchConstants();
 }
+function readResearchSeries(id){
+  const input=document.querySelector(id);
+  const result=parseResearchSeries(input?.value??"");
+  if(input)input.setAttribute("aria-invalid",String(!result.ok));
+  return{id,...result};
+}
+function reportResearchSeriesProblem(out,fields){
+  const bad=fields.find(field=>!field.ok);
+  if(!bad)return false;
+  if(out)out.textContent=researchErrorText(bad.code);
+  document.querySelector(bad.id)?.focus();
+  return true;
+}
+function reportResearchSeriesLengthMismatch(out,secondId){
+  if(out)out.textContent=researchErrorText("RESEARCH_SERIES_LENGTH_MISMATCH");
+  const input=document.querySelector(secondId);
+  input?.setAttribute("aria-invalid","true");
+  input?.focus();
+}
+for(const input of document.querySelectorAll(
+  "#research-stats-data,#research-regression-x,#research-regression-y,#research-chi-observed,#research-chi-expected"
+)){
+  input.addEventListener("input",()=>input.removeAttribute("aria-invalid"));
+}
 function bindResearchMode(){
   document.querySelector("#research-exact-run")?.addEventListener("click",()=>{
     const expr=document.querySelector("#research-exact-input")?.value??"";
@@ -1188,22 +1213,28 @@ function bindResearchMode(){
     if(out)out.textContent=r.kind==="measurement"?r.formatted:researchErrorText(r.code);
   });
   document.querySelector("#research-stats-run")?.addEventListener("click",()=>{
-    const raw=document.querySelector("#research-stats-data")?.value??"";
-    const data=raw.split(/[;,\s]+/).filter(Boolean).map(Number);
+    const data=readResearchSeries("#research-stats-data");
+    const out=document.querySelector("#research-stats-result");
+    if(reportResearchSeriesProblem(out,[data]))return;
     const mu0=researchNumber("#research-stats-mu0");
     const alpha=researchNumber("#research-stats-alpha");
-    const out=document.querySelector("#research-stats-result"),r=researchWorkbenchModule.runTTestResearch(data,mu0,alpha);
+    const r=researchWorkbenchModule.runTTestResearch(data.values,mu0,alpha);
     if(!out)return;
     if(r.kind==="t-test"){
       const ci=`[${Number(r.ci[0].toPrecision(10))}, ${Number(r.ci[1].toPrecision(10))}]`;
       out.textContent=`n=${r.n}\nmean=${Number(r.mean.toPrecision(10))}\nsd=${Number(r.sd.toPrecision(10))}\nt=${Number(r.t.toPrecision(10))}, df=${r.df}\np=${Number(r.pValue.toPrecision(10))}\nCI=${ci}\nreject H0: ${r.reject}`;
     }else out.textContent=researchErrorText(r.code);
   });
-  const parseResearchSeries=id=>(document.querySelector(id)?.value??"").split(/[;,\s]+/).filter(Boolean).map(Number);
   document.querySelector("#research-regression-run")?.addEventListener("click",()=>{
-    const x=parseResearchSeries("#research-regression-x"),y=parseResearchSeries("#research-regression-y");
+    const x=readResearchSeries("#research-regression-x"),y=readResearchSeries("#research-regression-y");
+    const out=document.querySelector("#research-regression-result");
+    if(reportResearchSeriesProblem(out,[x,y]))return;
+    if(x.values.length!==y.values.length){
+      reportResearchSeriesLengthMismatch(out,y.id);
+      return;
+    }
     const alpha=researchNumber("#research-regression-alpha");
-    const out=document.querySelector("#research-regression-result"),r=researchWorkbenchModule.runLinearRegressionResearch(x,y,alpha);
+    const r=researchWorkbenchModule.runLinearRegressionResearch(x.values,y.values,alpha);
     if(!out)return;
     if(r.kind==="linear-regression"){
       const ci=`[${Number(r.slopeCI[0].toPrecision(10))}, ${Number(r.slopeCI[1].toPrecision(10))}]`;
@@ -1211,9 +1242,15 @@ function bindResearchMode(){
     }else out.textContent=researchErrorText(r.code);
   });
   document.querySelector("#research-chi-run")?.addEventListener("click",()=>{
-    const observed=parseResearchSeries("#research-chi-observed"),expected=parseResearchSeries("#research-chi-expected");
+    const observed=readResearchSeries("#research-chi-observed"),expected=readResearchSeries("#research-chi-expected");
+    const out=document.querySelector("#research-chi-result");
+    if(reportResearchSeriesProblem(out,[observed,expected]))return;
+    if(observed.values.length!==expected.values.length){
+      reportResearchSeriesLengthMismatch(out,expected.id);
+      return;
+    }
     const estimated=researchNumber("#research-chi-estimated");
-    const out=document.querySelector("#research-chi-result"),r=researchWorkbenchModule.runChiSquareResearch(observed,expected,estimated);
+    const r=researchWorkbenchModule.runChiSquareResearch(observed.values,expected.values,estimated);
     if(!out)return;
     out.textContent=r.kind==="chi-square"
       ?`χ²=${Number(r.statistic.toPrecision(10))}\ndf=${r.df}\np=${Number(r.pValue.toPrecision(10))}`
