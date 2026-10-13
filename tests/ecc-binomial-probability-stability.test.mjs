@@ -74,3 +74,18 @@ test("invalid distribution parameters still raise explicit domain errors",()=>{
     assert.deepEqual(calculate(expression),{kind:"error",code:"DOMAIN_ERROR"},expression);
   }
 });
+
+test("extremely large binomial experiments retain centered PMF precision",()=>{
+  // Independent 80-digit Stirling series reference, with error below 1e-16
+  // relative at n>=1e10; exact finite combinatorial PMFs must not drift.
+  const samples=[
+    ["binompdf(5000000000,10000000000,0.5)",7.978845607829182418600698248970485e-6],
+    ["binompdf(500000000000,1000000000000,0.5)",7.978845608026658847396914284636863e-7],
+    ["binompdf(200000000000,1000000000000,0.2)",9.973557010031453517306761782945152e-7]
+  ];
+  for(const [expression,expected] of samples){
+    const r=calculate(expression);
+    assert.equal(r.kind,"value",expression);
+    near(r.numeric,expected,5e-10);
+  }
+});
