@@ -113,6 +113,7 @@ document.querySelector("#lang-toggle")?.addEventListener("click",()=>applyLocale
 
 const toolSearch=document.querySelector("#tool-search");
 const toolSearchStatus=document.querySelector("#tool-search-status");
+const toolSearchEmpty=document.querySelector("#tool-search-empty");
 function filterToolNavigation(){
   const query=(toolSearch?.value??"").trim().toLocaleLowerCase(locale==="ar"?"ar":"en");
   let visibleCount=0;
@@ -127,6 +128,7 @@ function filterToolNavigation(){
     group.hidden=groupVisible===0;
   });
   if(toolSearchStatus)toolSearchStatus.textContent=`${translate(locale,"toolSearchResults")}: ${visibleCount}`;
+  if(toolSearchEmpty)toolSearchEmpty.hidden=!query||visibleCount>0;
 }
 toolSearch?.addEventListener("input",filterToolNavigation);
 toolSearch?.addEventListener("keydown",event=>{
@@ -164,12 +166,20 @@ for(const toggle of toolGroupToggles){
     setToolGroupCollapsed(group,!group?.classList.contains("is-collapsed"));
   });
 }
+let searchExpansionSnapshot=null;
 function syncToolGroupsForContext(){
   const query=(toolSearch?.value??"").trim();
-  document.querySelectorAll("#tool-sidebar .tool-group").forEach(group=>{
+  const groups=[...document.querySelectorAll("#tool-sidebar .tool-group")];
+  if(query&&!searchExpansionSnapshot){
+    searchExpansionSnapshot=new Map(groups.map(group=>[group,group.classList.contains("is-collapsed")]));
+  }
+  const restore=!query&&searchExpansionSnapshot;
+  groups.forEach(group=>{
     const containsActive=Boolean(group.querySelector(".tool-item.active"));
     if(query||containsActive)setToolGroupCollapsed(group,false);
+    else if(restore)setToolGroupCollapsed(group,searchExpansionSnapshot.get(group)??true);
   });
+  if(restore)searchExpansionSnapshot=null;
 }
 toolSearch?.addEventListener("input",syncToolGroupsForContext);
 

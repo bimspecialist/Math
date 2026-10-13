@@ -101,3 +101,11 @@ test("research SEO links land on the correct analytics tool instead of a generic
  assert.match(app,/if\(await restoreResearchSubtoolHash\(target\)\)return/);
  assert.match(app,/if\(await restoreResearchSubtoolHash\(initialTool,\{track:false\}\)\)return/);
 });
+
+test("sidebar search gives a localized visible no-results state and restores collapsed groups",()=>{
+ assert.match(html,/id="tool-search-empty"[^>]*data-i18n="toolSearchEmpty" hidden/);
+ assert.ok(UI_STRINGS.en.toolSearchEmpty&&UI_STRINGS.ar.toolSearchEmpty);
+ assert.match(app,/toolSearchEmpty\.hidden=!query\|\|visibleCount>0/);
+ assert.match(app,/searchExpansionSnapshot=new Map/);
+ assert.match(app,/if\(restore\)searchExpansionSnapshot=null/);
+});

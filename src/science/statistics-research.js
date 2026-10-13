@@ -105,7 +105,7 @@ export function linearRegression(xValues,yValues,alpha=0.05){
 }
 export function chiSquareGoodnessOfFit(observed,expected,estimatedParameters=0){
   const o=cleanData(observed),e=cleanData(expected),estimated=Number(estimatedParameters);
-  if(!o||!e||o.length!==e.length||o.length<2||o.some(v=>v<0||!Number.isInteger(v))||e.some(v=>v<=0)||!Number.isInteger(estimated)||estimated<0)return{kind:"error",code:"INVALID_INPUT"};
+  if(!o||!e||o.length!==e.length||o.length<2||o.some(v=>v<0||!Number.isSafeInteger(v))||e.some(v=>v<=0)||!Number.isInteger(estimated)||estimated<0)return{kind:"error",code:"INVALID_INPUT"};
   const observedTotal=o.reduce((sum,v)=>sum+v,0),expectedTotal=e.reduce((sum,v)=>sum+v,0);
   const totalScale=Math.max(1,Math.abs(observedTotal),Math.abs(expectedTotal));
   if(Math.abs(observedTotal-expectedTotal)>1e-10*totalScale)return{kind:"error",code:"EXPECTED_TOTAL_MISMATCH"};

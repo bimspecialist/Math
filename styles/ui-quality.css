@@ -566,3 +566,7 @@ html[dir="rtl"] .converter-advanced-options:not([open])>summary::after{transform
 /* One focused research task per row, reducing two-column card clutter on wide monitors. */
 .research-grid{grid-template-columns:minmax(0,1fr);gap:8px;max-width:860px;margin-inline:auto}
 .research-card{min-width:0}
+
+/* Visible, bilingual recovery when the sidebar tool search has no matches. */
+.tool-search-empty{margin:8px 2px 3px;font-size:.82rem;line-height:1.45;color:var(--muted);overflow-wrap:anywhere}
+.tool-search-empty[hidden]{display:none}

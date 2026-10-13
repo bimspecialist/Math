@@ -45,3 +45,8 @@ test("Chi-square observed data must be counts; expectations may be fractional",(
   assert.equal(result.kind,"chi-square");
   assert.ok(result.pValue>=0&&result.pValue<=1);
 });
+
+test("Chi-square refuses observations larger than the exact integer range",()=>{
+ const big=Number.MAX_SAFE_INTEGER+1;
+ assert.deepEqual(chiSquareGoodnessOfFit([big,1],[big,1]),{kind:"error",code:"INVALID_INPUT"});
+});

@@ -483,6 +483,7 @@ export const UI_STRINGS = Object.freeze({
     seoArabicEngineering:"Arabic Engineering Calculator",
     publisherHome:"Publisher home",
     quickActionsLabel:"Frequently used tools",
+    toolSearchEmpty:"No matching tools. Try a different name.",
     quickExpressionLabel:"Type an expression",
     mathWorkspace:"Math Workspace"
   }),
@@ -970,6 +971,7 @@ export const UI_STRINGS = Object.freeze({
     seoArabicEngineering:"الحاسبة الهندسية بالعربية",
     publisherHome:"صفحة الناشر",
     quickActionsLabel:"الأدوات الأكثر استخدامًا",
+    toolSearchEmpty:"لا توجد أدوات مطابقة. جرّب اسمًا آخر.",
     quickExpressionLabel:"اكتب التعبير الرياضي",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
