@@ -88,3 +88,15 @@ test("ramp three-side consistency uses relative tolerance even below a millimete
   assert.equal(matching.derivedField,"verified");
   assert.ok(matching.length>1e-10);
 });
+
+test("unrepresentable ramp geometry fails explicitly instead of reporting Infinity",()=>{
+  assert.throws(()=>calculateRamp({rise:1e308,run:1e308}),/INVALID_RAMP_GEOMETRY/);
+  assert.throws(()=>calculateRamp({rise:1e308,run:1e308,length:1e308}),/INVALID_RAMP_GEOMETRY/);
+  const valid=calculateRamp({rise:3e200,run:4e200,length:5e200});
+  assert.equal(valid.derivedField,"verified");
+  nearRelative(valid.length,5e200);
+});
+
+test("a nonrepresentable ramp grade is not returned as Infinity",()=>{
+  assert.throws(()=>calculateRamp({rise:1e200,run:1e-200}),/INVALID_RAMP_GEOMETRY/);
+});
