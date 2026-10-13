@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   studentTTwoSidedPValue, chiSquareSurvival, chiSquareGoodnessOfFit,
-  oneSampleTTest, linearRegression
+  studentTInv, oneSampleTTest, linearRegression
 } from "../src/science/statistics-research.js";
 
 const nearRelative=(actual,expected,tolerance=1e-8)=>{
@@ -49,4 +49,34 @@ test("Chi-square observed data must be counts; expectations may be fractional",(
 test("Chi-square refuses observations larger than the exact integer range",()=>{
  const big=Number.MAX_SAFE_INTEGER+1;
  assert.deepEqual(chiSquareGoodnessOfFit([big,1],[big,1]),{kind:"error",code:"INVALID_INPUT"});
+});
+
+test("Student-t inverse finds Cauchy critical values beyond the former one-million cutoff",()=>{
+  for(const p of [0.9999999,0.9999999999]){
+    const q=1-p;
+    const exact=1/Math.tan(Math.PI*q); // df=1 is the Cauchy distribution
+    const value=studentTInv(p,1);
+    assert.ok(Number.isFinite(value)&&Math.abs(value/exact-1)<2e-8,`p=${p}: ${value}, expected ${exact}`);
+  }
+  for(const p of [1e-7,1e-10]){
+    const exact=-1/Math.tan(Math.PI*p);
+    const value=studentTInv(p,1);
+    assert.ok(Number.isFinite(value)&&Math.abs(value/exact-1)<2e-8,`p=${p}: ${value}, expected ${exact}`);
+  }
+});
+
+test("Student-t inverse brackets high confidence critical values at df=2",()=>{
+  const q=1e-15,p=1-q;
+  const exact=(1-2*q)/Math.sqrt(2*q*(1-q)); // closed-form df=2 quantile
+  const value=studentTInv(p,2);
+  assert.ok(Number.isFinite(value)&&value>1e6);
+  assert.ok(Math.abs(value/exact-1)<1e-3,`${value}, expected ${exact}`);
+  const check=studentTTwoSidedPValue(value,2);
+  assert.ok(Math.abs(check/(2*q)-1)<1e-3);
+});
+
+test("Student-t inverse rejects unrepresentable extreme or invalid degrees of freedom",()=>{
+  assert.ok(Number.isNaN(studentTInv(Number.MIN_VALUE,1)));
+  assert.ok(Number.isNaN(studentTInv(0.9,Infinity)));
+  assert.equal(studentTInv(0.5,1),0);
 });
