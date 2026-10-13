@@ -136,9 +136,60 @@ function normalCdf(x,mu=0,sigma=1){
   return 0.5*(1+erfFn((x-mu)/(sigma*Math.SQRT2)));
 }
 function binomialPmf(k,n,p){
-  assertInteger(k);assertInteger(n);
-  if(n<0||k<0||k>n||p<0||p>1)throw new EngineError("DOMAIN_ERROR");
-  return combination(n,k)*(p**k)*((1-p)**(n-k));
+  if(!Number.isSafeInteger(k)||!Number.isSafeInteger(n)||
+     n<0||k<0||k>n||!Number.isFinite(p)||p<0||p>1){
+    throw new EngineError("DOMAIN_ERROR");
+  }
+  // Handle degenerate distributions exactly (including n=0).
+  if(p===0)return k===0?1:0;
+  if(p===1)return k===n?1:0;
+  // Preserve simple-calculator results where the elementary formula is safe.
+  if(n<=1000){
+    const direct=combination(n,k)*(p**k)*((1-p)**(n-k));
+    if(direct>0&&Number.isFinite(direct))return Math.min(1,direct);
+  }
+  // Computing nCk or p^k separately can overflow/underflow even when the
+  // probability itself is finite. Combine the terms in log space instead.
+  const logProbability=logGamma(n+1)-logGamma(k+1)-logGamma(n-k+1)
+    +k*Math.log(p)+(n-k)*Math.log1p(-p);
+  const value=Math.exp(logProbability);
+  if(!Number.isFinite(value))throw new EngineError("DOMAIN_ERROR");
+  return Math.max(0,Math.min(1,value));
+}
+
+function binomialCdf(k,n,p){
+  if(!Number.isSafeInteger(k)||!Number.isSafeInteger(n)||
+     n<0||k<0||!Number.isFinite(p)||p<0||p>1){
+    throw new EngineError("DOMAIN_ERROR");
+  }
+  if(k>=n||p===0)return 1;
+  if(p===1)return 0;
+  // Sum the smaller tail from its largest mass, moving away from the mode.
+  // Recurrent ratios avoid repeatedly calling Gamma and support wide n.
+  const lower=k<n*p;
+  let j=lower?k:k+1,term=binomialPmf(j,n,p);
+  if(term===0)return lower?0:1;
+  let sum=0,compensation=0;
+  for(let steps=0;steps<200000;steps++){
+    const adjusted=term-compensation,next=sum+adjusted;
+    compensation=(next-sum)-adjusted;
+    sum=next;
+    if((lower?j===0:j===n)||term<=2*Number.EPSILON*sum){
+      const cdf=lower?sum:1-sum;
+      return Math.max(0,Math.min(1,cdf));
+    }
+    if(lower){
+      term*=j/(n-j+1)*((1-p)/p);
+      j--;
+    }else{
+      term*=(n-j)/(j+1)*(p/(1-p));
+      j++;
+    }
+    if(!Number.isFinite(term))throw new EngineError("DOMAIN_ERROR");
+  }
+  // A result is not returned if the tail did not converge within the
+  // computation budget; silently returning a partial CDF would mislead.
+  throw new EngineError("DOMAIN_ERROR");
 }
 function poissonPmf(k,lambda){
   assertInteger(k);
@@ -313,10 +364,7 @@ class Parser {
       }
       case"binomcdf":{
         if(args.length!==3)throw new EngineError("INVALID_EXPRESSION");
-        const k=assertInteger(args[0].num),n=assertInteger(args[1].num),p=args[2].num;
-        if(k<0||n<0||p<0||p>1)throw new EngineError("DOMAIN_ERROR");
-        let total=0;for(let i=0;i<=Math.min(k,n);i++)total+=binomialPmf(i,n,p);
-        return V(total);
+        return V(binomialCdf(args[0].num,args[1].num,args[2].num));
       }
       case"poissonpdf":{
         if(args.length!==2)throw new EngineError("INVALID_EXPRESSION");
