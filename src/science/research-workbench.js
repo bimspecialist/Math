@@ -13,7 +13,7 @@ export function runQuantityResearch(expression,targetUnit=""){
 }
 export function runUncertaintyResearch({a,ua,b,ub,operation="+",correlation=0}){
   try{
-    const x=measurement(a,ua),y=measurement(b,ub),rho=Number(correlation);
+    const x=measurement(a,ua),y=measurement(b,ub),rho=correlation;
     let result;
     if(operation==="+")result=addMeasurements(x,y,rho);
     else if(operation==="-")result=subtractMeasurements(x,y,rho);
