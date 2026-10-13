@@ -89,3 +89,15 @@ test("extremely large binomial experiments retain centered PMF precision",()=>{
     near(r.numeric,expected,5e-10);
   }
 });
+
+test("very large noncentral probabilities retain correct logarithmic deviation",()=>{
+  // Independent high-precision KL divergence + Stirling correction references.
+  for(const [expression,expected] of [
+    ["binompdf(500000500000,1000000000000,0.5)",4.83941449038367356503833383916e-7],
+    ["binompdf(3000010000,10000000000,0.3)",8.50079741665617534389437313094e-6]
+  ]){
+    const r=calculate(expression);
+    assert.equal(r.kind,"value",expression);
+    near(r.numeric,expected,1e-9);
+  }
+});
