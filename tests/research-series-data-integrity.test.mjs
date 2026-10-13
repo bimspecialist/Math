@@ -64,3 +64,10 @@ test("research UI consumes strict parser for t-test, regression and goodness-of-
     assert.ok(UI_STRINGS.en[key]&&UI_STRINGS.ar[key],"missing localized message "+key);
   }
 });
+
+test("spreadsheet paste with empty rows or empty tabular columns is rejected",()=>{
+  for(const source of ["1\n\n3","1\r\n \r\n3","1\n;\n3","1\n,\n3","1\t\t3","1\t  \t3"]){
+    assert.deepEqual(parseResearchSeries(source),{ok:false,code:"RESEARCH_SERIES_GAP"},JSON.stringify(source));
+  }
+  assert.deepEqual(parseResearchSeries("1\t2\n3\t4"),{ok:true,values:[1,2,3,4]});
+});
