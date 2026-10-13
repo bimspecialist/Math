@@ -9,7 +9,7 @@ const finitePositive=value=>{
 };
 const clean=n=>Math.abs(n)<EPS?0:Number(n.toPrecision(14));
 const closeEnough=(a,b)=>{
-  const scale=Math.max(1,Math.abs(a),Math.abs(b));
+  const scale=Math.max(Math.abs(a),Math.abs(b));
   return Math.abs(a-b)<=scale*CONSISTENCY_TOLERANCE;
 };
 

@@ -7,6 +7,8 @@ const normalize=s=>String(s??"")
   .replaceAll("²","^2").replaceAll("³","^3").trim();
 
 const clean=n=>Math.abs(n)<EPS?0:Number(n.toPrecision(14));
+// Real roots must retain legitimate values below the solver noise threshold.
+const cleanRoot=n=>n===0?0:Number(n.toPrecision(14));
 const variableList=s=>{
   const out=[];
   for(const m of normalize(s).matchAll(/\b[A-Za-z]\b/g)){
@@ -52,15 +54,15 @@ function inferQuadratic(f){
 function quadraticRoots({a,b,c}){
   if(Math.abs(a)<EPS){
     if(Math.abs(b)<EPS)return Math.abs(c)<EPS?{all:true}: {none:true};
-    return{roots:[clean(-c/b)],degree:1};
+    return{roots:[cleanRoot(-c/b)],degree:1};
   }
   const d=b*b-4*a*c;
-  if(d===0)return{roots:[clean(-b/(2*a))],degree:2};
+  if(d===0)return{roots:[cleanRoot(-b/(2*a))],degree:2};
   if(d>0){
     // Avoid subtracting nearly equal numbers in the quadratic formula.
     // Their cancellation can replace a valid small root with zero.
     const s=Math.sqrt(d),q=-0.5*(b+(b>=0?s:-s));
-    const r1=clean(q/a),r2=clean(c/q);
+    const r1=cleanRoot(q/a),r2=cleanRoot(c/q);
     return{roots:[r1,r2].sort((x,y)=>x-y),degree:2};
   }
   const re=clean(-b/(2*a)),im=clean(Math.sqrt(-d)/(2*Math.abs(a)));
@@ -111,7 +113,7 @@ function solveParsedPolynomial(poly){
   const lead=coeffs[0];
   if(Math.abs(lead)<EPS)return null;
   for(let i=0;i<coeffs.length;i++)coeffs[i]/=lead;
-  if(degree===1)return{roots:[clean(-coeffs[1])],degree:1};
+  if(degree===1)return{roots:[cleanRoot(-coeffs[1])],degree:1};
   if(degree===2)return quadraticRoots({a:1,b:coeffs[1],c:coeffs[2]});
   const radius=1+Math.max(...coeffs.slice(1).map(Math.abs));
   let roots=Array.from({length:degree},(_,k)=>{
