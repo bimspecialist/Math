@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {spawnSync} from "node:child_process";
 import {UI_STRINGS} from "../src/i18n/ui-strings.js";
 import {evaluateExpression} from "../src/calculator/math-engine.js";
 import {calculateRamp} from "../src/construction/ramp-calculator.js";
@@ -91,4 +92,20 @@ test("dashboard does not request extra tracking, block external services or load
   assert.match(dashboard,/await ensureAdvancedTools\(\)/);
   assert.match(app,/if\(!advancedToolsPromise\)advancedToolsPromise=Promise\.all/);
   assert.match(app,/if\(!mathLabEnginePromise\)mathLabEnginePromise=import/);
+});
+
+test("new browser modules and application entrypoint pass JavaScript syntax validation",()=>{
+ for(const path of ["src/app.js","src/dashboard/dashboard.js","src/dashboard/ramp-diagram.js"]){
+   const result=spawnSync(process.execPath,["--check",path],{encoding:"utf8"});
+   assert.equal(result.status,0,path+": "+result.stderr);
+ }
+});
+
+test("default homepage and full ramp share identical SVG implementation and no duplicate ids",()=>{
+ const ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
+ assert.equal(new Set(ids).size,ids.length);
+ assert.match(app,/import \{ rampSvgMarkup \} from "\.\/dashboard\/ramp-diagram\.js";/);
+ assert.match(read("src/dashboard/dashboard.js"),/import \{ rampSvgMarkup \} from "\.\/ramp-diagram\.js";/);
+ assert.match(read("styles/dashboard.css"),/\.mw-ramp-svg\{display:block;width:100%;height:auto/);
+ assert.match(html,/dashboardRampDisclaimer/);
 });
