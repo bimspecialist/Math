@@ -104,8 +104,15 @@ const cleanData=data=>{
   });
   return values.every(Number.isFinite)?values:null;
 };
+const finiteScalarInput=value=>{
+  // JavaScript coerces null, false and empty text to 0; a research
+  // parameter must be explicitly numeric rather than accidentally zero.
+  if(typeof value!=="number"&&(typeof value!=="string"||!value.trim()))return NaN;
+  const number=Number(value);
+  return Number.isFinite(number)?number:NaN;
+};
 export function oneSampleTTest(data,mu0=0,alpha=0.05){
-  const x=cleanData(data),nullMean=Number(mu0),level=Number(alpha);
+  const x=cleanData(data),nullMean=finiteScalarInput(mu0),level=finiteScalarInput(alpha);
   if(!x||x.length<2||!Number.isFinite(nullMean)||!(level>0&&level<1))return{kind:"error",code:"INVALID_INPUT"};
   const n=x.length,m=mean(x),variance=sampleVariance(x),sd=Math.sqrt(variance),se=sd/Math.sqrt(n),df=n-1;
   if(se===0)return{kind:"error",code:"ZERO_VARIANCE"};
@@ -113,7 +120,7 @@ export function oneSampleTTest(data,mu0=0,alpha=0.05){
   return{kind:"t-test",n,mean:m,sd,se,df,t,pValue:p,alpha:level,confidence:1-level,ci:[m-margin,m+margin],reject:p<level};
 }
 export function linearRegression(xValues,yValues,alpha=0.05){
-  const x=cleanData(xValues),y=cleanData(yValues),level=Number(alpha);
+  const x=cleanData(xValues),y=cleanData(yValues),level=finiteScalarInput(alpha);
   if(!x||!y||x.length!==y.length||x.length<3||!(level>0&&level<1))return{kind:"error",code:"INVALID_INPUT"};
   const n=x.length,mx=mean(x),my=mean(y),sxx=x.reduce((sum,v)=>sum+(v-mx)**2,0),sxy=x.reduce((sum,v,i)=>sum+(v-mx)*(y[i]-my),0);
   if(sxx===0)return{kind:"error",code:"ZERO_VARIANCE"};
@@ -128,7 +135,7 @@ export function linearRegression(xValues,yValues,alpha=0.05){
   return{kind:"linear-regression",n,slope,intercept,r2,sse,mse,df,slopeSE,interceptSE,tSlope,pSlope,alpha:level,slopeCI:[slope-critical*slopeSE,slope+critical*slopeSE]};
 }
 export function chiSquareGoodnessOfFit(observed,expected,estimatedParameters=0){
-  const o=cleanData(observed),e=cleanData(expected),estimated=Number(estimatedParameters);
+  const o=cleanData(observed),e=cleanData(expected),estimated=finiteScalarInput(estimatedParameters);
   if(!o||!e||o.length!==e.length||o.length<2||o.some(v=>v<0||!Number.isSafeInteger(v))||e.some(v=>v<=0)||!Number.isInteger(estimated)||estimated<0)return{kind:"error",code:"INVALID_INPUT"};
   const observedTotal=o.reduce((sum,v)=>sum+v,0),expectedTotal=e.reduce((sum,v)=>sum+v,0);
   const totalScale=Math.max(1,Math.abs(observedTotal),Math.abs(expectedTotal));
