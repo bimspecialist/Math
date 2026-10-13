@@ -99,4 +99,4 @@ The date calculator now uses precise ISO calendar years, including `0000–0099`
 
 Research statistics similarly distinguish truly omitted optional parameters (default mean = 0, estimated parameter count = 0) from explicitly invalid `null`, boolean or empty values. Existing numerical results for valid inputs are unchanged.
 
-No additional visual controls, tracking, cookies, analytics or external APIs were introduced. The update includes cache-busted static app assets and 8 new regression tests; see [the ECC date/inference review](docs/ECC_DATE_INFERENCE_AUDIT_2026-10-13.md). Browser-level keyboard, mobile and RTL testing still requires manual validation.
+No additional visual controls, tracking, cookies, analytics or external APIs were introduced. The update includes cache-busted static app assets and 9 new regression tests; see [the ECC date/inference review](docs/ECC_DATE_INFERENCE_AUDIT_2026-10-13.md). Browser-level keyboard, mobile and RTL testing still requires manual validation.
