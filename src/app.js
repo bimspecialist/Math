@@ -1,4 +1,5 @@
 import { CalculatorController } from "./calculator/calculator-controller.js";
+import { shouldHandleCalculatorShortcut } from "./calculator/keyboard-scope.js";
 import { mountCalculator } from "./calculator/render-calculator.js";
 import { CONVERTER_CATEGORIES, convertUnit, unitsFor, conversionFactor, formatConversionValue } from "./converters/unit-converter.js";
 import { sampleGraphExpressions, resolveGraphYBounds } from "./graphing/graph-engine.js";
@@ -66,7 +67,16 @@ const controller=new CalculatorController();
 const calculatorRoot=document.querySelector("#calculator-root");
 let locale=document.documentElement.lang==="ar"?"ar":"en";
 const mounted=mountCalculator(calculatorRoot,controller,locale);
-document.addEventListener("keydown",event=>{if(event.target instanceof HTMLTextAreaElement||event.target instanceof HTMLInputElement)return;mounted.keydown(event)});
+document.addEventListener("keydown",event=>{
+  const interactive=event.target instanceof Element&&Boolean(event.target.closest("a,button,input,textarea,select,summary,[contenteditable],[role='textbox']"));
+  if(!shouldHandleCalculatorShortcut({
+    calculatorActive:document.querySelector("#calculator-section")?.classList.contains("active"),
+    interactiveTarget:interactive,
+    ctrlKey:event.ctrlKey,metaKey:event.metaKey,altKey:event.altKey,
+    defaultPrevented:event.defaultPrevented
+  }))return;
+  mounted.keydown(event);
+});
 function applyLocale(nextLocale){
   locale=nextLocale==="ar"?"ar":"en";
   document.documentElement.lang=locale;

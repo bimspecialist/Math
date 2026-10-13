@@ -542,3 +542,14 @@ html[dir="rtl"] .research-disclosure:not([open])>.research-disclosure-summary::a
 .ramp-advanced-disclosure:not([open])>summary::after{transform:rotate(-90deg)}
 html[dir="rtl"] .ramp-advanced-disclosure:not([open])>summary::after{transform:rotate(90deg)}
 .ramp-advanced-disclosure>.ramp-panel{margin:0;border:0;border-block-start:1px solid var(--line);border-radius:0}
+
+/* Fast, readable lecture entry; keep the classic keypad available beneath. */
+.calculator-direct-entry{display:grid;align-items:stretch;gap:5px;color:#f5f9ff}
+.calculator-direct-entry .direct-entry-label{font-size:.73rem;font-weight:700;line-height:1.2;opacity:.95}
+.calculator-direct-entry .direct-entry-controls{display:flex;align-items:center;gap:7px;min-width:0}
+.calculator-direct-entry input{flex:1 1 auto;min-width:0;min-block-size:36px;color:#fff;opacity:1}
+.calculator-direct-entry input::placeholder{color:#d8e7f5;opacity:.8}
+.calculator-direct-entry .direct-entry-run{flex:0 0 auto;min-block-size:38px;border:1px solid #91b6e1;border-radius:8px;background:#d8e9fd;color:#14375b;padding:6px 10px;font-weight:800;font-size:.8rem;white-space:nowrap}
+.calculator-direct-entry .direct-entry-run:hover{background:#f1f7ff}
+.calculator-direct-entry input:focus-visible,.calculator-direct-entry .direct-entry-run:focus-visible{outline:2px solid #f5f9ff;outline-offset:2px}
+@media(max-width:360px){.calculator-direct-entry .direct-entry-run{padding-inline:7px;font-size:.75rem}}

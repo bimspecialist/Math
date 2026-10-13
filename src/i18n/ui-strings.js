@@ -482,6 +482,8 @@ export const UI_STRINGS = Object.freeze({
     seoArabicScientific:"Arabic Scientific Calculator",
     seoArabicEngineering:"Arabic Engineering Calculator",
     publisherHome:"Publisher home",
+    quickActionsLabel:"Frequently used tools",
+    quickExpressionLabel:"Type an expression",
     mathWorkspace:"Math Workspace"
   }),
   ar:Object.freeze({
@@ -967,6 +969,8 @@ export const UI_STRINGS = Object.freeze({
     seoArabicScientific:"الحاسبة العلمية بالعربية",
     seoArabicEngineering:"الحاسبة الهندسية بالعربية",
     publisherHome:"صفحة الناشر",
+    quickActionsLabel:"الأدوات الأكثر استخدامًا",
+    quickExpressionLabel:"اكتب التعبير الرياضي",
     mathWorkspace:"مساحة عمل الرياضيات"
   })
 });
