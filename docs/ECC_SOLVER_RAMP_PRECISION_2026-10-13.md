@@ -33,8 +33,16 @@ This pass applies ECC-style engineering disciplines through installed systematic
 | Initial GREEN | [run 38365459720](https://github.com/bimspecialist/Math/actions/runs/38365459720) | 711 passed; 0 failed |
 | Additional RED: tiny roots, consistency | [run 38365657762](https://github.com/bimspecialist/Math/actions/runs/38365657762) | 2 failures; 712 passed |
 | Second GREEN | [run 38365763422](https://github.com/bimspecialist/Math/actions/runs/38365763422) | 714 passed; 0 failed |
+| Third RED: output representability | [run 38366329411](https://github.com/bimspecialist/Math/actions/runs/38366329411) | 2 failing tests; 714 passed |
+| Reviewed GREEN | [run 38366586581](https://github.com/bimspecialist/Math/actions/runs/38366586581) | 716 passed; 0 failed |
+
 
 Regression file: `tests/ecc-solver-ramp-numerical-regression.test.mjs`. The complete `node scripts/verify-calculator.mjs` repository gate verifies 86 test files, including existing solver, ramp, math engines, calculator/UI contracts, localization, consent and SEO assertions.
+
+## Finding D: Explicit failures for unrepresentable numerical results
+The previous ramp result formatter could surface `Infinity` as a valid length or slope when intermediate or final values exceeded IEEE-754 representable limits. Results now reject non-finite geometry, grades, and ratios with `INVALID_RAMP_GEOMETRY` rather than returning a plausible-looking successful object.
+
+**Test correction captured in review:** An initial boundary check incorrectly assumed `hypot(1e308,1e308)` overflows, even though its true value `≈1.414e308` is finite. The final regression explicitly verifies that this case **succeeds**, and that `hypot(1.5e308,1.5e308)` — which exceeds the floating-point maximum — is rejected. The correction was required by the math, not to suppress a valid regression.
 
 ## Deliberate boundaries and remaining QA
 - Mathematical double-precision calculations have finite representability. This is not a general arbitrary-precision solver, symbolic proof engine, or substitute for approved ramp-accessibility design.
