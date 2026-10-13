@@ -1,5 +1,5 @@
 const sq=x=>x*x;
-const finite=(x,code="INVALID_VALUE")=>{x=Number(x);if(!Number.isFinite(x))throw new Error(code);return x};
+const finite=(x,code="INVALID_VALUE")=>{if(typeof x!=="number"&&(typeof x!=="string"||!x.trim()))throw new Error(code);const n=Number(x);if(!Number.isFinite(n))throw new Error(code);return n};
 const M=(value,uncertainty=0)=>{
   const v=finite(value),u=finite(uncertainty);
   if(u<0)throw new Error("INVALID_UNCERTAINTY");
@@ -74,6 +74,11 @@ export function formatMeasurement(m,{uncertaintyDigits=2}={}){
   m=M(m.value,m.uncertainty);uncertaintyDigits=Math.max(1,Math.min(5,Math.trunc(Number(uncertaintyDigits)||2)));
   if(m.uncertainty===0)return String(m.value);
   const exponent=Math.floor(Math.log10(m.uncertainty)),places=Math.max(0,-exponent+uncertaintyDigits-1),scale=10**places;
+  // Extremely small uncertainties may require a decimal scale greater than
+  // Number.MAX_VALUE. Use scientific notation instead of displaying NaN.
+  if(!Number.isFinite(scale)||scale===0||!Number.isFinite(m.value*scale)||!Number.isFinite(m.uncertainty*scale)){
+    return`${m.value} ± ${Number(m.uncertainty.toPrecision(uncertaintyDigits))}`;
+  }
   const u=Math.round(m.uncertainty*scale)/scale,v=Math.round(m.value*scale)/scale;
   return`${v} ± ${u}`;
 }

@@ -83,3 +83,12 @@ Research Mode accepts numerical observations separated by commas, semicolons, sp
 Missing observations are **never replaced by 0**. Empty comma/semicolon fields, blank pasted spreadsheet rows, repeated tabular separators, malformed exponents and non-finite values now produce a localized validation message. If regression or chi-square input columns have different counts, the interface identifies the issue instead of attempting to calculate.
 
 See [the evidence-based ECC-style RED → GREEN audit](docs/ECC_RESEARCH_DATA_INTEGRITY_2026-10-13.md). This repository does not install the separate Everything Claude Code runtime. Existing calculator, Math Lab, privacy/consent, SEO and GitHub Pages workflows are not intentionally modified.
+
+## Numerical semantics and robustness (ECC-style test-driven review, 2026-10-13)
+
+- Dimensional Quantities now follows the Scientific Calculator's mathematical precedence: `-2^2 = -4`, `(-2)^2 = 4`, and exponent chains are right-associative (`2^3^2 = 512`). Dimensional checks and unit conversion are retained.
+- Student-t critical values no longer stop at an arbitrary magnitude. A Cauchy/df=1 formula handles very small tail probabilities, while other valid degrees of freedom use checked bracketing. Values not representable reliably in ordinary JavaScript double precision return `NaN` instead of a convincing incorrect critical value.
+- Measurement Uncertainty rejects null, booleans and blank values instead of silently treating them as measurements of zero. Legitimate numeric zero still works; numeric strings remain supported. Extremely small, finite standard uncertainties now display in scientific notation rather than `NaN ± NaN`.
+- **Simple UI is preserved:** no extra buttons, setup screens, cookies, tracking scripts, or changes to existing math-tool lazy loading were added.
+
+A full RED → GREEN test ledger, preserved behavior and manual-review caveats are in [the numerical accuracy audit](docs/ECC_NUMERICAL_SEMANTICS_2026-10-13.md). Use `node scripts/verify-calculator.mjs` to run the complete verification suite.
