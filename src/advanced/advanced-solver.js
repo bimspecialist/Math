@@ -55,9 +55,12 @@ function quadraticRoots({a,b,c}){
     return{roots:[clean(-c/b)],degree:1};
   }
   const d=b*b-4*a*c;
-  if(Math.abs(d)<EPS)return{roots:[clean(-b/(2*a))],degree:2};
+  if(d===0)return{roots:[clean(-b/(2*a))],degree:2};
   if(d>0){
-    const s=Math.sqrt(d),r1=clean((-b-s)/(2*a)),r2=clean((-b+s)/(2*a));
+    // Avoid subtracting nearly equal numbers in the quadratic formula.
+    // Their cancellation can replace a valid small root with zero.
+    const s=Math.sqrt(d),q=-0.5*(b+(b>=0?s:-s));
+    const r1=clean(q/a),r2=clean(c/q);
     return{roots:[r1,r2].sort((x,y)=>x-y),degree:2};
   }
   const re=clean(-b/(2*a)),im=clean(Math.sqrt(-d)/(2*Math.abs(a)));
