@@ -71,3 +71,19 @@ test("spreadsheet paste with empty rows or empty tabular columns is rejected",()
   }
   assert.deepEqual(parseResearchSeries("1\t2\n3\t4"),{ok:true,values:[1,2,3,4]});
 });
+
+test("validated pasted data produce the expected statistical calculations",()=>{
+  const x=parseResearchSeries("١،٢،٣،٤،٥");
+  const y=parseResearchSeries("3 5 7 9 11");
+  assert.equal(x.ok,true);assert.equal(y.ok,true);
+  const reg=linearRegression(x.values,y.values);
+  assert.equal(reg.kind,"linear-regression");
+  assert.ok(Math.abs(reg.slope-2)<1e-12);
+  assert.ok(Math.abs(reg.intercept-1)<1e-12);
+  const observed=parseResearchSeries("20,30,50"),expected=parseResearchSeries("25,25,50");
+  const gof=chiSquareGoodnessOfFit(observed.values,expected.values);
+  assert.equal(gof.kind,"chi-square");
+  assert.ok(Math.abs(gof.statistic-2)<1e-12);
+  assert.ok(Math.abs(gof.pValue-Math.exp(-1))<1e-11);
+  assert.deepEqual(parseResearchSeries("<script>alert(1)</script>"),{ok:false,code:"RESEARCH_SERIES_INVALID"});
+});
