@@ -1,0 +1,57 @@
+/* Midnight Tech visual identity on top of Math Workspace's existing tested dark theme.
+   Calculation engines, exact arithmetic, consent, and graph coordinate systems untouched. */
+.site-shell.dashboard-active[data-dashboard-theme="dark"]{
+ --mw-back:#080d19;--mw-surface:#111e33;--mw-soft:#1a2e4a;
+ --mw-border:#304a69;--mw-ink:#edf6ff;--mw-muted:#b0c5df;
+ --mw-accent:#8bd9ff;--mw-shadow:0 15px 40px rgba(0,0,0,.25);
+ --page:#080d19;--panel:#111e33;--text:#edf6ff;--muted:#b0c5df;
+ --line:#304a69;--focus:#9bdcff;
+ background:radial-gradient(ellipse 65% 30% at 82% 0%,#1a2c4b,#080d19 80%);
+ color-scheme:dark
+}
+body:has(.site-shell.dashboard-active[data-dashboard-theme="dark"]){background:#080d19}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-header{
+ background:rgba(14,26,45,.94);border:1px solid var(--mw-border);
+ box-shadow:0 8px 28px #0003
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-brand-logo{
+ color:#93dfff
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-hero-intro{
+ background:linear-gradient(138deg,#172f50,#101d31 75%);
+ border:1px solid #365677;box-shadow:0 12px 34px #0002
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-eyebrow,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-section-kicker{
+ color:#94dcff
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-featured-ramp,
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-tool-card{
+ background:#111e33;border-color:#304a69;box-shadow:0 12px 30px #0002
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-tool-card{
+ transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-tool-card:hover{
+ border-color:#6196cd;transform:translateY(-3px);box-shadow:0 17px 38px #0004
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-primary-action{
+ color:#05172a;background:linear-gradient(110deg,#72d2ff,#a2b9ff);
+ border:1px solid #9cdbff;transition:filter .16s ease,transform .16s ease
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-primary-action:hover{
+ filter:brightness(1.07);transform:translateY(-1px)
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-card-icon{
+ box-shadow:inset 0 1px 2px #ffffff24,0 5px 17px #09152633
+}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-violet{background:#825dd6}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-blue{background:#267ac8}
+.site-shell.dashboard-active[data-dashboard-theme="dark"] .mw-teal{background:#0d9e97}
+.site-shell.dashboard-active :is(a,button,input,select,textarea,summary):focus-visible{
+ outline:2px solid #9bdcff;outline-offset:3px
+}
+@media(prefers-reduced-motion:reduce){
+ .site-shell.dashboard-active *, .site-shell.dashboard-active *::before,
+ .site-shell.dashboard-active *::after{animation:none!important;transition:none!important}
+}
