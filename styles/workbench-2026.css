@@ -234,3 +234,62 @@ body:has(.site-shell){background:#080f1d}
  .site-shell.dashboard-active .mw-dashboard *::before,
  .site-shell.dashboard-active .mw-dashboard *::after{transition:none!important;animation:none!important}
 }
+
+/* Light appearance: keep the existing theme toggle meaningful. */
+.site-shell.dashboard-active[data-dashboard-theme="light"]{
+ --mw-back:#f2f6fc;--mw-surface:#fff;--mw-soft:#e9f1fb;
+ --mw-border:#d0dfef;--mw-ink:#142c4e;--mw-muted:#45617e;
+ --mw-accent:#135fb6;--page:#f2f6fc;--panel:#fff;--text:#142c4e;
+ --muted:#496781;--line:#d0dfef;--focus:#135fb6;
+ background:#f2f6fc;color:#142c4e;color-scheme:light
+}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-dashboard{
+ --mw-back:#f2f6fc;--mw-surface:#fff;--mw-soft:#e9f1fb;
+ --mw-border:#d0dfef;--mw-ink:#142c4e;--mw-muted:#45617e;--mw-accent:#135fb6
+}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-header{
+ background:#fff!important;border-color:#cfdeee!important
+}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-header .mw-brand-label strong,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-hero-intro h2,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-showcase-heading h2,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-redesign-section h2{color:#142c4e!important}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-header :is(.mw-top-nav button,.mw-brand-label small){color:#395a7b}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-header-search input{background:#f6f9fc!important;color:#142c4e!important;border-color:#bdcee3!important}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-header-actions :is(#lang-toggle,#dashboard-theme-toggle){background:#e9f0fa;color:#23446a}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-hero-intro>p:not(.mw-eyebrow),
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-redesign-description{color:#46627f!important}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workspace-rail{border-color:#dae5f1}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-rail-list button{color:#365674}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-rail-list button:hover,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-rail-list button.active{background:#dce9f9;color:#123e73}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-card,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-tool-card,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-eng-tile,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-mathlab-preview,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-redesign-ramp .mw-featured-ramp{background:#fff!important;border-color:#cbdced!important;color:#142c4e}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-title strong,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-eng-tile strong,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-tool-card .mw-card-head button,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-redesign-ramp .mw-ramp-head h3{color:#142c4e!important}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-title small,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-eng-tile small{color:#46627f}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-head{border-color:#d8e3ef}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-foot{color:#496581}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-foot button,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-link{color:#125baf}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-rail-info{background:#e9f2fd;color:#365676;border-color:#ccddec}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-rail-info strong{color:#173e66}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-redesign-ramp .mw-metric{background:#eff5fd}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-mathlab-console strong{color:#284a71}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-solver-answer{color:#46627f}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-keys button{background:#e9f1fd;color:#173b66;border-color:#bfd0e3}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-workbench-keys button.mw-key-equals{background:#1265b8;color:white}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-expression-screen,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-solver-equation{background:#e7f1fc;border-color:#c2d5eb;color:#183a60}
+.site-shell.dashboard-active[data-dashboard-theme="light"] #workbench-expression,
+.site-shell.dashboard-active[data-dashboard-theme="light"] #workbench-result{color:#17385c}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-expression-top,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-expression-screen label{color:#365d86}
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-graph-legend,
+.site-shell.dashboard-active[data-dashboard-theme="light"] .mw-screen-help{color:#466682}
